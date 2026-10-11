@@ -1227,4 +1227,21 @@ const dots=(arr,col,rad)=>{g.fillStyle=col;for(const p of arr){if(!p)continue;co
 dots(beauty.faceOutline||[],'#ffffffcc',2.5);dots((beauty.eyeContours||[]).flat(),'#22e07a',3.5);dots(Array.from({length:10},(_,i)=>fp['bL'+i]).concat(Array.from({length:10},(_,i)=>fp['bR'+i])),'#4aa3ff',3.5);dots(beauty.lipOutline||[],'#ff4d6d',3);dots([fp.noseA,fp.noseB,fp.noseC],'#ffd400',4.5)}}catch(e){}requestAnimationFrame(draw)};
 btn.onclick=()=>{on=!on;cv.style.display=on?'block':'none';btn.textContent=on?'Hide face points':'Show face points';if(on){try{if(!source)toast('Upload a photo first.')}catch(e){}draw()}};
 }catch(e){}})();
+
+// v8: privacy-friendly analytics (Google Analytics 4). Paste your Measurement ID below (looks like G-XXXXXXXXXX). Empty = nothing is sent.
+(function(){const FRAME_GA_ID='G-JNY27DLF0Z';
+try{if(!/^G-[A-Z0-9]{6,}$/.test(FRAME_GA_ID))return;if(navigator.doNotTrack==='1')return;
+window.dataLayer=window.dataLayer||[];window.gtag=function(){dataLayer.push(arguments)};gtag('js',new Date());gtag('config',FRAME_GA_ID,{anonymize_ip:true,allow_google_signals:false,allow_ad_personalization_signals:false});
+const sc=document.createElement('script');sc.async=true;sc.src='https://www.googletagmanager.com/gtag/js?id='+FRAME_GA_ID;document.head.appendChild(sc);
+const track=(n,p)=>{try{gtag('event',n,p||{})}catch(e){}};
+// Only event names and a few settings are sent. Photos and face data never leave the device.
+try{$('#file').addEventListener('change',()=>track('photo_uploaded'))}catch(e){}
+try{const _ag=autoGlow;autoGlow=async function(){track('auto_glow');return _ag.apply(this,arguments)}}catch(e){}
+try{const _av=applyVibe;applyVibe=async function(k){track('look_applied',{look:String(k)});return _av.apply(this,arguments)}}catch(e){}
+try{const _dl=download;download=function(){track('save_image');return _dl.apply(this,arguments)}}catch(e){}
+try{$('#addDesk').addEventListener('click',()=>track('add_to_desktop_click'))}catch(e){}
+try{window.addEventListener('appinstalled',()=>track('app_installed'))}catch(e){}
+try{$('#modeToggle').addEventListener('click',()=>track('mode_toggle',{mode:document.body.classList.contains('simple')?'quick':'pro'}))}catch(e){}
+try{$('#heroSample').addEventListener('click',()=>track('try_sample'))}catch(e){}
+}catch(e){}})();
 </script></body></html>
