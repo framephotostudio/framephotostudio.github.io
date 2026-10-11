@@ -789,7 +789,7 @@ try{if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)){naviga
 function setMode(m,persist=true){const simple=m==='simple';document.body.classList.toggle('simple',simple);const t=$('#modeToggle');t.textContent=simple?'✦ Pro Studio':'Quick Glow';t.setAttribute('aria-pressed',String(!simple));if(simple){const a=document.querySelector('.tabs .active');if(a&&a.dataset.tab!=='edit'&&a.dataset.tab!=='share')tab('edit')}if(persist){try{localStorage.setItem('frame-mode',m)}catch(e){}}}
 $('#modeToggle').onclick=()=>setMode(document.body.classList.contains('simple')?'advanced':'simple');
 $('#moreTools').onclick=()=>{setMode('advanced');toast('All tools are on. Tap Quick Glow to go back.')};
-{let m='simple';try{if(localStorage.getItem('frame-mode')==='advanced')m='advanced'}catch(e){}setMode(m,false)}
+{let m='advanced';try{if(localStorage.getItem('frame-mode')==='simple')m='simple'}catch(e){}setMode(m,false)}
 
 // ===== Install button =====
 let deferredInstall=null;
