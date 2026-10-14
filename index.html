@@ -918,7 +918,7 @@ async function refreshLookThumbs(){
 const hint=$('#lookHint');if(hint)hint.hidden=!demoMode;
 if(!source||vibeBusy||glowBusy)return;
 const has=()=>!!(beauty.faceOutline&&beauty.faceOutline.length>2);
-const base=[photoRevision,demoMode,window.sampleKind,strengthMult,rotation,flipped,source.naturalWidth,source.naturalHeight,window.frameStyle].join('|');
+const base=[photoRevision,demoMode,window.sampleKind,strengthMult,rotation,flipped,source.naturalWidth,source.naturalHeight,window.frameStyle,window.__face||0,!!window.__everyone,(beauty.faceOutline&&beauty.faceOutline[0]?beauty.faceOutline[0].x.toFixed(3):'')].join('|');
 if(base!==thumbBase){thumbBase=base;thumbIdle=0}else thumbIdle++;
 if(!has()&&thumbIdle>=3&&!thumbTried.has(base)){thumbTried.add(base);try{await ensureFace()}catch(e){}}
 const faced=has(),key=base+'|'+faced;
