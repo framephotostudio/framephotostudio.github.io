@@ -918,15 +918,15 @@ async function refreshLookThumbs(){
 const hint=$('#lookHint');if(hint)hint.hidden=!demoMode;
 if(!source||vibeBusy||glowBusy)return;
 const has=()=>!!(beauty.faceOutline&&beauty.faceOutline.length>2);
-const base=[photoRevision,demoMode,window.sampleKind,strengthMult,rotation,flipped,source.naturalWidth,source.naturalHeight].join('|');
+const base=[photoRevision,demoMode,window.sampleKind,strengthMult,rotation,flipped,source.naturalWidth,source.naturalHeight,window.frameStyle].join('|');
 if(base!==thumbBase){thumbBase=base;thumbIdle=0}else thumbIdle++;
 if(!has()&&thumbIdle>=3&&!thumbTried.has(base)){thumbTried.add(base);try{await ensureFace()}catch(e){}}
 const faced=has(),key=base+'|'+faced;
 if(key===thumbKey)return;thumbKey=key;const seq=++thumbSeq;
 const geo=faced?{points:beauty.points,radius:beauty.radius,eyeContours:beauty.eyeContours,lipOutline:beauty.lipOutline,lipInner:beauty.lipInner,featurePoints:beauty.featurePoints,faceOutline:beauty.faceOutline}:null;
 const hb=faced?headBox():null;
-for(const [k,v] of Object.entries(VIBES)){
-if(seq!==thumbSeq)return;
+for(const [k,v0] of Object.entries(VIBES)){
+if(seq!==thumbSeq)return;const v=menBoost(v0);
 const btn=$('.vibe[data-vibe="'+k+'"]');if(!btn)continue;
 const sA={...adj},sL=look,sB=beauty;let c=null;
 try{
@@ -1576,5 +1576,25 @@ var r=_ad.apply(this,arguments);cur=i;
 if(multi&&!window.__everyone&&prev!==null&&prev!==i){var g={};for(var k=0;k<GEO.length;k++)if(GEO[k] in beauty)g[GEO[k]]=beauty[GEO[k]];beauty=Object.assign(beautyDefaults(),looks[i]||{},g);delete looks[i];try{syncBeauty()}catch(e){}try{invalidate()}catch(e){}}
 return r};
 var _bp=beautyPixels;beautyPixels=function(data,w,h,b){_bp(data,w,h,b);try{if(window.__everyone||detectedFaces.length<2||!b||!beauty||b.points!==beauty.points)return;for(var j in looks){if(+j===cur||!detectedFaces[+j])continue;var L=faceLayout(detectedFaces[+j]);_bp(data,w,h,Object.assign(beautyDefaults(),looks[j],{points:L.points,featurePoints:L.featurePoints,faceOutline:L.faceOutline,eyeContours:L.eyeContours,lipOutline:L.lipOutline,lipInner:L.lipInner,radius:L.radius,brush:[],spots:[]}))}}catch(e){console.warn('group looks',e)}};
+}catch(e){}})();</script>
+<script>/* v23: men's photos. A beard or moustache switches styling to Men automatically (no lipstick or glam), and a Women / Men switch sits right above the Finishes. */
+(function(){try{
+var WOMEN_ONLY=['fx_soft','fx_clean','fx_red','fx_bold'];
+function styleBtn(st){return document.querySelector('#styleRow [data-st="'+st+'"],#lookFilter [data-st="'+st+'"]')}
+function setSt(st){var b=styleBtn(st);if(b)b.click()}
+function finVis(){var men=window.frameStyle==='men';document.querySelectorAll('#finWrap .vibe').forEach(function(x){x.hidden=men&&WOMEN_ONLY.indexOf(x.dataset.vibe)>=0});document.querySelectorAll('#finSex button').forEach(function(b){b.classList.toggle('on',b.dataset.sx===(men?'men':'women'))});var tc=document.getElementById('toColors');if(tc)tc.hidden=men}
+document.addEventListener('click',function(e){var t=e.target.closest&&e.target.closest('[data-st]');if(t)setTimeout(finVis,20)},true);
+var fw=document.getElementById('finWrap');if(fw){var bar=document.createElement('div');bar.id='finSex';bar.setAttribute('role','group');bar.setAttribute('aria-label','Styling for');bar.innerHTML='<span>Styling for</span><button type="button" data-sx="women">Women</button><button type="button" data-sx="men">Men</button>';var h=fw.querySelector('.vibesTitle');if(h&&h.nextSibling)fw.insertBefore(bar,h.nextSibling);else fw.prepend(bar);
+bar.querySelectorAll('button').forEach(function(b){b.onclick=function(){window.__autoMen=false;setSt(b.dataset.sx);setTimeout(function(){finVis();reapply()},30)}});
+var css=document.createElement('style');css.textContent='#finSex{display:flex;align-items:center;gap:8px;margin:2px 0 12px;flex-wrap:wrap}#finSex span{font-size:12.5px;color:#6b5a86;letter-spacing:.3px}#finSex button{border:1px solid #e3d6f2;background:#fffaf6;color:#4a2f7a;border-radius:999px;padding:7px 16px;font:600 13px/1 inherit;cursor:pointer}#finSex button.on{background:linear-gradient(135deg,#7042d8,#9b4fc4);color:#fff;border-color:#d6b46a;box-shadow:0 0 0 2px #fff inset,0 3px 10px rgba(112,66,216,.3)}';document.head.appendChild(css)}
+function reapply(){var go=function(n){if(typeof vibeBusy!=='undefined'&&(vibeBusy||glowBusy)){if(n<60)setTimeout(function(){go(n+1)},150);return}try{if(lastRecipe&&lastRecipe.type==='vibe'){var k=lastRecipe.key;if(window.frameStyle==='men'&&WOMEN_ONLY.indexOf(k)>=0)k='fx_natural';applyVibe(k)}else if(lastRecipe&&lastRecipe.type==='glow')autoGlow()}catch(e){}};go(0)}
+function hasBeard(f){try{var c=baseCanvas(600),W=c.width,H=c.height,d=c.getContext('2d').getImageData(0,0,W,H).data;c.width=c.height=1;
+var P=function(i){return[f[i].x*W,f[i].y*H]},mix=function(a,b,t){return[a[0]*(1-t)+b[0]*t,a[1]*(1-t)+b[1]*t]},L=function(p,r){var s=0,n=0;for(var y=Math.max(0,Math.round(p[1]-r));y<Math.min(H,Math.round(p[1]+r));y++)for(var x=Math.max(0,Math.round(p[0]-r));x<Math.min(W,Math.round(p[0]+r));x++){var j=(y*W+x)*4;s+=.2126*d[j]+.7152*d[j+1]+.0722*d[j+2];n++}return n?s/n:0};
+var fw=Math.hypot(P(234)[0]-P(454)[0],P(234)[1]-P(454)[1]),r=Math.max(2,fw*.035),cheek=(L(P(50),r)+L(P(280),r))/2;if(!cheek)return false;
+var must=(L(mix(P(2),P(0),.55),r*.8)+L(mix(P(2),P(37),.6),r*.7)+L(mix(P(2),P(267),.6),r*.7))/3;return must/cheek<.72}catch(e){return false}}
+var _ad=applyDetectedFace,rev=-1;applyDetectedFace=function(i){var r=_ad.apply(this,arguments);try{if(!demoMode&&userPhoto&&rev!==photoRevision&&detectedFaces[i]){rev=photoRevision;var men=hasBeard(detectedFaces[i]);
+if(men&&window.frameStyle!=='men'){window.__autoMen=true;var prevSt=null;try{prevSt=localStorage.getItem('frame-style')}catch(e){}setSt('men');try{if(prevSt===null)localStorage.removeItem('frame-style');else localStorage.setItem('frame-style',prevSt)}catch(e){}setTimeout(function(){finVis();reapply()},30);setTimeout(function(){try{toast('Men’s styling on: clean and sharp, no makeup. Tap Women above the Finishes to switch.')}catch(e){}},400)}
+else if(!men&&window.__autoMen&&window.frameStyle==='men'){window.__autoMen=false;setSt('all');setTimeout(function(){finVis();reapply()},30)}}}catch(e){}return r};
+setTimeout(finVis,500);
 }catch(e){}})();</script>
 </body></html>
