@@ -2310,8 +2310,8 @@ hw_villain:{n:'Villain Glam',t:'Arched brows, violet smoke, plum lip',g:'#1e0f2c
  sh:{color:'plum',lipFinish:'cream',glossShade:'gRose',blushColor:'mauve',eyeColor:'midnightPlum',eyeFinish:'matte',linerStyle:'wing',linerColor:'black',lashStyle:'dramatic',lowerSmoke:.45,glamEyes:1}},
 hw_phantom:{men:1,n:'Gentleman Phantom',t:'Cool and chiseled',g:'#0e1420,#3a4660',d:1,look:'professional',adj:{light:2,contrast:7,color:0,warmth:-4,vignette:4,detail:6},
  beauty:{smooth:30,foundation:18,concealer:30,blemish:70,scars:60,wrinkles:18,contour:32,matte:42,browMakeup:26},sh:{}},
-hw_count:{men:1,n:'Dark Count',t:'Sculpted and moody',g:'#121418,#3a2a3e',d:1,look:'film',adj:{light:1,contrast:8,color:1,warmth:-2,vignette:4,shadows:-3,detail:6},
- beauty:{smooth:30,foundation:18,concealer:32,blemish:70,scars:60,wrinkles:18,contour:30,matte:40,browMakeup:24},sh:{}}}},
+hw_count:{men:1,n:'Moody Sculpt',t:'Sharper jaw, deeper shadows',g:'#121418,#3a2a3e',d:1,look:'film',adj:{light:-1,contrast:10,color:-1,warmth:-3,vignette:7,shadows:-6,detail:8,fade:2},
+ beauty:{smooth:30,foundation:18,concealer:32,blemish:70,scars:60,wrinkles:18,contour:44,matte:44,browMakeup:30},sh:{}}}},
 {id:'thanksgiving',name:'Thanksgiving',from:[11,1],to:[11,30],until:'Until Nov 30',g:'#3a1e10,#a0582a',looks:{
 tg_harvest:{n:'Harvest Bronze',t:'Copper eyes, golden rose',g:'#5a2e14,#c07a3a',d:1,look:'glow',adj:{light:3,contrast:5,color:3,warmth:3,vignette:3,softness:8},
  beauty:{smooth:38,foundation:20,concealer:24,blemish:75,scars:65,wrinkles:26,contour:26,highlight:34,bronzer:22,tan:36,blush:14,eyeShadow:40,eyeLiner:28,lashes:46,mascara:36,browMakeup:24,tint:56,gloss:30,faceLight:16},
@@ -2412,50 +2412,11 @@ var fin=document.getElementById('finWrap'),wr=document.getElementById('workRow')
 if(fin&&anchor&&anchor.parentNode===fin)fin.insertBefore(wrap,anchor);else if(fin)fin.appendChild(wrap);else{var ed=document.getElementById('edit');if(ed)ed.appendChild(wrap)}
 render();checkAdminParam();
 document.querySelectorAll('#styleRow [data-st],#lookFilter [data-st]').forEach(function(b){b.addEventListener('click',function(){setTimeout(filterStyle,30)})});
+var lastStyle=window.frameStyle;setInterval(function(){if(window.frameStyle!==lastStyle){lastStyle=window.frameStyle;filterStyle()}},400);document.addEventListener('click',function(e){if(e.target.closest&&e.target.closest('[data-fsx],[data-sx],[data-st]'))setTimeout(filterStyle,60)},true);
 var lastSig=active().map(function(s){return s.id}).join();
 setInterval(function(){var sig=active().map(function(s){return s.id}).join();if(sig!==lastSig){lastSig=sig;render()}},60000);
 /* glam seasonal looks get the same very subtle nose refinement as the glam finishes (women only) */
 var _avS=applyVibe;applyVibe=async function(k){var r=await _avS.apply(this,arguments);try{if(KEYS[k]&&!MENK[k]&&window.frameStyle!=='men'&&lastRecipe&&lastRecipe.key===k&&beauty.points&&beauty.points.nose&&(beauty.nose||0)>-4){beauty.nose=-4;try{syncBeauty()}catch(e){}invalidate();try{checkpoint()}catch(e){}}}catch(e){}return r};
 }catch(e){console.warn('v41 seasonal',e)}})();
-</script>
-<script>
-/* v42: Lip hydration - when a look or beauty edit is on, dry lines and flakes on the lips are smoothed before the lip colour goes on,
-   so lipstick sits on soft, hydrated-looking lips. Strength adapts to how dry the lips look; smooth lips are barely touched.
-   Skin outside the lips is never sampled, so the lip line stays crisp. Set beauty.lipHydrate=0 to switch it off for a photo. */
-;(function(){try{
-function sst(a,b,x){var t=Math.max(0,Math.min(1,(x-a)/(b-a)));return t*t*(3-2*t)}
-function boxBlur(src,wt,W,H,r){/* mask-weighted separable box blur, two passes: averages only lip pixels */
-var tmp=new Float32Array(W*H),tw=new Float32Array(W*H),out=new Float32Array(W*H),ow=new Float32Array(W*H);
-for(var y=0;y<H;y++){var s=0,sw=0,row=y*W;for(var x=-r;x<W;x++){var a=x+r,d=x-r-1;if(a<W){s+=src[row+a]*wt[row+a];sw+=wt[row+a]}if(d>=0){s-=src[row+d]*wt[row+d];sw-=wt[row+d]}if(x>=0){tmp[row+x]=s;tw[row+x]=sw}}}
-for(var x2=0;x2<W;x2++){var s2=0,sw2=0;for(var y2=-r;y2<H;y2++){var a2=y2+r,d2=y2-r-1;if(a2<H){s2+=tmp[a2*W+x2];sw2+=tw[a2*W+x2]}if(d2>=0){s2-=tmp[d2*W+x2];sw2-=tw[d2*W+x2]}if(y2>=0){out[y2*W+x2]=sw2>1e-4?s2/sw2:src[y2*W+x2]}}}
-return out}
-function hydrate(d,w,h,b){
-if(!b||b.lipHydrate===0)return;var lo=b.lipOutline;if(!lo||lo.length<6||typeof lipCoverage!=='function')return;
-/* only when the person has styled the photo (a look or beauty edit), never on a plain upload */
-if(!(b.tint||b.gloss||b.smooth||b.foundation||b.concealer||b.lipHydrate))return;
-var xs=lo.map(function(p){return p.x*w}),ys=lo.map(function(p){return p.y*h}),X0=Math.max(0,Math.floor(Math.min.apply(null,xs))-2),X1=Math.min(w-1,Math.ceil(Math.max.apply(null,xs))+2),Y0=Math.max(0,Math.floor(Math.min.apply(null,ys))-2),Y1=Math.min(h-1,Math.ceil(Math.max.apply(null,ys))+2),W=X1-X0+1,H=Y1-Y0+1;
-if(W<12||H<6||W*H>600000)return;var N=W*H,M=new Float32Array(N),R=new Float32Array(N),G=new Float32Array(N),B=new Float32Array(N),L=new Float32Array(N),cnt=0;
-for(var y=0;y<H;y++)for(var x=0;x<W;x++){var p=y*W+x,m=0;try{m=lipCoverage(x+X0+.5,y+Y0+.5,w,h,b)||0}catch(e){m=0}M[p]=m;var i=((y+Y0)*w+x+X0)*4;R[p]=d[i];G[p]=d[i+1];B[p]=d[i+2];L[p]=.299*d[i]+.587*d[i+1]+.114*d[i+2];if(m>.5)cnt++}
-if(cnt<40)return;
-var lipH=Math.max(4,H-4),r=Math.max(1,Math.round(lipH*.07)),r2=Math.max(2,Math.round(lipH*.16));
-var Lb=boxBlur(boxBlur(L,M,W,H,r),M,W,H,r);
-/* how dry: average fine texture inside the lips (dry lines, flakes), relative to lip brightness */
-var e=0,en=0;for(var q=0;q<N;q++){if(M[q]<.9)continue;e+=Math.abs(L[q]-Lb[q]);en++}e=en?e/en:0;
-var meanL=0;for(var q2=0;q2<N;q2++)if(M[q2]>=.9)meanL+=L[q2];meanL=en?meanL/en:128;var dry=e*(128/Math.max(40,meanL));
-var k=(.28+.5*sst(2.2,7,dry))*Math.min(1.4,Math.max(.6,(b.lipHydrate||100)/100));
-var Rb=boxBlur(boxBlur(R,M,W,H,r),M,W,H,r),Gb=boxBlur(boxBlur(G,M,W,H,r),M,W,H,r),Bb=boxBlur(boxBlur(B,M,W,H,r),M,W,H,r);
-/* wider pass evens out patchy flaking without flattening the lips' natural shape */
-var Lw=boxBlur(boxBlur(L,M,W,H,r2),M,W,H,r2);
-for(var y3=0;y3<H;y3++)for(var x3=0;x3<W;x3++){var p3=y3*W+x3,m3=M[p3];if(m3<=.01)continue;
-var dl=L[p3]-Lb[p3],kk=k;if(dl>0)kk=Math.min(.92,k+.25*sst(2,10,dl));/* white flakes */else kk=Math.min(.88,k+.12*sst(3,12,-dl));/* dark cracks */
-kk*=m3;var j=((y3+Y0)*w+x3+X0)*4;
-var nr=R[p3]+(Rb[p3]-R[p3])*kk,ng=G[p3]+(Gb[p3]-G[p3])*kk,nb=B[p3]+(Bb[p3]-B[p3])*kk;
-var patch=(Lb[p3]-Lw[p3]);if(patch>0)patch*=sst(4,14,patch)*.45*k*m3;else patch=0;/* lighten-only patches = dry flaky areas, eased down */
-d[j]=Math.max(0,Math.min(255,nr-patch));d[j+1]=Math.max(0,Math.min(255,ng-patch));d[j+2]=Math.max(0,Math.min(255,nb-patch))}
-window.__lipDry=Math.round(dry*10)/10;
-}
-window.__lipHydrate=hydrate;
-var _bpH=beautyPixels;beautyPixels=function(d,w,h,b){try{hydrate(d,w,h,b)}catch(e){console.warn('lip hydrate',e)}return _bpH.apply(this,arguments)};
-}catch(e){console.warn('v42 lip hydrate',e)}})();
 </script>
 </body></html>
