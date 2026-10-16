@@ -2479,4 +2479,38 @@ catch(e){toast(e.message||'Could not make the Before & After image.')}finally{bt
 window.__baPromo=makeCard;
 }catch(e){console.warn('v44 before after',e)}})();
 </script>
+<script>
+/* v45: Men's finishes - grooming-only looks (no makeup, eyes never brightened or reshaped), shown in the Finishes row when styling for men. */
+;(function(){try{
+if(typeof VIBES!=='object')return;
+var M={
+m_groomed:{n:'Freshly Groomed',t:'Even skin, neat brows',g:'#d9d2c8,#8c8478',d:1,look:'natural',adj:{light:4,contrast:4,color:1,warmth:0,detail:5,softness:3},
+ beauty:{smooth:26,foundation:14,concealer:24,blemish:70,scars:55,wrinkles:14,contour:10,matte:30,browMakeup:16,teeth:6,faceLight:14}},
+m_clear:{n:'Clear Skin',t:'Spots and redness gone',g:'#e6e1d8,#a59e92',d:1,look:'natural',adj:{light:4,contrast:3,color:0,warmth:-1,detail:4,softness:4},
+ beauty:{smooth:30,foundation:18,concealer:30,blemish:85,scars:70,wrinkles:12,matte:34,browMakeup:10,faceLight:12}},
+m_sharp:{n:'Sharp Jawline',t:'Defined jaw and cheekbones',g:'#4a4f5a,#1e2128',d:0,look:'professional',adj:{light:3,contrast:7,color:0,warmth:-1,detail:8,vignette:2},
+ beauty:{smooth:24,foundation:14,concealer:24,blemish:70,scars:55,wrinkles:14,contour:22,matte:38,browMakeup:18,faceLight:12}},
+m_rested:{n:'Well Rested',t:'Fresher under-eyes, brighter skin',g:'#e4ece4,#9fb4a2',d:1,look:'natural',adj:{light:6,contrast:3,color:2,warmth:1,softness:4},
+ beauty:{smooth:26,foundation:14,concealer:40,blemish:70,scars:55,wrinkles:22,matte:24,browMakeup:10,faceLight:16}},
+m_bronzed:{n:'Sun-Bronzed',t:'Healthy, warm tan',g:'#c99a6a,#7a4e2c',d:1,look:'natural',adj:{light:3,contrast:5,color:2,warmth:3,detail:4},
+ beauty:{smooth:24,foundation:12,concealer:22,blemish:70,scars:55,wrinkles:12,bronzer:18,tan:34,contour:12,matte:28,browMakeup:12,faceLight:14}},
+m_cover:{n:'Magazine Cover',t:'Crisp, editorial, confident',g:'#2a2d34,#6a6f7a',d:0,look:'professional',adj:{light:3,contrast:8,color:-1,warmth:-2,detail:9,vignette:4,shadows:-2},
+ beauty:{smooth:28,foundation:16,concealer:28,blemish:75,scars:60,wrinkles:16,contour:20,matte:42,browMakeup:18,teeth:6,faceLight:12}},
+m_night:{n:'Night Out',t:'Warm light, polished skin',g:'#3a2a22,#8a5a3a',d:0,look:'film',adj:{light:2,contrast:7,color:1,warmth:3,vignette:5,shadows:-3,detail:5},
+ beauty:{smooth:26,foundation:16,concealer:26,blemish:75,scars:60,wrinkles:14,contour:18,matte:34,browMakeup:16,faceLight:10}}
+};
+for(var k in M){M[k].sh={};M[k].men=1;VIBES[k]=M[k]}
+var row=document.getElementById('finRow');if(!row)return;
+var html='';for(var k2 in M){var v=M[k2];html+='<button class="vibe'+(v.d?' dark':'')+'" data-vibe="'+k2+'" data-tag="fin" data-menfin="1" style="background:linear-gradient(135deg,'+v.g+')"><b>'+v.n+'</b> <span>'+v.t+'</span></button>'}
+row.insertAdjacentHTML('afterbegin',html);
+row.querySelectorAll('[data-menfin]').forEach(function(b){b.onclick=function(){applyVibe(b.dataset.vibe)}});
+/* the visible set follows Women / Men through one attribute on the page, so no other code resetting buttons can show the wrong looks */
+var css=document.createElement('style');css.textContent=':root:not([data-fcstyle="men"]) #finRow [data-menfin]{display:none!important}:root[data-fcstyle="men"] #seasonWrap .vibe:not([data-men="1"]){display:none!important}:root[data-fcstyle="women"] #seasonWrap .vibe[data-men="1"]{display:none!important}';document.head.appendChild(css);
+function vis(){var s=window.frameStyle||'all',r=document.documentElement;if(r.dataset.fcstyle!==s){r.dataset.fcstyle=s;if(s==='men')row.scrollLeft=0}}
+vis();setInterval(vis,250);document.addEventListener('click',function(e){if(e.target.closest&&e.target.closest('[data-fsx],[data-sx],[data-st]')){setTimeout(vis,40);setTimeout(vis,120)}},true);
+/* these looks never brighten or change the eyes */
+var _mb45=menBoost;menBoost=function(v){var r=_mb45(v);if(r&&v&&v.men&&r.beauty&&r.beauty.eyeBright){r=Object.assign({},r,{beauty:Object.assign({},r.beauty,{eyeBright:0})})}return r};
+try{thumbKey=''}catch(e){}
+}catch(e){console.warn('v45 men finishes',e)}})();
+</script>
 </body></html>
