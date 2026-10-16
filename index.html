@@ -1874,7 +1874,7 @@ var F=window.__faceAI={state:'idle',maps:[],key:''};
 function load(){if(!sessP){sessP=(async function(){var ort=await import(ORT+'ort.webgpu.min.mjs');ort.env.wasm.wasmPaths=ORT;ort.env.wasm.numThreads=1;var s=await ort.InferenceSession.create(new URL(MODEL,location.href).href,{executionProviders:['wasm']});return{ort:ort,s:s}})();sessP.catch(function(){sessP=null})}return sessP}
 function inPoly(x,y,P){var c=false;for(var i=0,j=P.length-1;i<P.length;j=i++){var a=P[i],b=P[j];if((a[1]>y)!==(b[1]>y)&&x<(b[0]-a[0])*(y-a[1])/(b[1]-a[1])+a[0])c=!c}return c}
 // per-feature soft masks at model resolution (classes: 1 skin, 2-3 brows, 4-5 eyes, 6 glasses, 10 nose, 11 inner mouth)
-var GROUPS={skin:[1,10],brow:[2,3],eye:[4,5],glasses:[6],mouth:[11],hair:[17],head:[1,2,3,4,5,6,7,8,10,11,12,13],face:[1,2,3,4,5,6,7,8,10,11,12,13,14]},KH=4.6,DY=.9;
+var GROUPS={lips:[12,13],skin:[1,10],brow:[2,3],eye:[4,5],glasses:[6],mouth:[11],hair:[17],head:[1,2,3,4,5,6,7,8,10,11,12,13],face:[1,2,3,4,5,6,7,8,10,11,12,13,14]},KH=4.6,DY=.9;
 function buildMaps(lab){var n=S*S,out={},cnt={};for(var key in GROUPS){var g=GROUPS[key],hit=new Uint8Array(20),a=new Float32Array(n),c=0;g.forEach(function(q){hit[q]=1});for(var i=0;i<n;i++){if(hit[lab[i]]){a[i]=1;c++}}cnt[key]=c;a=boxBlurChannel(a,S,S,key==='brow'||key==='face'?2:1);var u=new Uint8Array(n);for(var i=0;i<n;i++)u[i]=Math.round(a[i]*255);out[key]=u}out.cnt=cnt;return out}
 async function parseFace(api,f,c){var W=c.width,H=c.height,P=f.map(function(p){return[p.x*W,p.y*H]});var ang=Math.atan2(P[263][1]-P[33][1],P[263][0]-P[33][0]),fw=Math.hypot(P[234][0]-P[454][0],P[234][1]-P[454][1]);
 var xs=P.map(function(p){return p[0]}),ys=P.map(function(p){return p[1]}),cx=(Math.min.apply(0,xs)+Math.max.apply(0,xs))/2,cy=(Math.min.apply(0,ys)+Math.max.apply(0,ys))/2,k=S/(fw*K),ca=Math.cos(-ang),sa=Math.sin(-ang);
@@ -2418,5 +2418,65 @@ setInterval(function(){var sig=active().map(function(s){return s.id}).join();if(
 /* glam seasonal looks get the same very subtle nose refinement as the glam finishes (women only) */
 var _avS=applyVibe;applyVibe=async function(k){var r=await _avS.apply(this,arguments);try{if(KEYS[k]&&!MENK[k]&&window.frameStyle!=='men'&&lastRecipe&&lastRecipe.key===k&&beauty.points&&beauty.points.nose&&(beauty.nose||0)>-4){beauty.nose=-4;try{syncBeauty()}catch(e){}invalidate();try{checkpoint()}catch(e){}}}catch(e){}return r};
 }catch(e){console.warn('v41 seasonal',e)}})();
+</script>
+<script>
+/* v43: Lip guard - lipstick stays inside the real lips. The face landmarks give the lip shape; the AI face map (when it has run)
+   marks actual lip pixels. Colour is kept only where both agree, so it never spills onto the skin above or below the lips.
+   If the AI map is missing or disagrees badly with the landmarks (odd angle, hand over mouth), the landmark shape is used alone. */
+;(function(){try{
+if(typeof lipCoverage!=='function')return;
+function sst(a,b,x){var t=Math.max(0,Math.min(1,(x-a)/(b-a)));return t*t*(3-2*t)}
+var cache={o:null,w:0,h:0,fn:null};
+function lipMap(b,w,h){
+var o=b&&b.lipOutline;if(!o||o.length<6)return null;
+if(cache.o===o&&cache.w===w&&cache.h===h)return cache.fn;
+cache.o=o;cache.w=w;cache.h=h;cache.fn=null;
+var F=window.__faceAI,at=null;try{at=F&&F.at?F.at(b,w,h,'lips'):null}catch(e){at=null}
+if(!at)return null;
+/* reliability: most of the landmark lip area should also be lips in the AI map */
+var xs=o.map(function(p){return p.x*w}),ys=o.map(function(p){return p.y*h}),X0=Math.min.apply(null,xs),X1=Math.max.apply(null,xs),Y0=Math.min.apply(null,ys),Y1=Math.max.apply(null,ys),n=0,hit=0,sx=(X1-X0)/24,sy=(Y1-Y0)/12;
+if(sx<.5||sy<.5)return null;
+for(var y=Y0+sy/2;y<Y1;y+=sy)for(var x=X0+sx/2;x<X1;x+=sx){var c=0;try{c=_lc(x,y,w,h,b)}catch(e){c=0}if(c<.99)continue;n++;if(at(x,y)>.35)hit++}
+if(n<20||hit/n<.55)return null;
+cache.fn=at;return at}
+var _lc=lipCoverage;
+lipCoverage=function(x,y,w,h,b){var c=_lc(x,y,w,h,b);if(!c)return c;var at=null;try{at=lipMap(b,w,h)}catch(e){at=null}if(!at)return c;var p=0;try{p=at(x,y)}catch(e){return c}return c*sst(.12,.5,p)};
+window.__lipGuard={map:lipMap,base:_lc};
+}catch(e){console.warn('v43 lip guard',e)}})();
+</script>
+<script>
+/* v44: Before & After promo image - the full "before" photo next to the full "after" photo, each framed on the face,
+   with the Face Couture logo and website underneath. 1080 x 1350 (Instagram / Facebook / TikTok photo post). */
+;(function(){try{
+var CREAM='#f8f1ea',PLUM='#2b1636',GOLD='#c9a24a',SITE='framephotostudio.github.io';
+function rr(x,X,Y,W,H,r){x.beginPath();x.moveTo(X+r,Y);x.arcTo(X+W,Y,X+W,Y+H,r);x.arcTo(X+W,Y+H,X,Y+H,r);x.arcTo(X,Y+H,X,Y,r);x.arcTo(X,Y,X+W,Y,r);x.closePath()}
+function cropBox(img,hb,pw,ph){var iw=img.width,ih=img.height,ar=pw/ph,cw,ch,cx=.5*iw,cy=.45*ih;
+if(hb){var fw=(hb.x1-hb.x0)*iw,fh=(hb.y1-hb.y0)*ih;cx=(hb.x0+hb.x1)/2*iw;cy=(hb.y0+hb.y1)/2*ih;cw=Math.max(fw/.8,fh/.62*ar);ch=cw/ar}else{cw=iw;ch=cw/ar}
+if(cw>iw){cw=iw;ch=cw/ar}if(ch>ih){ch=ih;cw=ch*ar}
+var x=Math.max(0,Math.min(iw-cw,cx-cw/2)),y=Math.max(0,Math.min(ih-ch,cy-ch*.47));return[x,y,cw,ch]}
+function panel(x,img,hb,X,Y,W,H,label){var b=cropBox(img,hb,W,H);x.save();rr(x,X,Y,W,H,22);x.clip();x.drawImage(img,b[0],b[1],b[2],b[3],X,Y,W,H);x.restore();
+x.lineWidth=3;x.strokeStyle=GOLD;rr(x,X+1.5,Y+1.5,W-3,H-3,21);x.stroke();
+x.font='700 26px "Helvetica Neue",Arial,system-ui,sans-serif';var t=label.split('').join(String.fromCharCode(8202)),tw=x.measureText(t).width,pw=tw+44,phh=50,px=X+(W-pw)/2,py=Y+H-phh-22;
+x.fillStyle='rgba(248,241,234,.94)';rr(x,px,py,pw,phh,25);x.fill();x.lineWidth=1.5;x.strokeStyle=GOLD;x.stroke();x.fillStyle=PLUM;x.textBaseline='middle';x.textAlign='center';x.fillText(t,X+W/2,py+phh/2+1)}
+async function makeCard(){
+var W=1080,H=1350,c=document.createElement('canvas');c.width=W;c.height=H;var x=c.getContext('2d');
+var after=process(2000,false,originalPhoto),before=process(2000,true,originalPhoto),hb=null;try{hb=headBox()}catch(e){hb=null}
+var g=x.createLinearGradient(0,0,0,H);g.addColorStop(0,'#fbf6f0');g.addColorStop(1,'#f3e7dc');x.fillStyle=g;x.fillRect(0,0,W,H);
+var M=36,G=18,FOOT=200,pw=(W-2*M-G)/2,ph=H-M-FOOT;
+panel(x,before,hb,M,M,pw,ph,'BEFORE');panel(x,after,hb,M+pw+G,M,pw,ph,'AFTER');
+var logo=document.querySelector('img.logoSvg');if(logo&&logo.complete&&logo.naturalWidth){var lw=470,lh=lw*logo.naturalHeight/logo.naturalWidth;x.drawImage(logo,(W-lw)/2,H-FOOT+30,lw,lh)}
+x.fillStyle=PLUM;x.font='500 28px "Helvetica Neue",Arial,system-ui,sans-serif';x.textAlign='center';x.textBaseline='alphabetic';x.fillText(SITE,W/2,H-30);
+return await new Promise(function(r){c.toBlob(r,'image/jpeg',.93)})}
+var btn=document.createElement('button');btn.type='button';btn.id='baPromo';btn.className='small';btn.textContent='Before & After';
+btn.setAttribute('aria-label','Save a before and after image for posting');
+btn.className='';btn.textContent='Save Before & After for posting';var anchor=document.getElementById('before'),row=anchor&&anchor.parentNode;if(row&&row.parentNode)row.parentNode.insertBefore(btn,row.nextSibling);
+var st=document.createElement('style');st.textContent='#baPromo{display:block;width:100%;max-width:420px;margin:10px auto 2px;min-height:46px;padding:11px 18px;border-radius:999px;border:1.5px solid #c9a24a;background:linear-gradient(135deg,#fffaf3,#f6e9da);color:#4a2a52;font:650 15px/1.2 system-ui,-apple-system,"Segoe UI",sans-serif;cursor:pointer;box-shadow:0 3px 10px #6d3fd014}#baPromo:hover{background:#f6e9da}#baPromo:focus-visible{outline:3px solid #c9a24a;outline-offset:2px}#baPromo[disabled]{opacity:.7;cursor:default}';document.head.appendChild(st);
+btn.onclick=async function(){if(!needPhoto())return;if(btn.disabled)return;var lbl=btn.textContent;btn.disabled=true;btn.textContent='Making your Before & After…';
+try{var blob=await makeCard();if(!blob)throw new Error('Could not make the image.');var f=new File([blob],'face-couture-before-after.jpg',{type:'image/jpeg'});
+var r=await deliverFiles([f],'Before & After');if(r==='pending'&&typeof isIOS!=='undefined'&&isIOS&&typeof showPhotoSheet==='function')showPhotoSheet(f);
+toast(r==='cancelled'?'Not saved.':r==='pending'?'Your Before & After is ready. Tap Share to save it.':'Your Before & After is ready to post.')}
+catch(e){toast(e.message||'Could not make the Before & After image.')}finally{btn.disabled=false;btn.textContent=lbl}};
+window.__baPromo=makeCard;
+}catch(e){console.warn('v44 before after',e)}})();
 </script>
 </body></html>
