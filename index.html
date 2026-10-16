@@ -470,13 +470,13 @@ for(let it=0;it<3;it++){const Q=P;P=Q.map((p,k)=>k&&k<N-1?{x:(Q[k-1].x+2*p.x+Q[k
 const T=[],M=[];for(let k=0;k<N;k++){const p0=P[Math.max(0,k-1)],p1=P[Math.min(N-1,k+1)];let tx=p1.x-p0.x,ty=p1.y-p0.y;const L=Math.hypot(tx,ty)||1;tx/=L;ty/=L;let mx=ty,my=-tx;if(mx*nx+my*ny<0){mx=-mx;my=-my}T.push([tx,ty]);M.push([mx,my])}
 const exM=lashExisting(data,w,h,P,M,span),st=b.linerStyle||'classic',base=span*({fine:.011,classic:.016,wing:.018,smoky:.03,bold:.022}[st]||.016),wingLen=st==='wing'?span*.18:0,S=(b.eyeShadow||0)/100,Ln=(b.eyeLiner||0)/100*(1-(b.glamEyes?.25:.6)*exM.liner),twf=t=>base*(.35+1*sm(.1,.85,t)),fin=b.eyeFinish,seg=tot/(N-1);
 const ang=.42,wdx=ex*Math.cos(ang)+nx*Math.sin(ang),wdy=ey*Math.cos(ang)+ny*Math.sin(ang),tw1=twf(1),Ox=P[N-1].x,Oy=P[N-1].y,Tx=Ox+wdx*wingLen,Ty=Oy+wdy*wingLen,Uk=Math.round((N-1)*.72),Ux=P[Uk].x+M[Uk][0]*Math.max(twf(.72),span*.02),Uy=P[Uk].y+M[Uk][1]*Math.max(twf(.72),span*.02),TRI=[[Ox,Oy],[Tx,Ty],[Ux,Uy]],triS=Math.sign((Tx-Ox)*(Uy-Oy)-(Ty-Oy)*(Ux-Ox))||1;
-const R=span*.8,xs=P.map(p=>p.x).concat([Tx]),ys=P.map(p=>p.y).concat([Ty]),bx0=Math.max(0,Math.floor(Math.min(...xs)-R)),bx1=Math.min(w-1,Math.ceil(Math.max(...xs)+R)),by0=Math.max(0,Math.floor(Math.min(...ys)-R)),by1=Math.min(h-1,Math.ceil(Math.max(...ys)+R*.4));
+const R=span*.8*Math.max(1,b.shadowReach||1),xs=P.map(p=>p.x).concat([Tx]),ys=P.map(p=>p.y).concat([Ty]),bx0=Math.max(0,Math.floor(Math.min(...xs)-R)),bx1=Math.min(w-1,Math.ceil(Math.max(...xs)+R)),by0=Math.max(0,Math.floor(Math.min(...ys)-R)),by1=Math.min(h-1,Math.ceil(Math.max(...ys)+R*.4));
 for(let y=by0;y<=by1;y++)for(let x=bx0;x<=bx1;x++){let bi=0,bd=1e12;for(let k=0;k<N;k++){const dd=(x-P[k].x)**2+(y-P[k].y)**2;if(dd<bd){bd=dd;bi=k}}const i=(y*w+x)*4;let wing=0;if(wingLen){let dm=1e9;for(let e=0;e<3;e++){const a1=TRI[e],a2=TRI[(e+1)%3],ex2=a2[0]-a1[0],ey2=a2[1]-a1[1],el=Math.hypot(ex2,ey2)||1;dm=Math.min(dm,-triS*((x-a1[0])*ey2-(y-a1[1])*ex2)/el)}wing=cl(dm/1.1+.5)}
 if(bd>R*R&&!wing)continue;let bestE=1e18,d=0,tf=bi/(N-1);for(const kk of [bi-1,bi]){if(kk<0||kk>=N-1)continue;const A=P[kk],B2=P[kk+1],sx=B2.x-A.x,sy=B2.y-A.y,sl=sx*sx+sy*sy||1;let t=((x-A.x)*sx+(y-A.y)*sy)/sl;if(!(kk===0&&t<0)&&!(kk===N-2&&t>1))t=Math.max(0,Math.min(1,t));const fx=A.x+sx*t,fy=A.y+sy*t,mx=M[kk][0]*(1-t)+M[kk+1][0]*t,my=M[kk][1]*(1-t)+M[kk+1][1]*t,ml=Math.hypot(mx,my)||1,e2=(x-fx)**2+(y-fy)**2;if(e2<bestE){bestE=e2;d=((x-fx)*mx+(y-fy)*my)/ml;tf=(kk+t)/(N-1)}}const luma=.2126*data[i]+.7152*data[i+1]+.0722*data[i+2];
-let shadow=0,liner=0,halo=0,sheen=0;if(S&&d>-1&&tf>-.12&&tf<1.14){const H=span*(.38+.22*cl(tf)),k=1-Math.max(0,d)/H;if(k>0){const prof=Math.pow(k,1.2)*sm(-1,2.5,d),edge=sm(-.12,.1,tf)*sm(-.14,.14,1-tf)*(.7+.5*cl(tf));shadow=Math.min(.95,edge*prof*sm(12,55,luma)*S*1.5)}}
+let shadow=0,liner=0,halo=0,sheen=0;if(S&&d>-1&&tf>-.12&&tf<1.14){const H=span*(.38+.22*cl(tf))*(b.shadowReach||1),k=1-Math.max(0,d)/H;if(k>0){const prof=Math.pow(k,1.2)*sm(-1,2.5,d),edge=sm(-.12,.1,tf)*sm(-.14,.14,1-tf)*(.7+.5*cl(tf));shadow=Math.min(.95,edge*prof*sm(12,55,luma)*S*1.5)}}
 if(Ln&&d>-2.4&&tf>-.03&&tf<1.03){const wd=twf(tf);let v;if(st==='smoky')v=Math.exp(-(((d-wd*.4)/(wd*1.05))**2))*.9;else{const ae=Math.max(.7,wd*.3);v=sm(-2.4,-.7,d)*(1-sm(wd-ae,wd+ae,d))*(.62+.38*cl((165-luma)/100))}liner=v*sm(.06,.32,tf)*sm(1.03,.97,tf)}
 liner=Math.min(.9,Math.max(liner*Ln*(b.glamEyes?1.5:.9),wing*Math.min(.74,Ln*2.4)));
-if(shadow>.004){const Hh2=span*(.38+.22*cl(tf)),dn=cl(d/Hh2),tOut=sm(.5,1,tf)*(1-dn*.6),tIn=Math.min(.7,(1-sm(0,.32,tf))*.55+sm(.55,1,dn)*.5),crease=Math.exp(-Math.pow((dn-.45)/.2,2))*.18,tone=color.map(v=>{let t=v*(1-tOut)+v*.5*tOut;t=t*(1-tIn)+(v+(255-v)*.4)*tIn;return t*(1-crease)});let sc=0;if(fin==='shimmer'||fin==='glitter'){const cell=(((Math.imul(Math.imul(x>>1,374761393)^Math.imul(y>>1,668265263),1274126177)>>>16)&1023)/1023);sc=fin==='glitter'?(cell>.93?Math.min(.8,Math.max(0,shadow-.14)*2.6):shadow*.22):Math.min(.5,shadow*.55)*(.75+.25*Math.sin(x*.07+y*.05))+(cell>.992?Math.max(0,shadow-.2)*.35:0)}for(let c=0;c<3;c++){const tex=Math.max(0,Math.min(255,tone[c]+(luma-shadeLuma)*.3)),tinted=data[i+c]*(1-shadow)+tex*shadow;data[i+c]=sc?tinted*(1-sc*.55)+[255,242,220][c]*sc*.55:tinted}}
+if(shadow>.004){const Hh2=span*(.38+.22*cl(tf))*(b.shadowReach||1),dn=cl(d/Hh2),tOut=sm(.5,1,tf)*(1-dn*.6),tIn=Math.min(.7,(1-sm(0,.32,tf))*.55+sm(.55,1,dn)*.5),crease=Math.exp(-Math.pow((dn-.45)/.2,2))*.18,tone=color.map(v=>{let t=v*(1-tOut)+v*.5*tOut;t=t*(1-tIn)+(v+(255-v)*.4)*tIn;return t*(1-crease)});let sc=0;if(fin==='shimmer'||fin==='glitter'){const cell=(((Math.imul(Math.imul(x>>1,374761393)^Math.imul(y>>1,668265263),1274126177)>>>16)&1023)/1023);sc=fin==='glitter'?(cell>.93?Math.min(.8,Math.max(0,shadow-.14)*2.6):shadow*.22):Math.min(.5,shadow*.55)*(.75+.25*Math.sin(x*.07+y*.05))+(cell>.992?Math.max(0,shadow-.2)*.35:0)}for(let c=0;c<3;c++){const tex=Math.max(0,Math.min(255,tone[c]+(luma-shadeLuma)*.3)),tinted=data[i+c]*(1-shadow)+tex*shadow;data[i+c]=sc?tinted*(1-sc*.55)+[255,242,220][c]*sc*.55:tinted}}
 if(liner>.004){for(let c=0;c<3;c++)data[i+c]=data[i+c]*(1-liner*(1-Math.min(1,(lc[c]+16)/255)))}}
 if(b.lashes||b.mascara)lashStrands(data,w,h,P,T,M,span,b,exM)}
 function lashExisting(data,w,h,P,M,span){const N=P.length,lum=(x,y)=>{x=Math.round(x);y=Math.round(y);if(x<0||y<0||x>=w||y>=h)return -1;const i=(y*w+x)*4;return .2126*data[i]+.7152*data[i+1]+.0722*data[i+2]};let dark=0,cnt=0,root=0,rn=0;for(let k=Math.round(N*.2);k<Math.round(N*.95);k+=2){const p=P[k],m=M[k];let sr=0,sn=0;for(const f of[.2,.25,.3]){const l=lum(p.x+m[0]*span*f,p.y+m[1]*span*f);if(l>=0){sr+=l;sn++}}if(!sn)continue;sr/=sn;if(sr<25)continue;for(let s=1;s<=8;s++){const l=lum(p.x+m[0]*span*.13*s/8,p.y+m[1]*span*.13*s/8);if(l<0)continue;if(l<sr*.62)dark++;cnt++}const l0=lum(p.x+m[0]*span*.012,p.y+m[1]*span*.012);if(l0>=0){root+=Math.max(0,Math.min(1,(sr-l0)/sr));rn++}}const c=v=>Math.max(0,Math.min(1,v));return{lash:cnt?c((dark/cnt-.08)/.32):0,liner:rn?c((root/rn-.25)/.4):0}}
@@ -2293,12 +2293,21 @@ hw_vampire:{n:'Couture Vampire',t:'Black-cherry lip, wine smoke',g:'#3a0d1f,#7a1
 hw_cat:{n:'Black Cat Glam',t:'Sharp wing, rosewood lip',g:'#141018,#4a3a52',d:1,look:'rose',adj:{light:3,contrast:6,color:1,warmth:-2,vignette:3,softness:8},
  beauty:{smooth:40,foundation:22,concealer:26,blemish:80,scars:70,wrinkles:28,contour:30,highlight:32,blush:14,eyeShadow:32,eyeLiner:54,lashes:58,mascara:42,browMakeup:28,tint:56,gloss:30,faceLight:16},
  sh:{color:'rosewood',lipFinish:'cream',glossShade:'gRose',blushColor:'mauve',eyeColor:'espressoE',eyeFinish:'matte',linerStyle:'wing',linerColor:'black',lashStyle:'dramatic',lowerSmoke:.2,glamEyes:1}},
-hw_enchant:{n:'Enchantress',t:'Plum smoke, mulberry lip',g:'#2c1640,#6a2d6e',d:1,look:'rose',adj:{light:2,contrast:6,color:2,warmth:-3,vignette:4,softness:10},
- beauty:{smooth:40,foundation:22,concealer:26,blemish:80,scars:70,wrinkles:28,contour:28,highlight:38,blush:14,eyeShadow:54,eyeLiner:36,lashes:56,mascara:40,browMakeup:26,tint:66,gloss:28,faceLight:16},
- sh:{color:'mulberry',lipFinish:'cream',glossShade:'gRose',blushColor:'mauve',eyeColor:'plum',eyeFinish:'matte',linerStyle:'classic',linerColor:'black',lashStyle:'volume',lowerSmoke:.4,glamEyes:1}},
-hw_masq:{n:'Gilded Masquerade',t:'Gold smoke, ruby lip',g:'#3a2410,#b8862b',d:1,look:'glow',adj:{light:3,contrast:6,color:3,warmth:2,vignette:3,softness:10},
+hw_enchant:{n:'Enchantress',t:'Plum smoke, matching plum lip',g:'#2c1640,#6a2d6e',d:1,look:'rose',adj:{light:2,contrast:6,color:2,warmth:-3,vignette:4,softness:10},
+ beauty:{smooth:40,foundation:22,concealer:26,blemish:80,scars:70,wrinkles:28,contour:28,highlight:38,blush:14,eyeShadow:54,eyeLiner:36,lashes:56,mascara:40,browMakeup:26,tint:64,gloss:28,faceLight:16},
+ sh:{color:'plum',lipFinish:'cream',glossShade:'gRose',blushColor:'mauve',eyeColor:'plum',eyeFinish:'matte',linerStyle:'classic',linerColor:'black',lashStyle:'volume',lowerSmoke:.4,glamEyes:1}},
+hw_masq:{n:'Gilded Masquerade',t:'Bronze-gold smoke, ruby lip',g:'#3a2410,#b8862b',d:1,look:'glow',adj:{light:3,contrast:6,color:3,warmth:2,vignette:3,softness:10},
  beauty:{smooth:40,foundation:22,concealer:26,blemish:80,scars:70,wrinkles:28,contour:26,highlight:40,bronzer:20,tan:28,blush:14,eyeShadow:52,eyeLiner:34,lashes:56,mascara:40,browMakeup:26,tint:62,gloss:28,faceLight:18},
- sh:{color:'ruby',lipFinish:'cream',glossShade:'gCherry',blushColor:'peach',eyeColor:'amber',eyeFinish:'shimmer',linerStyle:'wing',linerColor:'black',lashStyle:'volume',lowerSmoke:.3,glamEyes:1}},
+ sh:{color:'ruby',lipFinish:'cream',glossShade:'gCherry',blushColor:'peach',eyeColor:'bronze',eyeFinish:'shimmer',linerStyle:'wing',linerColor:'black',lashStyle:'volume',lowerSmoke:.3,glamEyes:1}},
+hw_fairy:{n:'Moonlit Fairy',t:'Lilac shimmer, pearly glow',g:'#b9a6e0,#f0d6ea',d:1,look:'glow',adj:{light:5,contrast:3,color:2,warmth:-2,softness:14},
+ beauty:{smooth:42,foundation:20,concealer:26,blemish:80,scars:70,wrinkles:28,contour:18,highlight:50,blush:16,eyeShadow:40,eyeLiner:20,lashes:52,mascara:38,browMakeup:20,tint:50,gloss:42,faceLight:22},
+ sh:{color:'petalRose',lipFinish:'cream',glossShade:'gRose',blushColor:'pink',eyeColor:'lavender',eyeFinish:'shimmer',linerStyle:'fine',linerColor:'brown',lashStyle:'wispy',lowerSmoke:.1,glamEyes:1}},
+hw_princess:{n:'Storybook Princess',t:'Pearl lids, rosy cheeks, soft pink lip',g:'#f2c6d2,#fbeef0',d:1,look:'rose',adj:{light:5,contrast:3,color:3,warmth:-1,softness:14},
+ beauty:{smooth:42,foundation:20,concealer:26,blemish:80,scars:70,wrinkles:28,contour:18,highlight:46,blush:22,eyeShadow:36,eyeLiner:22,lashes:54,mascara:40,browMakeup:22,tint:52,gloss:40,faceLight:22},
+ sh:{color:'cleanRose',lipFinish:'cream',glossShade:'gRose',blushColor:'pink',eyeColor:'pearlChamp',eyeFinish:'shimmer',linerStyle:'fine',linerColor:'brown',lashStyle:'wispy',lowerSmoke:.1,glamEyes:1}},
+hw_villain:{n:'Villain Glam',t:'Arched brows, violet smoke, plum lip',g:'#1e0f2c,#5a2a78',d:1,look:'rose',adj:{light:2,contrast:7,color:2,warmth:-3,vignette:4,softness:8},
+ beauty:{smooth:42,foundation:24,concealer:26,blemish:80,scars:70,wrinkles:28,contour:36,highlight:36,blush:12,eyeShadow:54,eyeLiner:52,lashes:64,mascara:46,browMakeup:36,tint:72,gloss:20,faceLight:16},
+ sh:{color:'plum',lipFinish:'cream',glossShade:'gRose',blushColor:'mauve',eyeColor:'midnightPlum',eyeFinish:'matte',linerStyle:'wing',linerColor:'black',lashStyle:'dramatic',lowerSmoke:.45,glamEyes:1}},
 hw_phantom:{men:1,n:'Gentleman Phantom',t:'Cool and chiseled',g:'#0e1420,#3a4660',d:1,look:'professional',adj:{light:2,contrast:7,color:0,warmth:-4,vignette:4,detail:6},
  beauty:{smooth:30,foundation:18,concealer:30,blemish:70,scars:60,wrinkles:18,contour:32,matte:42,browMakeup:26},sh:{}},
 hw_count:{men:1,n:'Dark Count',t:'Sculpted and moody',g:'#121418,#3a2a3e',d:1,look:'film',adj:{light:1,contrast:8,color:1,warmth:-2,vignette:4,shadows:-3,detail:6},
@@ -2355,6 +2364,8 @@ ny_midnightm:{men:1,n:'Midnight Sharp',t:'Moody and sculpted',g:'#0c0c14,#2a2a46
 ny_blacktie:{men:1,n:'Black Tie',t:'Crisp, camera-ready',g:'#101216,#4a4e5a',d:1,look:'professional',adj:{light:3,contrast:7,color:1,warmth:-1,vignette:3,detail:7},
  beauty:{smooth:30,foundation:18,concealer:32,blemish:72,scars:62,wrinkles:20,contour:26,matte:40,browMakeup:22,eyeBright:10},sh:{}}}}];
 
+/* glam seasonal eyes: shadow blends further up the lid toward the crease; smoky looks reach highest */
+SEASONS.forEach(function(se){for(var lk in se.looks){var lv=se.looks[lk];if(lv.men||!lv.sh||!lv.beauty||!lv.beauty.eyeShadow)continue;lv.sh.shadowReach=(lv.sh.lowerSmoke||0)>=.3?1.4:1.22}});
 var KEYS={},MENK={};SEASONS.forEach(function(s){for(var k in s.looks){var v=s.looks[k];VIBES[k]=v;KEYS[k]=s.id;if(v.men)MENK[k]=1}});
 function md(m,d){return m*100+d}
 function inSeason(s,now){var t=md(now.getMonth()+1,now.getDate()),a=md(s.from[0],s.from[1]),b=md(s.to[0],s.to[1]);return a<=b?(t>=a&&t<=b):(t>=a||t<=b)}
@@ -2406,5 +2417,45 @@ setInterval(function(){var sig=active().map(function(s){return s.id}).join();if(
 /* glam seasonal looks get the same very subtle nose refinement as the glam finishes (women only) */
 var _avS=applyVibe;applyVibe=async function(k){var r=await _avS.apply(this,arguments);try{if(KEYS[k]&&!MENK[k]&&window.frameStyle!=='men'&&lastRecipe&&lastRecipe.key===k&&beauty.points&&beauty.points.nose&&(beauty.nose||0)>-4){beauty.nose=-4;try{syncBeauty()}catch(e){}invalidate();try{checkpoint()}catch(e){}}}catch(e){}return r};
 }catch(e){console.warn('v41 seasonal',e)}})();
+</script>
+<script>
+/* v42: Lip hydration - when a look or beauty edit is on, dry lines and flakes on the lips are smoothed before the lip colour goes on,
+   so lipstick sits on soft, hydrated-looking lips. Strength adapts to how dry the lips look; smooth lips are barely touched.
+   Skin outside the lips is never sampled, so the lip line stays crisp. Set beauty.lipHydrate=0 to switch it off for a photo. */
+;(function(){try{
+function sst(a,b,x){var t=Math.max(0,Math.min(1,(x-a)/(b-a)));return t*t*(3-2*t)}
+function boxBlur(src,wt,W,H,r){/* mask-weighted separable box blur, two passes: averages only lip pixels */
+var tmp=new Float32Array(W*H),tw=new Float32Array(W*H),out=new Float32Array(W*H),ow=new Float32Array(W*H);
+for(var y=0;y<H;y++){var s=0,sw=0,row=y*W;for(var x=-r;x<W;x++){var a=x+r,d=x-r-1;if(a<W){s+=src[row+a]*wt[row+a];sw+=wt[row+a]}if(d>=0){s-=src[row+d]*wt[row+d];sw-=wt[row+d]}if(x>=0){tmp[row+x]=s;tw[row+x]=sw}}}
+for(var x2=0;x2<W;x2++){var s2=0,sw2=0;for(var y2=-r;y2<H;y2++){var a2=y2+r,d2=y2-r-1;if(a2<H){s2+=tmp[a2*W+x2];sw2+=tw[a2*W+x2]}if(d2>=0){s2-=tmp[d2*W+x2];sw2-=tw[d2*W+x2]}if(y2>=0){out[y2*W+x2]=sw2>1e-4?s2/sw2:src[y2*W+x2]}}}
+return out}
+function hydrate(d,w,h,b){
+if(!b||b.lipHydrate===0)return;var lo=b.lipOutline;if(!lo||lo.length<6||typeof lipCoverage!=='function')return;
+/* only when the person has styled the photo (a look or beauty edit), never on a plain upload */
+if(!(b.tint||b.gloss||b.smooth||b.foundation||b.concealer||b.lipHydrate))return;
+var xs=lo.map(function(p){return p.x*w}),ys=lo.map(function(p){return p.y*h}),X0=Math.max(0,Math.floor(Math.min.apply(null,xs))-2),X1=Math.min(w-1,Math.ceil(Math.max.apply(null,xs))+2),Y0=Math.max(0,Math.floor(Math.min.apply(null,ys))-2),Y1=Math.min(h-1,Math.ceil(Math.max.apply(null,ys))+2),W=X1-X0+1,H=Y1-Y0+1;
+if(W<12||H<6||W*H>600000)return;var N=W*H,M=new Float32Array(N),R=new Float32Array(N),G=new Float32Array(N),B=new Float32Array(N),L=new Float32Array(N),cnt=0;
+for(var y=0;y<H;y++)for(var x=0;x<W;x++){var p=y*W+x,m=0;try{m=lipCoverage(x+X0+.5,y+Y0+.5,w,h,b)||0}catch(e){m=0}M[p]=m;var i=((y+Y0)*w+x+X0)*4;R[p]=d[i];G[p]=d[i+1];B[p]=d[i+2];L[p]=.299*d[i]+.587*d[i+1]+.114*d[i+2];if(m>.5)cnt++}
+if(cnt<40)return;
+var lipH=Math.max(4,H-4),r=Math.max(1,Math.round(lipH*.07)),r2=Math.max(2,Math.round(lipH*.16));
+var Lb=boxBlur(boxBlur(L,M,W,H,r),M,W,H,r);
+/* how dry: average fine texture inside the lips (dry lines, flakes), relative to lip brightness */
+var e=0,en=0;for(var q=0;q<N;q++){if(M[q]<.9)continue;e+=Math.abs(L[q]-Lb[q]);en++}e=en?e/en:0;
+var meanL=0;for(var q2=0;q2<N;q2++)if(M[q2]>=.9)meanL+=L[q2];meanL=en?meanL/en:128;var dry=e*(128/Math.max(40,meanL));
+var k=(.28+.5*sst(2.2,7,dry))*Math.min(1.4,Math.max(.6,(b.lipHydrate||100)/100));
+var Rb=boxBlur(boxBlur(R,M,W,H,r),M,W,H,r),Gb=boxBlur(boxBlur(G,M,W,H,r),M,W,H,r),Bb=boxBlur(boxBlur(B,M,W,H,r),M,W,H,r);
+/* wider pass evens out patchy flaking without flattening the lips' natural shape */
+var Lw=boxBlur(boxBlur(L,M,W,H,r2),M,W,H,r2);
+for(var y3=0;y3<H;y3++)for(var x3=0;x3<W;x3++){var p3=y3*W+x3,m3=M[p3];if(m3<=.01)continue;
+var dl=L[p3]-Lb[p3],kk=k;if(dl>0)kk=Math.min(.92,k+.25*sst(2,10,dl));/* white flakes */else kk=Math.min(.88,k+.12*sst(3,12,-dl));/* dark cracks */
+kk*=m3;var j=((y3+Y0)*w+x3+X0)*4;
+var nr=R[p3]+(Rb[p3]-R[p3])*kk,ng=G[p3]+(Gb[p3]-G[p3])*kk,nb=B[p3]+(Bb[p3]-B[p3])*kk;
+var patch=(Lb[p3]-Lw[p3]);if(patch>0)patch*=sst(4,14,patch)*.45*k*m3;else patch=0;/* lighten-only patches = dry flaky areas, eased down */
+d[j]=Math.max(0,Math.min(255,nr-patch));d[j+1]=Math.max(0,Math.min(255,ng-patch));d[j+2]=Math.max(0,Math.min(255,nb-patch))}
+window.__lipDry=Math.round(dry*10)/10;
+}
+window.__lipHydrate=hydrate;
+var _bpH=beautyPixels;beautyPixels=function(d,w,h,b){try{hydrate(d,w,h,b)}catch(e){console.warn('lip hydrate',e)}return _bpH.apply(this,arguments)};
+}catch(e){console.warn('v42 lip hydrate',e)}})();
 </script>
 </body></html>
