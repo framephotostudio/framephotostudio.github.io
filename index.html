@@ -2280,4 +2280,131 @@ try{var SL=VIBES.fx_sunlit;if(SL&&SL.beauty){SL.beauty.blemish=Math.max(SL.beaut
 var _bpW=beautyPixels;beautyPixels=function(d,w,h,b){if(b&&b.wrinkles){try{wrinklePixels(d,w,h,b)}catch(e){console.warn('wrinkles',e)}}return _bpW.apply(this,arguments)};
 }catch(e){console.warn('v40 wrinkles',e)}})();
 </script>
+<script>
+/* v41: Seasonal Couture - limited-edition holiday looks, each in its own tab that appears and hides by date.
+   Halloween Oct 1 - Nov 7 | Thanksgiving Nov 1 - Nov 30 | Christmas Dec 1 - Dec 31 | New Year's Dec 20 - Jan 3 (dates inclusive, viewer's local date, every year).
+   Owner preview of every season: see Admin preview below */
+;(function(){try{
+var SEASONS=[
+{id:'halloween',name:'Halloween',from:[10,1],to:[11,7],until:'Until Nov 7',g:'#2a1030,#5a1a3c',looks:{
+hw_vampire:{n:'Couture Vampire',t:'Black-cherry lip, wine smoke',g:'#3a0d1f,#7a1a36',d:1,look:'rose',adj:{light:2,contrast:7,color:1,warmth:-3,vignette:4,softness:8},
+ beauty:{smooth:42,foundation:24,concealer:26,blemish:80,scars:70,wrinkles:28,contour:30,highlight:34,blush:14,eyeShadow:54,eyeLiner:40,lashes:60,mascara:44,browMakeup:26,tint:80,gloss:22,faceLight:16},
+ sh:{color:'blackCherry',lipFinish:'cream',glossShade:'gCherry',blushColor:'mauve',eyeColor:'wineE',eyeFinish:'matte',linerStyle:'wing',linerColor:'black',lashStyle:'volume',lowerSmoke:.4,glamEyes:1}},
+hw_cat:{n:'Black Cat Glam',t:'Sharp wing, rosewood lip',g:'#141018,#4a3a52',d:1,look:'rose',adj:{light:3,contrast:6,color:1,warmth:-2,vignette:3,softness:8},
+ beauty:{smooth:40,foundation:22,concealer:26,blemish:80,scars:70,wrinkles:28,contour:30,highlight:32,blush:14,eyeShadow:32,eyeLiner:54,lashes:58,mascara:42,browMakeup:28,tint:56,gloss:30,faceLight:16},
+ sh:{color:'rosewood',lipFinish:'cream',glossShade:'gRose',blushColor:'mauve',eyeColor:'espressoE',eyeFinish:'matte',linerStyle:'wing',linerColor:'black',lashStyle:'dramatic',lowerSmoke:.2,glamEyes:1}},
+hw_enchant:{n:'Enchantress',t:'Plum smoke, mulberry lip',g:'#2c1640,#6a2d6e',d:1,look:'rose',adj:{light:2,contrast:6,color:2,warmth:-3,vignette:4,softness:10},
+ beauty:{smooth:40,foundation:22,concealer:26,blemish:80,scars:70,wrinkles:28,contour:28,highlight:38,blush:14,eyeShadow:54,eyeLiner:36,lashes:56,mascara:40,browMakeup:26,tint:66,gloss:28,faceLight:16},
+ sh:{color:'mulberry',lipFinish:'cream',glossShade:'gRose',blushColor:'mauve',eyeColor:'plum',eyeFinish:'matte',linerStyle:'classic',linerColor:'black',lashStyle:'volume',lowerSmoke:.4,glamEyes:1}},
+hw_masq:{n:'Gilded Masquerade',t:'Gold smoke, ruby lip',g:'#3a2410,#b8862b',d:1,look:'glow',adj:{light:3,contrast:6,color:3,warmth:2,vignette:3,softness:10},
+ beauty:{smooth:40,foundation:22,concealer:26,blemish:80,scars:70,wrinkles:28,contour:26,highlight:40,bronzer:20,tan:28,blush:14,eyeShadow:52,eyeLiner:34,lashes:56,mascara:40,browMakeup:26,tint:62,gloss:28,faceLight:18},
+ sh:{color:'ruby',lipFinish:'cream',glossShade:'gCherry',blushColor:'peach',eyeColor:'amber',eyeFinish:'shimmer',linerStyle:'wing',linerColor:'black',lashStyle:'volume',lowerSmoke:.3,glamEyes:1}},
+hw_phantom:{men:1,n:'Gentleman Phantom',t:'Cool and chiseled',g:'#0e1420,#3a4660',d:1,look:'professional',adj:{light:2,contrast:7,color:0,warmth:-4,vignette:4,detail:6},
+ beauty:{smooth:30,foundation:18,concealer:30,blemish:70,scars:60,wrinkles:18,contour:32,matte:42,browMakeup:26},sh:{}},
+hw_count:{men:1,n:'Dark Count',t:'Sculpted and moody',g:'#121418,#3a2a3e',d:1,look:'film',adj:{light:1,contrast:8,color:1,warmth:-2,vignette:4,shadows:-3,detail:6},
+ beauty:{smooth:30,foundation:18,concealer:32,blemish:70,scars:60,wrinkles:18,contour:30,matte:40,browMakeup:24},sh:{}}}},
+{id:'thanksgiving',name:'Thanksgiving',from:[11,1],to:[11,30],until:'Until Nov 30',g:'#3a1e10,#a0582a',looks:{
+tg_harvest:{n:'Harvest Bronze',t:'Copper eyes, golden rose',g:'#5a2e14,#c07a3a',d:1,look:'glow',adj:{light:3,contrast:5,color:3,warmth:3,vignette:3,softness:8},
+ beauty:{smooth:38,foundation:20,concealer:24,blemish:75,scars:65,wrinkles:26,contour:26,highlight:34,bronzer:22,tan:36,blush:14,eyeShadow:40,eyeLiner:28,lashes:46,mascara:36,browMakeup:24,tint:56,gloss:30,faceLight:16},
+ sh:{color:'goldenRose',lipFinish:'cream',glossShade:'gRose',blushColor:'peach',eyeColor:'copperRose',eyeFinish:'matte',linerStyle:'classic',linerColor:'brown',lashStyle:'wispy',lowerSmoke:.25,glamEyes:1}},
+tg_cashmere:{n:'Cashmere Spice',t:'Mocha eyes, rosewood lip',g:'#4a3028,#a07a62',d:1,look:'natural',adj:{light:4,contrast:4,color:2,warmth:2,softness:10},
+ beauty:{smooth:36,foundation:20,concealer:24,blemish:75,scars:65,wrinkles:26,contour:22,highlight:32,bronzer:14,tan:26,blush:14,eyeShadow:34,eyeLiner:22,lashes:42,mascara:34,browMakeup:22,tint:54,gloss:32,faceLight:16},
+ sh:{color:'rosewood',lipFinish:'cream',glossShade:'gRose',blushColor:'rose',eyeColor:'mochaSilk',eyeFinish:'matte',linerStyle:'fine',linerColor:'brown',lashStyle:'wispy',lowerSmoke:.2,glamEyes:1}},
+tg_pumpkin:{n:'Pumpkin Spice',t:'Peach-bronze glow',g:'#c86a2a,#f0b070',d:1,look:'glow',adj:{light:4,contrast:4,color:3,warmth:3,softness:10},
+ beauty:{smooth:38,foundation:20,concealer:24,blemish:75,scars:65,wrinkles:26,contour:22,highlight:38,bronzer:18,tan:34,blush:14,eyeShadow:38,eyeLiner:24,lashes:44,mascara:34,browMakeup:22,tint:52,gloss:38,faceLight:18},
+ sh:{color:'teaRose',lipFinish:'cream',glossShade:'gHoney',blushColor:'peach',eyeColor:'amber',eyeFinish:'shimmer',linerStyle:'classic',linerColor:'brown',lashStyle:'wispy',lowerSmoke:.2,glamEyes:1}},
+tg_mulled:{n:'Mulled Wine',t:'Wine eyes, wine lip',g:'#3e1424,#8a3048',d:1,look:'rose',adj:{light:3,contrast:6,color:2,warmth:-2,vignette:3,softness:10},
+ beauty:{smooth:40,foundation:22,concealer:26,blemish:80,scars:70,wrinkles:28,contour:26,highlight:34,blush:14,eyeShadow:48,eyeLiner:34,lashes:54,mascara:40,browMakeup:24,tint:66,gloss:28,faceLight:16},
+ sh:{color:'wine',lipFinish:'cream',glossShade:'gRose',blushColor:'rose',eyeColor:'wineE',eyeFinish:'matte',linerStyle:'classic',linerColor:'black',lashStyle:'volume',lowerSmoke:.35,glamEyes:1}},
+tg_sharp:{men:1,n:'Autumn Sharp',t:'Crisp and warm',g:'#2e2a26,#7a6a58',d:1,look:'professional',adj:{light:3,contrast:6,color:1,warmth:1,detail:7},
+ beauty:{smooth:28,foundation:16,concealer:32,blemish:70,scars:60,wrinkles:18,contour:22,matte:40,browMakeup:20,eyeBright:10},sh:{}},
+tg_warm:{men:1,n:'Harvest Warmth',t:'Healthy, rested glow',g:'#3a2a1e,#8a6040',d:1,look:'natural',adj:{light:3,contrast:5,color:2,warmth:3,detail:5},
+ beauty:{smooth:28,foundation:16,concealer:32,blemish:70,scars:60,wrinkles:18,contour:20,bronzer:16,matte:30,browMakeup:18,eyeBright:10},sh:{}}}},
+{id:'christmas',name:'Christmas',from:[12,1],to:[12,31],until:'Until Dec 31',g:'#3a0c14,#1e3a2a',looks:{
+xm_velvet:{n:'Velvet Noel',t:'Classic red, pearl lids',g:'#5a0c18,#a8182c',d:1,look:'rose',adj:{light:3,contrast:6,color:2,warmth:-2,vignette:3,softness:10},
+ beauty:{smooth:40,foundation:22,concealer:26,blemish:80,scars:70,wrinkles:28,contour:26,highlight:36,blush:14,eyeShadow:36,eyeLiner:40,lashes:56,mascara:40,browMakeup:26,tint:64,gloss:26,faceLight:18},
+ sh:{color:'red',lipFinish:'cream',glossShade:'gCherry',blushColor:'rose',eyeColor:'pearlChamp',eyeFinish:'shimmer',linerStyle:'wing',linerColor:'black',lashStyle:'volume',lowerSmoke:.2,glamEyes:1}},
+xm_frost:{n:'Frosted Champagne',t:'Pearl eyes, rosy glow',g:'#c8b8a8,#7a8a98',d:1,look:'glow',adj:{light:5,contrast:3,color:2,warmth:-1,softness:12},
+ beauty:{smooth:40,foundation:20,concealer:26,blemish:80,scars:70,wrinkles:28,contour:20,highlight:44,blush:14,eyeShadow:40,eyeLiner:24,lashes:48,mascara:36,browMakeup:22,tint:52,gloss:36,faceLight:20},
+ sh:{color:'petalRose',lipFinish:'cream',glossShade:'gRose',blushColor:'pink',eyeColor:'pearlChamp',eyeFinish:'shimmer',linerStyle:'fine',linerColor:'brown',lashStyle:'wispy',lowerSmoke:.15,glamEyes:1}},
+xm_mistletoe:{n:'Mistletoe Rose',t:'Rose-gold eyes, soft rose',g:'#8a3a52,#e8a0b4',d:1,look:'rose',adj:{light:4,contrast:4,color:3,warmth:-1,softness:12},
+ beauty:{smooth:40,foundation:20,concealer:26,blemish:80,scars:70,wrinkles:28,contour:22,highlight:38,blush:14,eyeShadow:42,eyeLiner:28,lashes:50,mascara:38,browMakeup:22,tint:56,gloss:34,faceLight:18},
+ sh:{color:'cleanRose',lipFinish:'cream',glossShade:'gRose',blushColor:'rose',eyeColor:'roseGold',eyeFinish:'shimmer',linerStyle:'classic',linerColor:'brown',lashStyle:'wispy',lowerSmoke:.2,glamEyes:1}},
+xm_snow:{n:'Snow Queen',t:'Icy shimmer, velvet rose',g:'#9aa8c0,#e8eef6',d:1,look:'glow',adj:{light:5,contrast:4,color:2,warmth:-3,softness:12},
+ beauty:{smooth:42,foundation:20,concealer:26,blemish:80,scars:70,wrinkles:28,contour:24,highlight:44,blush:14,eyeShadow:44,eyeLiner:32,lashes:56,mascara:40,browMakeup:24,tint:58,gloss:32,faceLight:20},
+ sh:{color:'velvetRose',lipFinish:'cream',glossShade:'gRose',blushColor:'pink',eyeColor:'moonstone',eyeFinish:'shimmer',linerStyle:'wing',linerColor:'black',lashStyle:'volume',lowerSmoke:.2,glamEyes:1}},
+xm_crisp:{men:1,n:'Winter Crisp',t:'Fresh and sharp',g:'#1e2a36,#7890a8',d:1,look:'professional',adj:{light:4,contrast:6,color:1,warmth:-2,detail:7},
+ beauty:{smooth:30,foundation:16,concealer:32,blemish:70,scars:60,wrinkles:18,contour:22,matte:38,browMakeup:20,eyeBright:12},sh:{}},
+xm_fireside:{men:1,n:'Fireside',t:'Warm and polished',g:'#2a1a14,#7a3a24',d:1,look:'natural',adj:{light:3,contrast:6,color:2,warmth:2,vignette:3,detail:5},
+ beauty:{smooth:28,foundation:16,concealer:32,blemish:70,scars:60,wrinkles:18,contour:24,bronzer:12,matte:34,browMakeup:20},sh:{}}}},
+{id:'newyear',name:'New Year’s',from:[12,20],to:[1,3],until:'Until Jan 3',g:'#14141e,#8a7032',looks:{
+ny_midnight:{n:'Midnight Sparkle',t:'Gold smoke, deep red lip',g:'#1a1428,#8a6a2a',d:1,look:'rose',adj:{light:2,contrast:7,color:2,warmth:-1,vignette:4,softness:10},
+ beauty:{smooth:40,foundation:22,concealer:26,blemish:80,scars:70,wrinkles:28,contour:28,highlight:40,blush:14,eyeShadow:52,eyeLiner:38,lashes:58,mascara:42,browMakeup:26,tint:64,gloss:28,faceLight:18},
+ sh:{color:'spicedRed',lipFinish:'cream',glossShade:'gRose',blushColor:'mauve',eyeColor:'bronze',eyeFinish:'shimmer',linerStyle:'wing',linerColor:'black',lashStyle:'volume',lowerSmoke:.35,glamEyes:1}},
+ny_toast:{n:'Champagne Toast',t:'Champagne glow, glossy lip',g:'#e2cfa8,#b08a52',d:1,look:'glow',adj:{light:5,contrast:4,color:2,warmth:1,softness:12},
+ beauty:{smooth:40,foundation:20,concealer:26,blemish:80,scars:70,wrinkles:28,contour:22,highlight:46,bronzer:12,tan:24,blush:14,eyeShadow:42,eyeLiner:26,lashes:50,mascara:36,browMakeup:22,tint:54,gloss:40,faceLight:20},
+ sh:{color:'champRose',lipFinish:'cream',glossShade:'gRose',blushColor:'peach',eyeColor:'brulee',eyeFinish:'shimmer',linerStyle:'classic',linerColor:'brown',lashStyle:'wispy',lowerSmoke:.2,glamEyes:1}},
+ny_glam:{n:'Black Tie Glam',t:'Espresso smoke, velvet rose',g:'#1a1210,#5a3a30',d:1,look:'rose',adj:{light:2,contrast:7,color:2,warmth:-2,vignette:4,softness:10},
+ beauty:{smooth:42,foundation:22,concealer:26,blemish:80,scars:70,wrinkles:28,contour:30,highlight:36,blush:14,eyeShadow:56,eyeLiner:42,lashes:60,mascara:44,browMakeup:28,tint:62,gloss:26,faceLight:16},
+ sh:{color:'velvetRose',lipFinish:'cream',glossShade:'gRose',blushColor:'mauve',eyeColor:'espressoE',eyeFinish:'matte',linerStyle:'wing',linerColor:'black',lashStyle:'volume',lowerSmoke:.45,glamEyes:1}},
+ny_rosegold:{n:'Rose Gold Glam',t:'Rose-gold shimmer',g:'#b0705a,#f0c0a8',d:1,look:'glow',adj:{light:4,contrast:4,color:3,warmth:0,softness:12},
+ beauty:{smooth:40,foundation:20,concealer:26,blemish:80,scars:70,wrinkles:28,contour:24,highlight:42,blush:14,eyeShadow:46,eyeLiner:28,lashes:52,mascara:38,browMakeup:22,tint:56,gloss:36,faceLight:18},
+ sh:{color:'polishedRose',lipFinish:'cream',glossShade:'gRose',blushColor:'rose',eyeColor:'copperRose',eyeFinish:'shimmer',linerStyle:'classic',linerColor:'brown',lashStyle:'wispy',lowerSmoke:.25,glamEyes:1}},
+ny_midnightm:{men:1,n:'Midnight Sharp',t:'Moody and sculpted',g:'#0c0c14,#2a2a46',d:1,look:'film',adj:{light:1,contrast:8,color:1,warmth:-2,vignette:4,shadows:-3,detail:6},
+ beauty:{smooth:30,foundation:18,concealer:30,blemish:70,scars:60,wrinkles:18,contour:30,matte:40,browMakeup:24},sh:{}},
+ny_blacktie:{men:1,n:'Black Tie',t:'Crisp, camera-ready',g:'#101216,#4a4e5a',d:1,look:'professional',adj:{light:3,contrast:7,color:1,warmth:-1,vignette:3,detail:7},
+ beauty:{smooth:30,foundation:18,concealer:32,blemish:72,scars:62,wrinkles:20,contour:26,matte:40,browMakeup:22,eyeBright:10},sh:{}}}}];
+
+var KEYS={},MENK={};SEASONS.forEach(function(s){for(var k in s.looks){var v=s.looks[k];VIBES[k]=v;KEYS[k]=s.id;if(v.men)MENK[k]=1}});
+function md(m,d){return m*100+d}
+function inSeason(s,now){var t=md(now.getMonth()+1,now.getDate()),a=md(s.from[0],s.from[1]),b=md(s.to[0],s.to[1]);return a<=b?(t>=a&&t<=b):(t>=a||t<=b)}
+/* Admin preview: only the owner's device sees every season. Visit the site once with ?admin=<passphrase>; ?admin=off turns it off. Only a hash of the passphrase is stored here. */
+var ADMIN_HASH='a1f29fb0827267b373210814236fbfa47d00ccf46eefec36dfa9d2b67deabfcd',isAdmin=false;
+try{isAdmin=localStorage.getItem('fcAdmin')===ADMIN_HASH}catch(e){}
+var DATES={halloween:'Oct 1 \u2013 Nov 7',thanksgiving:'Nov 1 \u2013 Nov 30',christmas:'Dec 1 \u2013 Dec 31',newyear:'Dec 20 \u2013 Jan 3'};
+function active(){var now=new Date();return SEASONS.filter(function(s){return isAdmin||inSeason(s,now)})}
+function setAdmin(on){isAdmin=on;try{if(on)localStorage.setItem('fcAdmin',ADMIN_HASH);else localStorage.removeItem('fcAdmin')}catch(e){}render();try{toast(on?'Admin preview on: every season is showing on this device only.':'Admin preview off: seasons show only on their dates.')}catch(e){}}
+function checkAdminParam(){var q=null;try{q=new URLSearchParams(location.search).get('admin')}catch(e){}if(q===null)return;
+try{var u=new URL(location.href);u.searchParams.delete('admin');window.history.replaceState(null,'',u.pathname+u.search+u.hash)}catch(e){}
+if(q==='off'){setAdmin(false);return}
+if(!(window.crypto&&crypto.subtle)){try{toast('Admin preview needs the secure https site address.')}catch(e){}return}
+crypto.subtle.digest('SHA-256',new TextEncoder().encode(q)).then(function(b){var h=[].map.call(new Uint8Array(b),function(x){return('0'+x.toString(16)).slice(-2)}).join('');if(h===ADMIN_HASH)setAdmin(true);else try{toast('That admin passphrase is not right.')}catch(e){}})}
+window.__seasonal={SEASONS:SEASONS,inSeason:inSeason,active:active};
+
+var st=document.createElement('style');st.textContent=
+'#seasonWrap{margin:6px 0 4px}#seasonWrap[hidden]{display:none}'+
+'.adminBar{display:flex;gap:10px;align-items:center;justify-content:space-between;background:#fbf6e9;border:1px solid #e3cf98;border-radius:14px;padding:10px 12px;margin:0 0 10px;font:13px/1.35 system-ui,-apple-system,sans-serif;color:#5a4320}.adminBar b{display:block;color:#3a2410;font-size:13.5px}.adminBar button{flex:none;border:1px solid #c9a24a;background:#fff;color:#5a4320;border-radius:999px;padding:8px 12px;min-height:36px;font:650 13px system-ui,sans-serif;cursor:pointer}'+'.seasonTabs{display:flex;flex-direction:column;align-items:flex-start;gap:8px;margin:2px 0 8px}.seasonTabs .seasonRow{align-self:stretch;width:100%}'+
+'.seasonTab{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:8px 14px;border-radius:999px;border:1.5px solid #c9a24a;color:#fff;font:650 14px system-ui,-apple-system,sans-serif;cursor:pointer;box-shadow:0 3px 10px #3a1a4a26;letter-spacing:.2px}'+
+'.seasonTab{flex-wrap:wrap;justify-content:flex-start;text-align:left;max-width:100%;row-gap:2px}.seasonTab .stName{white-space:nowrap}.seasonTab small{white-space:nowrap;display:inline-flex;align-items:center;gap:8px}'+'.seasonTab small{font-weight:500;font-size:11.5px;opacity:.85;letter-spacing:.3px}'+
+'.seasonTab .chev{display:inline-block;width:7px;height:7px;border-right:2px solid #e8cf8a;border-bottom:2px solid #e8cf8a;transform:rotate(45deg) translateY(-2px);transition:transform .2s}'+
+'.seasonTab[aria-expanded=true] .chev{transform:rotate(-135deg) translateY(-1px)}'+
+'.seasonTab:focus-visible{outline:3px solid #c9a24a;outline-offset:2px}'+
+'#finWrap #seasonWrap .seasonRow[hidden],#seasonWrap .seasonRow[hidden]{display:none!important}.seasonRow{margin:0 0 10px}'+
+'#seasonWrap .vibe[hidden]{display:none!important}.seasonRow .vibe b{font-size:15px;line-height:1.15}.seasonRow .vibe span{font-size:12px;line-height:1.3}.seasonRow .vibe{position:relative}.seasonRow .vibe:after{content:"Limited";position:absolute;top:8px;left:8px;font:700 9.5px system-ui,sans-serif;letter-spacing:.8px;text-transform:uppercase;color:#3a2410;background:linear-gradient(135deg,#f3dc96,#c9a24a);padding:3px 7px;border-radius:999px}'+
+'@media(min-width:900px){#seasonWrap .finRow{flex-wrap:wrap!important;overflow:visible!important;display:flex!important}}';
+document.head.appendChild(st);
+
+var wrap=document.createElement('div');wrap.id='seasonWrap';wrap.hidden=true;
+function vbtn(k){var v=VIBES[k];return '<button class="vibe'+(v.d?' dark':'')+'" data-vibe="'+k+'" data-tag="fin" data-season="'+KEYS[k]+'"'+(MENK[k]?' data-men="1"':'')+' style="background:linear-gradient(135deg,'+v.g+')"><b>'+v.n+'</b> <span>'+v.t+'</span></button>'}
+function render(){
+var list=active();wrap.hidden=!list.length;if(!list.length){wrap.innerHTML='';return}
+var html='';list.forEach(function(s){
+html+='<button type="button" class="seasonTab" data-stab="'+s.id+'" aria-expanded="false" aria-controls="sRow_'+s.id+'" style="background:linear-gradient(135deg,'+s.g+')">'+'<span class="stName">'+s.name+' Couture</span><small>'+(isAdmin?(inSeason(s,new Date())?'Live now \u00b7 ':'Hidden \u00b7 ')+DATES[s.id]:s.until)+' <i class="chev" aria-hidden="true"></i></small></button>';
+html+='<div class="vibes finRow seasonRow" id="sRow_'+s.id+'" role="group" aria-label="'+s.name+' looks" hidden>'+Object.keys(s.looks).map(vbtn).join('')+'</div>'});
+wrap.innerHTML='<h3 class="vibesTitle">Seasonal</h3>'+(isAdmin?'<div class="adminBar"><span><b>Admin preview</b> All seasons are showing on this device only. Visitors see each season only on its dates.</span><button type="button" id="adminOff">Exit preview</button></div>':'')+'<div class="seasonTabs">'+html+'</div>';
+var ao=document.getElementById('adminOff');if(ao)ao.onclick=function(){setAdmin(false)};
+wrap.querySelectorAll('.seasonTab').forEach(function(t){t.onclick=function(){var r=document.getElementById('sRow_'+t.dataset.stab),open=t.getAttribute('aria-expanded')!=='true';t.setAttribute('aria-expanded',open?'true':'false');r.hidden=!open;if(open){r.scrollLeft=0;try{thumbKey=''}catch(e){}}}});
+wrap.querySelectorAll('.vibe').forEach(function(b){b.onclick=function(){applyVibe(b.dataset.vibe)}});
+filterStyle();try{thumbKey=''}catch(e){}}
+function filterStyle(){var s=window.frameStyle||'all';wrap.querySelectorAll('.vibe').forEach(function(b){var m=b.dataset.men==='1';b.hidden=s==='men'?!m:s==='women'?m:false})}
+var fin=document.getElementById('finWrap'),wr=document.getElementById('workRow'),anchor=wr&&wr.previousElementSibling&&wr.previousElementSibling.previousElementSibling;
+if(fin&&anchor&&anchor.parentNode===fin)fin.insertBefore(wrap,anchor);else if(fin)fin.appendChild(wrap);else{var ed=document.getElementById('edit');if(ed)ed.appendChild(wrap)}
+render();checkAdminParam();
+document.querySelectorAll('#styleRow [data-st],#lookFilter [data-st]').forEach(function(b){b.addEventListener('click',function(){setTimeout(filterStyle,30)})});
+var lastSig=active().map(function(s){return s.id}).join();
+setInterval(function(){var sig=active().map(function(s){return s.id}).join();if(sig!==lastSig){lastSig=sig;render()}},60000);
+/* glam seasonal looks get the same very subtle nose refinement as the glam finishes (women only) */
+var _avS=applyVibe;applyVibe=async function(k){var r=await _avS.apply(this,arguments);try{if(KEYS[k]&&!MENK[k]&&window.frameStyle!=='men'&&lastRecipe&&lastRecipe.key===k&&beauty.points&&beauty.points.nose&&(beauty.nose||0)>-4){beauty.nose=-4;try{syncBeauty()}catch(e){}invalidate();try{checkpoint()}catch(e){}}}catch(e){}return r};
+}catch(e){console.warn('v41 seasonal',e)}})();
+</script>
 </body></html>
