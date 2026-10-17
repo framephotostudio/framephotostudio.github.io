@@ -3087,4 +3087,62 @@ var am=$q('#artistMode');if(am)am.onclick=function(){setStrength(1.2,'1.2');appl
 var ab=$q('#artistPlus');if(ab)ab.onclick=function(){setStrength(1.4,'1.6');applyVibe('artistplus')};
 }catch(e){console.warn('v60 pro layout',e)}})();
 </script>
+<style>/* v61: the Save image button always stays on top of the Undo / Redo / Save project bar while scrolling on phone; sign-up sheet stays above both */#saveBar{z-index:32!important}.proSheet{z-index:50!important}</style>
+<script>
+/* v61: Natural Glow gets a real dewy glow. The old highlighter only added a flat, slightly warm brightness to the cheeks, so the look
+   barely changed. Now light catches the high points of the face (cheekbones, bridge and tip of the nose, centre forehead, cupid's bow,
+   chin) with a soft pearly sheen that follows the light already in the photo, so it reads as glowing, healthy skin, not paint.
+   Pore texture stays (screen blend, not a flat fill), the colour is pearl-rose on light skin and soft gold on deep skin, never yellow or grey.
+   Only looks with sh.dewy use it; Subtle, Natural, Glam and Max each add a little more. */
+;(function(){try{
+if(typeof beautyPixels!=='function'||typeof VIBES!=='object')return;
+function inPoly(x,y,P){var c=false;for(var i=0,j=P.length-1;i<P.length;j=i++){var a=P[i],b=P[j];if(((a.y>y)!==(b.y>y))&&(x<(b.x-a.x)*(y-a.y)/(b.y-a.y)+a.x))c=!c}return c}
+function blur(src,W,H,r){r=Math.max(1,r|0);var t=new Float32Array(W*H),o=new Float32Array(W*H),n=2*r+1;for(var y=0;y<H;y++){var s=0,row=y*W;for(var k=-r;k<=r;k++)s+=src[row+Math.min(W-1,Math.max(0,k))];for(var x=0;x<W;x++){t[row+x]=s/n;s+=src[row+Math.min(W-1,x+r+1)]-src[row+Math.max(0,x-r)]}}
+ for(var x2=0;x2<W;x2++){var s2=0;for(var k2=-r;k2<=r;k2++)s2+=t[Math.min(H-1,Math.max(0,k2))*W+x2];for(var y2=0;y2<H;y2++){o[y2*W+x2]=s2/n;s2+=t[Math.min(H-1,y2+r+1)*W+x2]-t[Math.max(0,y2-r)*W+x2]}}return o}
+function blur2(a,W,H,r){return blur(blur(a,W,H,r),W,H,r)}
+function dewy(d,w,h,b,amt){var o=b.faceOutline;if(!o||o.length<3)return;var P=o.map(function(p){return{x:p.x*w,y:p.y*h}}),xs=P.map(function(p){return p.x}),ys=P.map(function(p){return p.y}),
+ X0=Math.max(0,Math.floor(Math.min.apply(null,xs))),X1=Math.min(w-1,Math.ceil(Math.max.apply(null,xs))),Y0=Math.max(0,Math.floor(Math.min.apply(null,ys))),Y1=Math.min(h-1,Math.ceil(Math.max.apply(null,ys))),W=X1-X0+1,H=Y1-Y0+1;
+ if(W<24||H<24||W*H>2600000)return;
+ var EC=(b.eyeContours||[]).filter(function(c){return c&&c.length>4}).map(function(c){return c.map(function(p){return{x:p.x*w,y:p.y*h}})});if(EC.length<2)return;
+ var E=EC.map(function(U){var cx=0,cy=0;U.forEach(function(p){cx+=p.x/U.length;cy+=p.y/U.length});return{x:cx,y:cy,U:U}}).sort(function(a,b){return a.x-b.x});
+ var D=Math.hypot(E[1].x-E[0].x,E[1].y-E[0].y);if(D<8)return;var mx=(E[0].x+E[1].x)/2,ey=(E[0].y+E[1].y)/2,ang=Math.atan2(E[1].y-E[0].y,E[1].x-E[0].x),ca=Math.cos(ang),sa=Math.sin(ang);
+ var fp=b.featurePoints||{},EX=E.map(function(e){return e.U.map(function(p){return{x:e.x+(p.x-e.x)*1.45,y:e.y+(p.y-e.y)*2.1}})}),BR=[];
+ ['bL','bR'].forEach(function(s){var q=[0,1,2,3,4,9,8,7,6,5].map(function(i){return fp[s+i]}).filter(Boolean).map(function(p){return{x:p.x*w,y:p.y*h}});if(q.length>=8){var cx=0,cy=0;q.forEach(function(p){cx+=p.x/q.length;cy+=p.y/q.length});BR.push(q.map(function(p){return{x:cx+(p.x-cx)*1.25,y:cy+(p.y-cy)*1.6}}))}});
+ var LP=b.lipOutline&&b.lipOutline.length>5?b.lipOutline.map(function(p){return{x:p.x*w,y:p.y*h}}):null,lipTop=null;if(LP){var lx=0,lyMin=1e9;LP.forEach(function(p){lx+=p.x/LP.length;if(p.y<lyMin)lyMin=p.y});lipTop={x:lx,y:lyMin}}
+ var SKN=null;try{SKN=window.__faceAI&&window.__faceAI.region?window.__faceAI.region(b,w,h,X0,Y0,W,H,'skin'):null}catch(e){SKN=null}
+ /* rotated face coordinates: u across the face, v down the face, in eye-distance units, origin between the eyes */
+ var bottom=0;P.forEach(function(p){var v=(-(p.x-mx)*sa+(p.y-ey)*ca)/D;if(v>bottom)bottom=v});
+ var S=[ /* [u, v, su, sv, weight] */
+  [-.6,.44,.24,.10,1],[.6,.44,.24,.10,1],          /* cheekbones, up and out toward the temples */
+  [0,.40,.06,.26,.7],[0,.86,.08,.06,.5],         /* bridge and tip of the nose */
+  [0,-.55,.30,.15,.5],                             /* centre forehead */
+  [0,bottom-.22,.16,.07,.4]];                       /* chin */
+ if(lipTop){var lu=((lipTop.x-mx)*ca+(lipTop.y-ey)*sa)/D,lv=(-(lipTop.x-mx)*sa+(lipTop.y-ey)*ca)/D;S.push([lu,lv-.06,.09,.035,.45])}
+ var L=new Float32Array(W*H),M=new Float32Array(W*H),G=new Float32Array(W*H);
+ for(var y=0;y<H;y++)for(var x=0;x<W;x++){var q=y*W+x,j=((y+Y0)*w+x+X0)*4,px=x+X0+.5,py=y+Y0+.5;L[q]=.299*d[j]+.587*d[j+1]+.114*d[j+2];
+  var ins=inPoly(px,py,P);if(ins){for(var e=0;e<EX.length&&ins;e++)if(inPoly(px,py,EX[e]))ins=false;for(var f=0;f<BR.length&&ins;f++)if(inPoly(px,py,BR[f]))ins=false;if(ins&&LP&&inPoly(px,py,LP))ins=false}
+  M[q]=ins?1:0;
+  var u=((px-mx)*ca+(py-ey)*sa)/D,v=(-(px-mx)*sa+(py-ey)*ca)/D,g=0;for(var s=0;s<S.length;s++){var z=S[s],du=(u-z[0])/z[2],dv=(v-z[1])/z[3],t=z[4]*Math.exp(-.5*(du*du+dv*dv));if(t>g)g=t}G[q]=g}
+ var Mh=M;M=blur2(M,W,H,Math.max(2,Math.round(D*.09)));if(SKN){for(var k=0;k<W*H;k++)M[k]*=Math.max(0,Math.min(1,(SKN[k]-.25)/.35))}else{for(var k=0;k<W*H;k++)M[k]*=Math.min(1,Mh[k]+.5*M[k])}
+ /* where the photo already has light, the sheen is stronger: that keeps it dewy and real instead of painted on */
+ var LM=new Float32Array(W*H);for(var k1=0;k1<W*H;k1++)LM[k1]=L[k1]*Mh[k1];var rB=Math.max(3,Math.round(D*.45)),bN=blur2(LM,W,H,rB),bD=blur2(Mh,W,H,rB),rS=Math.max(2,Math.round(D*.06)),sN=blur2(LM,W,H,rS),sD=blur2(Mh,W,H,rS);
+ var skinL=0,cnt=0;for(var k2=0;k2<W*H;k2+=3)if(Mh[k2]>.9){skinL+=L[k2];cnt++}skinL=cnt?skinL/cnt:150;
+ var deep=Math.max(0,Math.min(1,(150-skinL)/50)),tint=[1,.94-.05*deep,.91-.15*deep],soft=Math.max(0,Math.min(1,(skinL-40)/60));
+ var K=new Float32Array(W*H);for(var k3=0;k3<W*H;k3++){if(M[k3]<=.01)continue;var big=bD[k3]>.05?bN[k3]/bD[k3]:L[k3],sm=sD[k3]>.05?sN[k3]/sD[k3]:L[k3],lit=Math.max(.35,Math.min(1.5,.8+(sm-big)/22));
+  K[k3]=M[k3]*(G[k3]*lit*.115+.018)*amt}
+ K=blur2(K,W,H,Math.max(1,Math.round(D*.03)));
+ /* colour-correct grey or greenish shadows (beside the nose, under the eyes) back toward her own skin tone, like a peach corrector */
+ var CR=[],CB=[];for(var k4=0;k4<W*H;k4+=2)if(Mh[k4]>.9){var j4=((((k4/W)|0)+Y0)*w+(k4%W)+X0)*4,r4=d[j4],g4=d[j4+1],b4=d[j4+2];CR.push(.5*r4-.4187*g4-.0813*b4);CB.push(-.1687*r4-.3313*g4+.5*b4)}
+ if(CR.length>50){CR.sort(function(a,b){return a-b});CB.sort(function(a,b){return a-b});var mCr=CR[CR.length>>1],mCb=CB[CB.length>>1];
+  for(var k5=0;k5<W*H;k5++){var mm=M[k5];if(mm<=.02)continue;var j5=((((k5/W)|0)+Y0)*w+(k5%W)+X0)*4,r5=d[j5],g5=d[j5+1],b5=d[j5+2],Y5=.299*r5+.587*g5+.114*b5,cr=.5*r5-.4187*g5-.0813*b5,cb=-.1687*r5-.3313*g5+.5*b5,dCr=mCr-cr,dCb=mCb-cb;
+   if(dCr<=1.5&&dCb>=-1.5)continue;var t5=Math.min(1,.42*amt)*mm;if(dCr<0)dCr=0;if(dCb>0)dCb=0;dCr=Math.min(dCr,14)*t5;dCb=Math.max(dCb,-10)*t5;var ncr=cr+dCr,ncb=cb+dCb;
+   d[j5]=Math.max(0,Math.min(255,Y5+1.402*ncr));d[j5+1]=Math.max(0,Math.min(255,Y5-.344136*ncb-.714136*ncr));d[j5+2]=Math.max(0,Math.min(255,Y5+1.772*ncb))}}
+ for(var y2=0;y2<H;y2++)for(var x2=0;x2<W;x2++){var q2=y2*W+x2,kk=K[q2];if(kk<=.002)continue;var j2=((y2+Y0)*w+x2+X0)*4,Lv=L[q2];if(Lv>238)kk*=Math.max(0,(252-Lv)/14);
+  kk*=(.62+.38*soft)*(deep?(1-.25*deep):1);
+  for(var c=0;c<3;c++){var dv2=d[j2+c];d[j2+c]=Math.min(255,dv2+(255-dv2)*kk*tint[c])}}}
+window.__dewy=dewy;
+var _bp61=beautyPixels;beautyPixels=function(d,w,h,b){var r=_bp61.apply(this,arguments);try{if(b&&b.dewy){var m=(typeof strengthMult!=='undefined'?strengthMult:.8),a=m<=.55?.62:m<=.85?1:m<=1.3?1.28:1.5;dewy(d,w,h,b,a*(+b.dewy||1))}}catch(e){console.warn('v61 dewy glow',e)}return r};
+if(VIBES.glow){VIBES.glow.sh=Object.assign({},VIBES.glow.sh,{dewy:1})}
+}catch(e){console.warn('v61 dewy',e)}})();
+</script>
 </body></html>
