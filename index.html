@@ -489,7 +489,7 @@ function lashExisting(data,w,h,P,M,span){const N=P.length,lum=(x,y)=>{x=Math.rou
 function lashStrands(data,w,h,P,T,M,span,b,ex){ex=ex||{lash:0,liner:0};const N=P.length,cl=v=>Math.max(0,Math.min(1,v)),sm=(p,q,x)=>{const t=cl((x-p)/(q-p));return t*t*(3-2*t)};
 /* v37: luxury lash extensions - a dense band rooted exactly on the lash line, length that builds to the outer corner, a lifted outward fan and soft wispy spikes */
 // [strands, max length (x eye width), wisp spikes, root thickness, curl]
-const styles={natural:[78,.21,0,.0042,.18],wispy:[104,.25,.55,.0044,.22],length:[96,.30,.12,.0042,.24],volume:[150,.26,.25,.0054,.22],dramatic:[176,.32,.4,.0058,.26],runway:[210,.38,.5,.0064,.28]};
+/* v57: finer, softer strands so lashes read as real extensions, not drawn-on */const styles={natural:[66,.21,0,.0034,.18],wispy:[86,.25,.5,.0035,.22],length:[80,.29,.12,.0034,.24],volume:[110,.26,.22,.0040,.22],dramatic:[124,.30,.32,.0042,.25],runway:[146,.35,.42,.0046,.27]};
 const key=b.lashes?b.lashStyle:'natural',[c0,len0,wisp,th0,curl]=styles[key]||styles.natural,mas=(b.mascara||0)/100,LS=cl((b.lashes?b.lashes:(b.mascara||0)*.55)/100),own=cl(ex.lash),
 amtL=cl(.35+LS*.9),lenK=(.72+.42*LS)*(1-.12*own),size=len0*lenK,
 X=[],Y=[];for(const p of P){X.push(p.x);Y.push(p.y)}const reach=span*(size*1.25+.05),bx0=Math.max(0,Math.floor(Math.min(...X)-reach)),bx1=Math.min(w-1,Math.ceil(Math.max(...X)+reach)),by0=Math.max(0,Math.floor(Math.min(...Y)-reach)),by1=Math.min(h-1,Math.ceil(Math.max(...Y)+span*.05)),BW=bx1-bx0+1,BH=by1-by0+1;if(BW<2||BH<2)return;
@@ -509,7 +509,7 @@ const l0=Math.hypot(a0x,a0y)||1,l1=Math.hypot(a1x,a1y)||1,d0x=a0x/l0,d0y=a0y/l0,
 const sx=p.x-p.nx*.6,sy=p.y-p.ny*.6,cx=sx+d0x*len*.52,cy=sy+d0y*len*.52,ex2=cx+d1x*len*.52,ey2=cy+d1y*len*.52,steps=Math.max(8,Math.round(len*1.4)),r0=thick*thMul;
 for(let k=0;k<=steps;k++){const u=k/steps,px=(1-u)*(1-u)*sx+2*(1-u)*u*cx+u*u*ex2,py=(1-u)*(1-u)*sy+2*(1-u)*u*cy+u*u*ey2,radius=Math.max(.28,r0*Math.pow(1-u*.9,1.3)),al=alpha*(1-Math.pow(u,1.7)*.9);stamp(px,py,radius,al)}};
 // 2) the lash band: many short, overlapping strands right at the roots give volume without a drawn line
-const nb=Math.round(c0*.9*Math.max(.45,Math.min(1.2,span/70)));for(let n=0;n<nb;n++){const t=.05+.94*(n+rnd(n,11))/nb;drawStrand(t,.28+.3*rnd(n,12),(.28+.22*amtL)*(.7+.3*rnd(n,13)),.95,n+5000)}
+const nb=Math.round(c0*.9*Math.max(.45,Math.min(1.2,span/70)));for(let n=0;n<nb;n++){const t=.05+.94*(n+rnd(n,11))/nb;drawStrand(t,.28+.3*rnd(n,12),(.22+.2*amtL)*(.7+.3*rnd(n,13)),.9,n+5000)}
 // 3) the main lashes, in small clusters like hand-placed extensions
 const nm=Math.round(c0*Math.max(.45,Math.min(1.2,span/70)));let cl1=1,cs1=0;for(let n=0;n<nm;n++){if(n%4===0){cl1=.82+.3*rnd(n>>2,9);cs1=(rnd(n>>2,10)-.5)*.012}const t=Math.min(.99,.06+.93*(n+.5+(rnd(n,1)-.5)*.9)/nm+cs1);drawStrand(t,cl1*(.8+.32*rnd(n,2)),(.5+.42*amtL)*(.72+.28*rnd(n,4)),.85+.3*rnd(n,5),n)}
 // 4) wispy spikes: a few longer, tapered clusters
@@ -2052,7 +2052,7 @@ for(var p=0;p<n;p++){var dl=Math.hypot(R[p]-Lc[0],G[p]-Lc[1],B[p]-Lc[2]),ds=Math
 var lim=boxBlurChannel(A,W,H,Math.max(1,Math.round(lh*.06)));for(var p=0;p<n;p++){if(lim[p]<.03)P[p]=0;if(A[p]>.9)P[p]=Math.max(P[p],.9)}
 var I=new Float32Array(n);for(var p=0;p<n;p++)I[p]=(.299*R[p]+.587*G[p]+.114*B[p])/255;var Q=guided(I,P,W,H,Math.max(2,Math.round(lh/14)),.0015);
 var sm=boxBlurChannel(Q,W,H,Math.max(1,Math.round(lh/36))),fe=Math.max(1,lh/60);v={X0:X0,Y0:Y0,W:W,H:H,m:new Float32Array(n)};for(var p=0;p<n;p++){var z=sm[p];v.m[p]=z<=0?0:z>=1?1:smst(.5-.12/fe,.5+.12/fe,z)}
-/* v38: lipstick reaches the real lip line with a crisp, natural edge (no soft pale skirt beyond the lips) */var Dm=boxBlurChannel(v.m,W,H,Math.max(1,Math.round(lh/28)));for(var p=0;p<n;p++){var e2=smst(.25,.55,Dm[p]);if(e2>v.m[p])v.m[p]=e2}v.m=boxBlurChannel(v.m,W,H,Math.max(1,Math.round(lh/50)));if(TG){TG=boxBlurChannel(TG,W,H,1);for(var p=0;p<n;p++)v.m[p]*=TG[p]}var MO=F.region(bb,w,h,X0,Y0,W,H,'mouth');if(MO){var mb=boxBlurChannel(boxBlurChannel(MO,W,H,Math.max(1,Math.round(lh/16))),W,H,Math.max(1,Math.round(lh/16)));for(var p=0;p<n;p++)if(mb[p]>.2){var lp=I[p]*255;v.m[p]*=1-smst(.25,.55,mb[p])*(1-smst(.5,.85,A[p]))}}}catch(e){v=null;console.warn('lips',e)}L.c.set(ck,v);return v}
+/* v38: lipstick reaches the real lip line with a crisp, natural edge (no soft pale skirt beyond the lips) */var Dm=boxBlurChannel(v.m,W,H,Math.max(1,Math.round(lh/28)));for(var p=0;p<n;p++){var e2=smst(.25,.55,Dm[p]);if(e2>v.m[p])v.m[p]=e2}v.m=boxBlurChannel(v.m,W,H,Math.max(1,Math.round(lh/50)));if(TG){/* v57: smooth the colour guide first - phone JPEGs store colour in 2x2 blocks, which made a stair-step lip edge on small photos */TG=boxBlurChannel(boxBlurChannel(TG,W,H,Math.max(1,Math.round(lh/22))),W,H,1);for(var p=0;p<n;p++)v.m[p]*=TG[p]}var MO=F.region(bb,w,h,X0,Y0,W,H,'mouth');if(MO){var mb=boxBlurChannel(boxBlurChannel(MO,W,H,Math.max(1,Math.round(lh/16))),W,H,Math.max(1,Math.round(lh/16)));for(var p=0;p<n;p++)if(mb[p]>.2){var lp=I[p]*255;v.m[p]*=1-smst(.25,.55,mb[p])*(1-smst(.5,.85,A[p]))}}/* v57: a fine anti-aliased edge so the lip line is smooth even zoomed in */v.m=boxBlurChannel(boxBlurChannel(v.m,W,H,1),W,H,1);}catch(e){v=null;console.warn('lips',e)}L.c.set(ck,v);return v}
 lipCoverage=function(x,y,w,h,b){var L=F._ld;if(L&&L.w===w&&L.h===h){var r=null;try{r=recFor(b)}catch(e){}if(r){var v=lipRefined(L,r,b);if(v){var ix=Math.round(x)-v.X0,iy=Math.round(y)-v.Y0;if(ix<0||iy<0||ix>=v.W||iy>=v.H)return 0;return Math.max(0,v.m[iy*v.W+ix]||0)}}}return _lcAI(x,y,w,h,b)};
 var _lg=lipGateFn;lipGateFn=function(data,w,h,b){var L=F._ld;if(L&&L.w===w&&L.h===h){try{if(recFor(b))return null}catch(e){}}return _lg.apply(this,arguments)};
 var _bpL=beautyPixels;beautyPixels=function(d,w,h,b){var prev=F._ld;F._ld={d:d,w:w,h:h,c:new Map()};try{return _bpL.apply(this,arguments)}finally{F._ld=prev}};
@@ -2390,14 +2390,14 @@ rl_little:{n:'Little Princess',t:'Soft pink shimmer, light gloss',g:'#f8d6e2,#ff
 rl_queen:{n:'Royal Queen',t:'Gold shimmer, rosy glossy lip',g:'#3a1458,#b8862b',d:1,look:'glow',adj:{light:1,contrast:6,color:2,warmth:2,vignette:4,softness:5},
  beauty:{smooth:40,foundation:20,concealer:26,blemish:80,scars:70,wrinkles:28,contour:26,highlight:42,bronzer:14,tan:16,blush:28,eyeShadow:56,eyeLiner:36,lashes:62,mascara:46,browMakeup:24,tint:54,gloss:60,faceLight:12},
  sh:{color:'rose',lipFinish:'cream',glossShade:'gRose',blushColor:'rose',eyeColor:'champGold',eyeFinish:'shimmer',linerStyle:'wing',linerColor:'black',lashStyle:'volume',lowerSmoke:.2,glamEyes:1,shadowReach:1.45}},
-rl_ice:{n:'Ice Queen',t:'Icy shimmer, cool pink gloss',g:'#9aa8c0,#e8eef6',d:1,look:'glow',adj:{light:2,contrast:5,color:1,warmth:-2,vignette:3,softness:6},
- beauty:{smooth:40,foundation:20,concealer:26,blemish:80,scars:70,wrinkles:28,contour:22,highlight:44,blush:26,eyeShadow:52,eyeLiner:30,lashes:60,mascara:44,browMakeup:22,tint:44,gloss:64,faceLight:12},
- sh:{color:'pink',lipFinish:'cream',glossShade:'gRose',blushColor:'pink',eyeColor:'moonstone',eyeFinish:'shimmer',linerStyle:'wing',linerColor:'black',lashStyle:'volume',lowerSmoke:.1,glamEyes:1,shadowReach:1.4}},
+rl_ice:{n:'Ice Queen',t:'Rosy frost lids, glossy frosted rose lip',g:'#c9a3b4,#f4e6ee',d:1,look:'glow',adj:{light:2,contrast:5,color:2,warmth:-1,vignette:3,softness:6},
+ beauty:{smooth:40,foundation:20,concealer:26,blemish:80,scars:70,wrinkles:28,contour:22,highlight:46,blush:42,eyeShadow:46,eyeLiner:24,lashes:46,mascara:36,browMakeup:22,tint:62,gloss:68,faceLight:12},
+ sh:{color:'petalRose',lipFinish:'shimmer',glossShade:'gRose',blushColor:'rose',eyeColor:'roseQuartz',eyeFinish:'shimmer',linerStyle:'classic',linerColor:'brown',lashStyle:'wispy',lowerSmoke:.1,glamEyes:1,shadowReach:1.35}},
 rl_fairy:{n:'Fairy Princess',t:'Lilac shimmer, peony gloss',g:'#b9a6e0,#f0d6ea',d:1,look:'glow',adj:{light:2,contrast:5,color:2,warmth:0,vignette:3,softness:6},
  beauty:{smooth:38,foundation:18,concealer:24,blemish:80,scars:70,wrinkles:28,contour:16,highlight:42,blush:30,eyeShadow:48,eyeLiner:20,lashes:58,mascara:42,browMakeup:20,tint:46,gloss:66,faceLight:12},
  sh:{color:'peony',lipFinish:'cream',glossShade:'gRose',blushColor:'pink',eyeColor:'lavender',eyeFinish:'shimmer',linerStyle:'fine',linerColor:'brown',lashStyle:'wispy',lowerSmoke:0,glamEyes:1,shadowReach:1.35}},
 rl_witch:{n:'Enchanted Witch',t:'Plum smoke, berry lip',g:'#2c1640,#6a2d6e',d:1,look:'rose',adj:{light:1,contrast:6,color:2,warmth:-2,vignette:4,softness:5},
- beauty:{smooth:40,foundation:22,concealer:26,blemish:80,scars:70,wrinkles:28,contour:28,highlight:36,blush:22,eyeShadow:58,eyeLiner:42,lashes:62,mascara:46,browMakeup:26,tint:62,gloss:46,faceLight:10},
+ beauty:{smooth:40,foundation:22,concealer:26,blemish:80,scars:70,wrinkles:28,contour:28,highlight:36,blush:22,eyeShadow:58,eyeLiner:42,lashes:52,mascara:46,browMakeup:26,tint:62,gloss:46,faceLight:10},
  sh:{color:'berry',lipFinish:'cream',glossShade:'gRose',blushColor:'mauve',eyeColor:'plum',eyeFinish:'shimmer',linerStyle:'wing',linerColor:'black',lashStyle:'volume',lowerSmoke:.35,glamEyes:1,shadowReach:1.55}},
 rl_prince:{men:1,n:'Prince Charming',t:'Polished and refined',g:'#1e2a46,#b8862b',d:1,look:'professional',adj:{light:4,contrast:6,color:1,warmth:0,detail:6},
  beauty:{smooth:30,foundation:16,concealer:30,blemish:70,scars:60,wrinkles:18,contour:24,matte:38,browMakeup:20},sh:{}},
@@ -2771,7 +2771,7 @@ try{thumbKey=''}catch(e){}
 if(typeof beautyPixels!=='function')return;
 if(typeof VIBES==='object'&&VIBES.artist){VIBES.artist.adj={light:0,contrast:2,color:0,warmth:0,softness:3,detail:4,vignette:2};VIBES.artist.beauty=Object.assign({},VIBES.artist.beauty,{faceLight:0,foundation:6,concealer:14,smooth:20,blemish:50,scars:40,wrinkles:24})}
 function guard(o,d,w,h,b,X0,Y0,X1,Y1){var artist=!!b.artist,fo=b.faceOutline,xs=fo.map(function(p){return p.x*w}),ys=fo.map(function(p){return p.y*h}),fx0=Math.min.apply(null,xs),fx1=Math.max.apply(null,xs),fy0=Math.min.apply(null,ys),fy1=Math.max.apply(null,ys),fw=fx1-fx0,fh=fy1-fy0;
-var fp=b.featurePoints||{},EY=artist?[]:[fp.eyeLeft,fp.eyeRight].filter(Boolean).map(function(e){return{x:e.x*w,y:e.y*h-fh*.02}}),erx=fw*.17,ery=fh*.09;
+var fp=b.featurePoints||{},EY=artist?[]:[fp.eyeLeft,fp.eyeRight].filter(Boolean).map(function(e){return{x:e.x*w,y:e.y*h-fh*.04}}),erx=fw*.22,ery=fh*.13;
 var LB=null;if(!artist){try{var lo=b.lipOutline;if(lo&&lo.length>5&&typeof lipCoverage==='function'){var lx=lo.map(function(p){return p.x*w}),ly=lo.map(function(p){return p.y*h}),pd=(Math.max.apply(null,ly)-Math.min.apply(null,ly))*.4+3;LB=[Math.min.apply(null,lx)-pd,Math.min.apply(null,ly)-pd,Math.max.apply(null,lx)+pd,Math.max.apply(null,ly)+pd]}}catch(e){LB=null}}
 var RW=X1-X0+1,CM=null;
 if(artist){try{var bx0=Math.max(X0,Math.floor(fx0-fw*.15)),bx1=Math.min(X1,Math.ceil(fx1+fw*.15)),by0=Math.max(Y0,Math.floor(fy0-fh*.1)),by1=Math.min(Y1,Math.ceil(fy1+fh*.15)),BW=bx1-bx0+1,BH=by1-by0+1;
@@ -2789,7 +2789,7 @@ var dcb=cbn-cbo,dcr=crn-cro,pu=dcb*ua+dcr*uc,pv=dcb*va+dcr*vc;
 /* no yellow / green drift */
 var T=.6;if(pv<-T)pv=-T+(pv+T)*.08;
 /* no stronger skin colour than the photo had (lipstick in Makeup Artist may get a little richer) */
-var lim=co*(artist?.05:.02)+.5;if(pu>lim)pu=lim+(pu-lim)*.1;
+var lim=co*(artist?.05:.02)+.5;/* v57: only a yellow/orange push is held back; rose, pink, plum and red makeup keep their full colour */if(pu>lim&&(artist||dcb<-.5*Math.max(dcr,0)))pu=lim+(pu-lim)*.1;
 var cbg=cbo+pu*ua+pv*va,crg=cro+pu*uc+pv*vc;if(co<8){var dm=Math.hypot(dcb,dcr),sk=dm>.6?.6/dm:1,tn=Math.max(0,Math.min(1,(co-4)/4));cbg=(cbo+dcb*sk)*(1-tn)+cbg*tn;crg=(cro+dcr*sk)*(1-tn)+crg*tn}if(artist){/* Makeup Artist keeps every colour the artist used: a pixel may only move toward its neighbours' original colour (blemish cover), never to a new colour */
 var mcb=cbo,mcr=cro;if(CM&&x>=bx0&&x<=bx1&&y>=by0&&y<=by1){var qm=(y-by0)*BW+(x-bx0);mcb=CM.cb[qm];mcr=CM.cr[qm]}var sx=mcb-cbo,sy=mcr-cro,sl=sx*sx+sy*sy,tt=sl>.01?Math.max(0,Math.min(1,(dcb*sx+dcr*sy)/sl)):0;cbg=cbo+sx*tt;crg=cro+sy*tt}
 var cbf=cbn+(cbg-cbn)*wt,crf=crn+(crg-crn)*wt;
