@@ -2638,4 +2638,36 @@ document.head.appendChild(m);
 }catch(e){console.warn('v49 layout',e)}}
 if(document.readyState==='complete')setTimeout(run,500);else window.addEventListener('load',function(){setTimeout(run,500)});})();
 </script>
+<script>
+/* v50: Phone photo dock - replaces the floating photo. While you scroll through the looks on a phone, your photo stays
+   docked across the top of the screen with the name of the look you are using. Tap it to jump back to the full photo.
+   The size label above the photo is gone (sizes live in Formats and Export). */
+;(function(){try{
+var css=document.createElement('style');css.textContent=
+'#livePip{display:none!important}'+
+'body.simple .stagehead{display:none!important}'+
+'#dockPhoto{display:none}'+
+'@media(max-width:899px){#dockPhoto{position:fixed;left:0;right:0;top:0;z-index:70;display:block;transform:translateY(-110%);transition:transform .22s ease;background:#fbf6f1;border-bottom:1.5px solid #e2cfa0;box-shadow:0 8px 22px #2a174a26;padding:calc(env(safe-area-inset-top,0px) + 8px) max(12px,env(safe-area-inset-right,0px)) 8px max(12px,env(safe-area-inset-left,0px));cursor:pointer;border:0;width:100%;text-align:center;font:inherit}'+
+'#dockPhoto.on{transform:none}#dockPhoto canvas{display:block;margin:0 auto;height:min(26vh,220px);width:auto;max-width:100%;border-radius:12px}'+
+'#dockPhoto .dkLabel{display:inline-flex;align-items:center;gap:8px;margin-top:6px;padding:4px 12px;border-radius:999px;background:#3b2147;color:#fff;font:650 13px/1.2 system-ui,-apple-system,"Segoe UI",sans-serif}'+
+'#dockPhoto .dkLabel i{width:7px;height:7px;border-radius:50%;background:#d9b45a;display:inline-block}#dockPhoto .dkHint{display:block;margin-top:3px;color:#7a6884;font:500 11.5px system-ui,sans-serif}'+
+'#dockPhoto:focus-visible{outline:3px solid #c9a24a;outline-offset:-3px}'+
+'body.dockOn .editorActions,body.dockOn .tabs{top:var(--dockH,0px)!important}}';
+document.head.appendChild(css);
+var dock=document.createElement('button');dock.type='button';dock.id='dockPhoto';dock.setAttribute('aria-label','Your photo. Tap to see the full photo');
+dock.innerHTML='<canvas width="10" height="10" aria-hidden="true"></canvas><span class="dkLabel"><i></i><span class="dkName">Original</span></span>';
+document.body.appendChild(dock);var cv=dock.querySelector('canvas'),nm=dock.querySelector('.dkName');
+dock.onclick=function(){var st=document.querySelector('.stage');if(st)st.scrollIntoView({behavior:'smooth',block:'start'})};
+function name(){var t='Original';try{if(lastRecipe&&lastRecipe.type==='vibe'&&VIBES[lastRecipe.key])t=VIBES[lastRecipe.key].n;else if(lastRecipe&&lastRecipe.type==='glow')t='Auto Glow'}catch(e){}
+try{var s=document.querySelector('#strength [data-mult].active');if(s&&t!=='Original')t+=' · '+s.textContent.trim()}catch(e){}return t}
+var on=false,lastCopy=0;
+function tick(){try{
+var phone=matchMedia('(max-width:899px)').matches,st=document.querySelector('.stage'),pane=document.getElementById('edit')&&document.getElementById('edit').closest('section,.panel')||document.getElementById('edit'),main=document.getElementById('main');
+var want=false;if(phone&&st&&pane&&main&&typeof source!=='undefined'&&source){var a=st.getBoundingClientRect(),p=pane.getBoundingClientRect();want=a.bottom<60&&p.top<innerHeight-120&&p.bottom>innerHeight*.45}
+if(want!==on){on=want;dock.classList.toggle('on',on);document.body.classList.toggle('dockOn',on);if(on)document.documentElement.style.setProperty('--dockH',dock.offsetHeight+'px')}
+if(on){var now=Date.now();if(now-lastCopy>300&&main.width>1){lastCopy=now;var h=Math.min(innerHeight*.26,220)*2,w=Math.round(h*main.width/main.height);if(cv.width!==w||cv.height!==Math.round(h)){cv.width=w;cv.height=Math.round(h)}cv.getContext('2d').drawImage(main,0,0,cv.width,cv.height);var n=name();if(nm.textContent!==n)nm.textContent=n;document.documentElement.style.setProperty('--dockH',dock.offsetHeight+'px')}}
+}catch(e){}}
+setInterval(tick,200);addEventListener('scroll',tick,{passive:true});
+}catch(e){console.warn('v50 dock',e)}})();
+</script>
 </body></html>
