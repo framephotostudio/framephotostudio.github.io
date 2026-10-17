@@ -2581,11 +2581,11 @@ var _avS48=applyVibe;applyVibe=async function(k){var r=await _avS48.apply(this,a
 if(!lastRecipe||lastRecipe.key!==k||!beauty||!beauty.points||!beauty.featurePoints)return r;
 var men=window.frameStyle==='men',work=WORK.test(k),notes=[],changed=false;
 if(men){if((beauty.blemish||0)<65){beauty.blemish=65;changed=true}if((beauty.scars||0)<45){beauty.scars=45;changed=true}}
-else if(!work&&k!=='artist'){
+else if(!work&&k!=='artist'&&k!=='artistplus'){
  if((beauty.blemish||0)<78){beauty.blemish=78;changed=true}if((beauty.scars||0)<62){beauty.scars=62;changed=true}notes.push('blemishes covered');
  var m=measure(beauty)||{};window.__smart=m;
  if(m.nose){var n=-Math.round(Math.max(0,Math.min(8,(m.nose-1.25)*25)));if(n<0&&(beauty.nose||0)>n){beauty.nose=n;changed=true;notes.push('nose refined')}}
- if(m.eye&&k!=='artist'&&!manualLift&&!(beauty.eyeLift>0)){var lift=Math.round(Math.max(0,Math.min(45,(.26-m.eye)/.08*45)));if(lift>=8){beauty.eyeLift=lift;syncLift(lift);changed=true;notes.push('eyes opened')}}
+ if(m.eye&&k!=='artist'&&k!=='artistplus'&&!manualLift&&!(beauty.eyeLift>0)){var lift=Math.round(Math.max(0,Math.min(45,(.26-m.eye)/.08*45)));if(lift>=8){beauty.eyeLift=lift;syncLift(lift);changed=true;notes.push('eyes opened')}}
 }
 if(changed){try{syncBeauty()}catch(e){}invalidate();try{checkpoint()}catch(e){}}
 if(notes.length>1){var v=VIBES[k];setTimeout(function(){try{toast((v?v.n+' applied. ':'')+'Smart touch-ups: '+notes.join(', ')+'.')}catch(e){}},60)}
@@ -2710,7 +2710,7 @@ var LP=b.lipOutline&&b.lipOutline.length>5?b.lipOutline.map(function(p){return{x
 var L=new Float32Array(W*H),M=new Float32Array(W*H);for(var y=0;y<H;y++)for(var x=0;x<W;x++){var q=y*W+x,j=((y+Y0)*w+x+X0)*4,px=x+X0+.5,py=y+Y0+.5;L[q]=.299*d[j]+.587*d[j+1]+.114*d[j+2];var inside=inPoly(px,py,P);if(inside){for(var e=0;e<EX.length;e++)if(inPoly(px,py,EX[e])){inside=false;break}if(inside&&LP&&inPoly(px,py,LP))inside=false}M[q]=inside?1:0}
 M=blur(M,W,H,Math.max(2,Math.round(W*.03)));var big=blur(L,W,H,Math.max(3,Math.round(W*.07))),sm=blur(L,W,H,1);
 /* protect the lips and eyes from the sculpting pass (they get their own treatment) */
-for(var y2=0;y2<H;y2++)for(var x2=0;x2<W;x2++){var q2=y2*W+x2,m=M[q2];if(m<=.01)continue;var j2=((y2+Y0)*w+x2+X0)*4,Lv=L[q2],add=(sm[q2]-big[q2])*.22*a*m;if(Lv<18||Lv>245)add*=.4;var cap=4*a*m;if(add<-cap)add=-cap;else if(add>cap)add=cap;for(var c=0;c<3;c++)d[j2+c]=Math.max(0,Math.min(255,d[j2+c]+add))}}
+for(var y2=0;y2<H;y2++)for(var x2=0;x2<W;x2++){var q2=y2*W+x2,m=M[q2];if(m<=.01)continue;var j2=((y2+Y0)*w+x2+X0)*4,Lv=L[q2],add=(sm[q2]-big[q2])*(b.artistPlus?.4:.22)*a*m;if(Lv<18||Lv>245)add*=.4;var cap=(b.artistPlus?8:4)*a*m;if(add<-cap)add=-cap;else if(add>cap)add=cap;for(var c=0;c<3;c++)d[j2+c]=Math.max(0,Math.min(255,d[j2+c]+add))}}
 function crisp(d,w,h,poly,amt){if(!poly||poly.length<3)return;var xs=poly.map(function(p){return p.x}),ys=poly.map(function(p){return p.y}),pad=4,X0=Math.max(0,Math.floor(Math.min.apply(null,xs))-pad),X1=Math.min(w-1,Math.ceil(Math.max.apply(null,xs))+pad),Y0=Math.max(0,Math.floor(Math.min.apply(null,ys))-pad),Y1=Math.min(h-1,Math.ceil(Math.max.apply(null,ys))+pad),W=X1-X0+1,H=Y1-Y0+1;if(W<4||H<4)return;
 var L=new Float32Array(W*H),M=new Float32Array(W*H);for(var y=0;y<H;y++)for(var x=0;x<W;x++){var q=y*W+x,j=((y+Y0)*w+x+X0)*4;L[q]=.299*d[j]+.587*d[j+1]+.114*d[j+2];M[q]=inPoly(x+X0+.5,y+Y0+.5,poly)?1:0}
 M=blur(M,W,H,2);var bl=blur(L,W,H,1);for(var y2=0;y2<H;y2++)for(var x2=0;x2<W;x2++){var q2=y2*W+x2;if(M[q2]<=.01)continue;var j2=((y2+Y0)*w+x2+X0)*4,add=Math.max(-18,Math.min(18,(L[q2]-bl[q2])*amt*M[q2]));for(var c=0;c<3;c++)d[j2+c]=Math.max(0,Math.min(255,d[j2+c]+add))}}
@@ -2853,5 +2853,22 @@ document.getElementById('reelVideo').onclick=makeReel;try{var sv=localStorage.ge
 var st2=document.createElement('style');st2.textContent='.reelCredit{display:grid;gap:6px;margin:10px 0 4px}.reelCredit label{font-size:13px;font-weight:600;color:#4a2a63}.reelCredit input{font:16px system-ui,sans-serif;padding:10px 12px;border-radius:12px;border:1.5px solid #e2d4ea;background:#fff;color:#2b1636;width:100%;box-sizing:border-box}.reelBox{display:grid;gap:8px;margin:10px 0 6px;padding:12px 14px;border-radius:16px;border:1.5px solid #e6d3a3;background:#fffaf2}.reelBox .reelCredit{margin:0}.reelBtn{font:700 15px system-ui,-apple-system,"Segoe UI",sans-serif;padding:12px 16px;border-radius:999px;border:0;cursor:pointer;color:#fff;background:linear-gradient(135deg,#2b1636,#5a2d5c);box-shadow:0 6px 16px #2b163633}.reelShare{background:linear-gradient(135deg,#c9a24a,#e8cf8a);color:#2b1636}.reelShare[hidden]{display:none}.reelBtn:disabled{opacity:.7;cursor:wait}.reelBtn:focus-visible{outline:3px solid #c9a24a;outline-offset:3px}.reelNote{margin:0;font-size:12.5px;line-height:1.4;color:#6b5a72}';document.head.appendChild(st2);
 addReel();setTimeout(addReel,1500);
 }catch(e){console.warn('v54 photographer finish + reel',e)}})();
+</script>
+<script>
+/* v56: Makeup Artist Plus - the same colour-true Makeup Artist edit with a stronger retouch: airbrushed skin,
+   stronger blemish and scar cover, deeper natural sculpt. Lipstick, blush, eyeshadow and skin tone stay exactly as the artist did them. */
+;(function(){try{
+if(typeof VIBES!=='object'||!VIBES.artist)return;
+VIBES.artistplus={n:'Makeup Artist Plus',t:'Stronger retouch, same makeup',g:'#2b1636,#c9a24a',d:1,look:'natural',artist:1,
+ adj:{light:0,contrast:4,color:0,warmth:0,softness:4,detail:6,vignette:3},
+ beauty:{smooth:40,foundation:10,concealer:24,blemish:85,scars:70,wrinkles:42,faceLight:0,gloss:30},
+ sh:{artist:1,artistPlus:1,glossShade:'clear',lipNat:1}};
+var row=document.getElementById('finRow');if(row&&!row.querySelector('[data-vibe="artistplus"]'))row.insertAdjacentHTML('beforeend','<button class="vibe artistHidden" data-vibe="artistplus" data-tag="fin" tabindex="-1" aria-hidden="true"><b>Makeup Artist Plus</b></button>');
+var am=document.getElementById('artistMode');if(am&&!document.getElementById('artistPlus')){var b=document.createElement('button');b.type='button';b.id='artistPlus';
+b.innerHTML='<span class="apText"><b>Makeup Artist Plus</b><span>Stronger retouch: airbrushed skin, stronger blemish cover, deeper sculpt. Makeup colours stay the same.</span></span><span class="apGo">Try Plus</span>';
+b.onclick=function(){applyVibe('artistplus')};am.insertAdjacentElement('afterend',b)}
+var st=document.createElement('style');st.textContent='#finRow .artistHidden{display:none!important}#artistPlus{display:flex;align-items:center;gap:12px;width:100%;text-align:left;margin:-6px 0 14px;padding:12px 14px;border-radius:16px;border:1.5px solid #c9a24a;background:#fffaf2;color:#2b1636;cursor:pointer;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}#artistPlus .apText{display:grid;gap:2px;flex:1;min-width:0}#artistPlus b{font-size:16px}#artistPlus .apText span{font-size:12.5px;line-height:1.35;color:#6b5a72}#artistPlus .apGo{flex:none;font-weight:700;font-size:13px;color:#2b1636;background:linear-gradient(135deg,#f3dc96,#c9a24a);padding:8px 13px;border-radius:999px}#artistPlus.on{background:linear-gradient(135deg,#2b1636,#4a2642);color:#fff}#artistPlus.on .apText span{color:#f1e4ec}#artistPlus:focus-visible{outline:3px solid #c9a24a;outline-offset:3px}:root[data-fcstyle="men"] #artistPlus{display:none!important}';document.head.appendChild(st);
+setInterval(function(){var bt=document.getElementById('artistPlus');if(!bt)return;var on=!!(typeof lastRecipe!=='undefined'&&lastRecipe&&lastRecipe.key==='artistplus');if(bt.classList.contains('on')!==on){bt.classList.toggle('on',on);var g=bt.querySelector('.apGo');if(g)g.textContent=on?'Applied':'Try Plus'}},400);
+}catch(e){console.warn('v56 artist plus',e)}})();
 </script>
 </body></html>
