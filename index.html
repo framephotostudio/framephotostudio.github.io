@@ -468,15 +468,21 @@ function eyeLook(data,w,h,a,outerRight,b,color,shadeLuma,lc){const sm=(p,q,x)=>{
 const N=48,cum=[0];for(let i=1;i<o.length;i++)cum.push(cum[i-1]+Math.hypot(o[i].x-o[i-1].x,o[i].y-o[i-1].y));const tot=cum[cum.length-1]||1;let P=[];for(let k=0;k<N;k++){const s=tot*k/(N-1);let j=1;while(j<o.length-1&&cum[j]<s)j++;const f=cl((s-cum[j-1])/Math.max(.001,cum[j]-cum[j-1]));P.push({x:o[j-1].x+(o[j].x-o[j-1].x)*f,y:o[j-1].y+(o[j].y-o[j-1].y)*f})}
 for(let it=0;it<3;it++){const Q=P;P=Q.map((p,k)=>k&&k<N-1?{x:(Q[k-1].x+2*p.x+Q[k+1].x)/4,y:(Q[k-1].y+2*p.y+Q[k+1].y)/4}:p)}
 const T=[],M=[];for(let k=0;k<N;k++){const p0=P[Math.max(0,k-1)],p1=P[Math.min(N-1,k+1)];let tx=p1.x-p0.x,ty=p1.y-p0.y;const L=Math.hypot(tx,ty)||1;tx/=L;ty/=L;let mx=ty,my=-tx;if(mx*nx+my*ny<0){mx=-mx;my=-my}T.push([tx,ty]);M.push([mx,my])}
+let BD=null;{const fp=b.featurePoints||{},pick=s=>[5,6,7,8,9].map(i=>fp[s+i]).filter(Boolean).map(p=>({x:p.x*w,y:p.y*h})),Lb=pick('bL'),Rb=pick('bR'),ec={x:(P[0].x+P[N-1].x)/2,y:(P[0].y+P[N-1].y)/2},cen=a=>a.length?a.reduce((s,p)=>({x:s.x+p.x/a.length,y:s.y+p.y/a.length}),{x:0,y:0}):null,cL=cen(Lb),cR=cen(Rb);let bw=cL&&cR?(Math.hypot(cL.x-ec.x,cL.y-ec.y)<Math.hypot(cR.x-ec.x,cR.y-ec.y)?Lb:Rb):(Lb.length?Lb:Rb);
+if(bw&&bw.length>=3){const D=[];for(let i=0;i<bw.length-1;i++)for(let s=0;s<8;s++)D.push({x:bw[i].x+(bw[i+1].x-bw[i].x)*s/8,y:bw[i].y+(bw[i+1].y-bw[i].y)*s/8});D.push(bw[bw.length-1]);
+BD=P.map((p,k)=>{let best=null,bp=1e9;for(const q of D){const vx=q.x-p.x,vy=q.y-p.y,t=vx*M[k][0]+vy*M[k][1];if(t<=0)continue;const pp=Math.abs(vx*M[k][1]-vy*M[k][0]);if(pp<bp){bp=pp;best=t}}return best&&bp<span*.3?best:null});
+let last=null;for(let k=0;k<N;k++){if(BD[k]!=null)last=BD[k];else BD[k]=last}last=null;for(let k=N-1;k>=0;k--){if(BD[k]!=null)last=BD[k];else BD[k]=last}if(BD.every(v=>v==null))BD=null}}
+/* shadow height: up to the crease and beyond for glam looks, but always stopping below the brow */
+const hOf=t=>{let H=span*(.38+.22*cl(t))*(b.shadowReach||1);if(BD){const u=Math.max(0,Math.min(N-1,t*(N-1))),i0=Math.floor(u),i1=Math.min(N-1,i0+1),v=BD[i0]*(1-(u-i0))+BD[i1]*(u-i0);if(v>0)H=Math.min(H,v*(b.glamEyes?.82:.9))}return H};
 const exM=lashExisting(data,w,h,P,M,span),st=b.linerStyle||'classic',base=span*({fine:.011,classic:.016,wing:.018,smoky:.03,bold:.022}[st]||.016),wingLen=st==='wing'?span*.18:0,S=(b.eyeShadow||0)/100,Ln=(b.eyeLiner||0)/100*(1-(b.glamEyes?.25:.6)*exM.liner),twf=t=>base*(.35+1*sm(.1,.85,t)),fin=b.eyeFinish,seg=tot/(N-1);
 const ang=.42,wdx=ex*Math.cos(ang)+nx*Math.sin(ang),wdy=ey*Math.cos(ang)+ny*Math.sin(ang),tw1=twf(1),Ox=P[N-1].x,Oy=P[N-1].y,Tx=Ox+wdx*wingLen,Ty=Oy+wdy*wingLen,Uk=Math.round((N-1)*.72),Ux=P[Uk].x+M[Uk][0]*Math.max(twf(.72),span*.02),Uy=P[Uk].y+M[Uk][1]*Math.max(twf(.72),span*.02),TRI=[[Ox,Oy],[Tx,Ty],[Ux,Uy]],triS=Math.sign((Tx-Ox)*(Uy-Oy)-(Ty-Oy)*(Ux-Ox))||1;
 const R=span*.8*Math.max(1,b.shadowReach||1),xs=P.map(p=>p.x).concat([Tx]),ys=P.map(p=>p.y).concat([Ty]),bx0=Math.max(0,Math.floor(Math.min(...xs)-R)),bx1=Math.min(w-1,Math.ceil(Math.max(...xs)+R)),by0=Math.max(0,Math.floor(Math.min(...ys)-R)),by1=Math.min(h-1,Math.ceil(Math.max(...ys)+R*.4));
 for(let y=by0;y<=by1;y++)for(let x=bx0;x<=bx1;x++){let bi=0,bd=1e12;for(let k=0;k<N;k++){const dd=(x-P[k].x)**2+(y-P[k].y)**2;if(dd<bd){bd=dd;bi=k}}const i=(y*w+x)*4;let wing=0;if(wingLen){let dm=1e9;for(let e=0;e<3;e++){const a1=TRI[e],a2=TRI[(e+1)%3],ex2=a2[0]-a1[0],ey2=a2[1]-a1[1],el=Math.hypot(ex2,ey2)||1;dm=Math.min(dm,-triS*((x-a1[0])*ey2-(y-a1[1])*ex2)/el)}wing=cl(dm/1.1+.5)}
 if(bd>R*R&&!wing)continue;let bestE=1e18,d=0,tf=bi/(N-1);for(const kk of [bi-1,bi]){if(kk<0||kk>=N-1)continue;const A=P[kk],B2=P[kk+1],sx=B2.x-A.x,sy=B2.y-A.y,sl=sx*sx+sy*sy||1;let t=((x-A.x)*sx+(y-A.y)*sy)/sl;if(!(kk===0&&t<0)&&!(kk===N-2&&t>1))t=Math.max(0,Math.min(1,t));const fx=A.x+sx*t,fy=A.y+sy*t,mx=M[kk][0]*(1-t)+M[kk+1][0]*t,my=M[kk][1]*(1-t)+M[kk+1][1]*t,ml=Math.hypot(mx,my)||1,e2=(x-fx)**2+(y-fy)**2;if(e2<bestE){bestE=e2;d=((x-fx)*mx+(y-fy)*my)/ml;tf=(kk+t)/(N-1)}}const luma=.2126*data[i]+.7152*data[i+1]+.0722*data[i+2];
-let shadow=0,liner=0,halo=0,sheen=0;if(S&&d>-1&&tf>-.12&&tf<1.14){const H=span*(.38+.22*cl(tf))*(b.shadowReach||1),k=1-Math.max(0,d)/H;if(k>0){const prof=Math.pow(k,1.2)*sm(-1,2.5,d),edge=sm(-.12,.1,tf)*sm(-.14,.14,1-tf)*(.7+.5*cl(tf));shadow=Math.min(.95,edge*prof*sm(12,55,luma)*S*1.5)}}
+let shadow=0,liner=0,halo=0,sheen=0;if(S&&d>-1&&tf>-.12&&tf<1.14){const H=hOf(tf),k=1-Math.max(0,d)/H;if(k>0){const prof=(b.glamEyes?(1-sm(.42,1,1-k))*(.72+.28*k):Math.pow(k,1.2))*sm(-1,2.5,d),edge=sm(-.12,.1,tf)*sm(-.14,.14,1-tf)*(.7+.5*cl(tf));shadow=Math.min(.95,edge*prof*sm(12,55,luma)*S*1.5)}}
 if(Ln&&d>-2.4&&tf>-.03&&tf<1.03){const wd=twf(tf);let v;if(st==='smoky')v=Math.exp(-(((d-wd*.4)/(wd*1.05))**2))*.9;else{const ae=Math.max(.7,wd*.3);v=sm(-2.4,-.7,d)*(1-sm(wd-ae,wd+ae,d))*(.62+.38*cl((165-luma)/100))}liner=v*sm(.06,.32,tf)*sm(1.03,.97,tf)}
 liner=Math.min(.9,Math.max(liner*Ln*(b.glamEyes?1.5:.9),wing*Math.min(.74,Ln*2.4)));
-if(shadow>.004){const Hh2=span*(.38+.22*cl(tf))*(b.shadowReach||1),dn=cl(d/Hh2),tOut=sm(.5,1,tf)*(1-dn*.6),tIn=Math.min(.7,(1-sm(0,.32,tf))*.55+sm(.55,1,dn)*.5),crease=Math.exp(-Math.pow((dn-.45)/.2,2))*.18,tone=color.map(v=>{let t=v*(1-tOut)+v*.5*tOut;t=t*(1-tIn)+(v+(255-v)*.4)*tIn;return t*(1-crease)});let sc=0;if(fin==='shimmer'||fin==='glitter'){const cell=(((Math.imul(Math.imul(x>>1,374761393)^Math.imul(y>>1,668265263),1274126177)>>>16)&1023)/1023);sc=fin==='glitter'?(cell>.93?Math.min(.8,Math.max(0,shadow-.14)*2.6):shadow*.22):Math.min(.5,shadow*.55)*(.75+.25*Math.sin(x*.07+y*.05))+(cell>.992?Math.max(0,shadow-.2)*.35:0)}for(let c=0;c<3;c++){const tex=Math.max(0,Math.min(255,tone[c]+(luma-shadeLuma)*.3)),tinted=data[i+c]*(1-shadow)+tex*shadow;data[i+c]=sc?tinted*(1-sc*.55)+[255,242,220][c]*sc*.55:tinted}}
+if(shadow>.004){const Hh2=hOf(tf),dn=cl(d/Hh2),tOut=sm(.5,1,tf)*(1-dn*.6),tIn=Math.min(.7,(1-sm(0,.32,tf))*.55+sm(.55,1,dn)*.5),crease=Math.exp(-Math.pow((dn-.45)/.2,2))*.18,tone=color.map(v=>{let t=v*(1-tOut)+v*.5*tOut;t=t*(1-tIn)+(v+(255-v)*.4)*tIn;return t*(1-crease)});let sc=0;if(fin==='shimmer'||fin==='glitter'){const cell=(((Math.imul(Math.imul(x>>1,374761393)^Math.imul(y>>1,668265263),1274126177)>>>16)&1023)/1023);sc=fin==='glitter'?(cell>.93?Math.min(.8,Math.max(0,shadow-.14)*2.6):shadow*.22):Math.min(.5,shadow*.55)*(.75+.25*Math.sin(x*.07+y*.05))+(cell>.992?Math.max(0,shadow-.2)*.35:0)}for(let c=0;c<3;c++){const tex=Math.max(0,Math.min(255,tone[c]+(luma-shadeLuma)*.3)),tinted=data[i+c]*(1-shadow)+tex*shadow;data[i+c]=sc?tinted*(1-sc*.55)+[255,242,220][c]*sc*.55:tinted}}
 if(liner>.004){for(let c=0;c<3;c++)data[i+c]=data[i+c]*(1-liner*(1-Math.min(1,(lc[c]+16)/255)))}}
 if(b.lashes||b.mascara)lashStrands(data,w,h,P,T,M,span,b,exM)}
 function lashExisting(data,w,h,P,M,span){const N=P.length,lum=(x,y)=>{x=Math.round(x);y=Math.round(y);if(x<0||y<0||x>=w||y>=h)return -1;const i=(y*w+x)*4;return .2126*data[i]+.7152*data[i+1]+.0722*data[i+2]};let dark=0,cnt=0,root=0,rn=0;for(let k=Math.round(N*.2);k<Math.round(N*.95);k+=2){const p=P[k],m=M[k];let sr=0,sn=0;for(const f of[.2,.25,.3]){const l=lum(p.x+m[0]*span*f,p.y+m[1]*span*f);if(l>=0){sr+=l;sn++}}if(!sn)continue;sr/=sn;if(sr<25)continue;for(let s=1;s<=8;s++){const l=lum(p.x+m[0]*span*.13*s/8,p.y+m[1]*span*.13*s/8);if(l<0)continue;if(l<sr*.62)dark++;cnt++}const l0=lum(p.x+m[0]*span*.012,p.y+m[1]*span*.012);if(l0>=0){root+=Math.max(0,Math.min(1,(sr-l0)/sr));rn++}}const c=v=>Math.max(0,Math.min(1,v));return{lash:cnt?c((dark/cnt-.08)/.32):0,liner:rn?c((root/rn-.25)/.4):0}}
@@ -2290,9 +2296,9 @@ var SEASONS=[
 hw_vampire:{n:'Couture Vampire',t:'Black-cherry lip, wine smoke',g:'#3a0d1f,#7a1a36',d:1,look:'rose',adj:{light:2,contrast:7,color:1,warmth:-3,vignette:4,softness:8},
  beauty:{smooth:42,foundation:24,concealer:26,blemish:80,scars:70,wrinkles:28,contour:30,highlight:34,blush:14,eyeShadow:54,eyeLiner:40,lashes:60,mascara:44,browMakeup:26,tint:80,gloss:22,faceLight:16},
  sh:{color:'blackCherry',lipFinish:'cream',glossShade:'gCherry',blushColor:'mauve',eyeColor:'wineE',eyeFinish:'matte',linerStyle:'wing',linerColor:'black',lashStyle:'volume',lowerSmoke:.4,glamEyes:1}},
-hw_cat:{n:'Black Cat Glam',t:'Sharp wing, rosewood lip',g:'#141018,#4a3a52',d:1,look:'rose',adj:{light:3,contrast:6,color:1,warmth:-2,vignette:3,softness:8},
+hw_cat:{n:'Black Cat Glam',t:'Sharp wing, deep rose lip',g:'#141018,#4a3a52',d:1,look:'rose',adj:{light:3,contrast:6,color:1,warmth:-2,vignette:3,softness:8},
  beauty:{smooth:40,foundation:22,concealer:26,blemish:80,scars:70,wrinkles:28,contour:30,highlight:32,blush:14,eyeShadow:32,eyeLiner:54,lashes:58,mascara:42,browMakeup:28,tint:56,gloss:30,faceLight:16},
- sh:{color:'rosewood',lipFinish:'cream',glossShade:'gRose',blushColor:'mauve',eyeColor:'espressoE',eyeFinish:'matte',linerStyle:'wing',linerColor:'black',lashStyle:'dramatic',lowerSmoke:.2,glamEyes:1}},
+ sh:{color:'deepRose',lipFinish:'cream',glossShade:'gRose',blushColor:'mauve',eyeColor:'espressoE',eyeFinish:'matte',linerStyle:'wing',linerColor:'black',lashStyle:'dramatic',lowerSmoke:.2,glamEyes:1}},
 hw_enchant:{n:'Enchantress',t:'Plum smoke, matching plum lip',g:'#2c1640,#6a2d6e',d:1,look:'rose',adj:{light:2,contrast:6,color:2,warmth:-3,vignette:4,softness:10},
  beauty:{smooth:40,foundation:22,concealer:26,blemish:80,scars:70,wrinkles:28,contour:28,highlight:38,blush:14,eyeShadow:54,eyeLiner:36,lashes:56,mascara:40,browMakeup:26,tint:64,gloss:28,faceLight:16},
  sh:{color:'plum',lipFinish:'cream',glossShade:'gRose',blushColor:'mauve',eyeColor:'plum',eyeFinish:'matte',linerStyle:'classic',linerColor:'black',lashStyle:'volume',lowerSmoke:.4,glamEyes:1}},
@@ -2302,9 +2308,9 @@ hw_masq:{n:'Gilded Masquerade',t:'Bronze-gold smoke, ruby lip',g:'#3a2410,#b8862
 hw_fairy:{n:'Moonlit Fairy',t:'Lilac shimmer, pearly glow',g:'#b9a6e0,#f0d6ea',d:1,look:'glow',adj:{light:5,contrast:3,color:2,warmth:-2,softness:14},
  beauty:{smooth:42,foundation:20,concealer:26,blemish:80,scars:70,wrinkles:28,contour:18,highlight:50,blush:16,eyeShadow:40,eyeLiner:20,lashes:52,mascara:38,browMakeup:20,tint:50,gloss:42,faceLight:22},
  sh:{color:'petalRose',lipFinish:'cream',glossShade:'gRose',blushColor:'pink',eyeColor:'lavender',eyeFinish:'shimmer',linerStyle:'fine',linerColor:'brown',lashStyle:'wispy',lowerSmoke:.1,glamEyes:1}},
-hw_princess:{n:'Storybook Princess',t:'Pearl lids, rosy cheeks, soft pink lip',g:'#f2c6d2,#fbeef0',d:1,look:'rose',adj:{light:5,contrast:3,color:3,warmth:-1,softness:14},
+hw_princess:{n:'Storybook Princess',t:'Rosy lids, flushed cheeks, rose lip',g:'#f2c6d2,#fbeef0',d:1,look:'rose',adj:{light:5,contrast:3,color:3,warmth:-1,softness:14},
  beauty:{smooth:42,foundation:20,concealer:26,blemish:80,scars:70,wrinkles:28,contour:18,highlight:46,blush:22,eyeShadow:36,eyeLiner:22,lashes:54,mascara:40,browMakeup:22,tint:52,gloss:40,faceLight:22},
- sh:{color:'cleanRose',lipFinish:'cream',glossShade:'gRose',blushColor:'pink',eyeColor:'pearlChamp',eyeFinish:'shimmer',linerStyle:'fine',linerColor:'brown',lashStyle:'wispy',lowerSmoke:.1,glamEyes:1}},
+ sh:{color:'cleanRose',lipFinish:'cream',glossShade:'gRose',blushColor:'pink',eyeColor:'antiqueRose',eyeFinish:'shimmer',linerStyle:'fine',linerColor:'brown',lashStyle:'wispy',lowerSmoke:.1,glamEyes:1}},
 hw_villain:{n:'Villain Glam',t:'Arched brows, violet smoke, plum lip',g:'#1e0f2c,#5a2a78',d:1,look:'rose',adj:{light:2,contrast:7,color:2,warmth:-3,vignette:4,softness:8},
  beauty:{smooth:42,foundation:24,concealer:26,blemish:80,scars:70,wrinkles:28,contour:36,highlight:36,blush:12,eyeShadow:54,eyeLiner:52,lashes:64,mascara:46,browMakeup:36,tint:72,gloss:20,faceLight:16},
  sh:{color:'plum',lipFinish:'cream',glossShade:'gRose',blushColor:'mauve',eyeColor:'midnightPlum',eyeFinish:'matte',linerStyle:'wing',linerColor:'black',lashStyle:'dramatic',lowerSmoke:.45,glamEyes:1}},
@@ -2313,15 +2319,15 @@ hw_phantom:{men:1,n:'Gentleman Phantom',t:'Cool and chiseled',g:'#0e1420,#3a4660
 hw_count:{men:1,n:'Moody Sculpt',t:'Sharper jaw, deeper shadows',g:'#121418,#3a2a3e',d:1,look:'film',adj:{light:-1,contrast:10,color:-1,warmth:-3,vignette:7,shadows:-6,detail:8,fade:2},
  beauty:{smooth:30,foundation:18,concealer:32,blemish:70,scars:60,wrinkles:18,contour:44,matte:44,browMakeup:30},sh:{}}}},
 {id:'thanksgiving',name:'Thanksgiving',from:[11,1],to:[11,30],until:'Until Nov 30',g:'#3a1e10,#a0582a',looks:{
-tg_harvest:{n:'Harvest Bronze',t:'Copper eyes, golden rose',g:'#5a2e14,#c07a3a',d:1,look:'glow',adj:{light:3,contrast:5,color:3,warmth:3,vignette:3,softness:8},
+tg_harvest:{n:'Harvest Bronze',t:'Copper eyes, brick-rose lip',g:'#5a2e14,#c07a3a',d:1,look:'glow',adj:{light:3,contrast:5,color:3,warmth:3,vignette:3,softness:8},
  beauty:{smooth:38,foundation:20,concealer:24,blemish:75,scars:65,wrinkles:26,contour:26,highlight:34,bronzer:22,tan:36,blush:14,eyeShadow:40,eyeLiner:28,lashes:46,mascara:36,browMakeup:24,tint:56,gloss:30,faceLight:16},
- sh:{color:'goldenRose',lipFinish:'cream',glossShade:'gRose',blushColor:'peach',eyeColor:'copperRose',eyeFinish:'matte',linerStyle:'classic',linerColor:'brown',lashStyle:'wispy',lowerSmoke:.25,glamEyes:1}},
+ sh:{color:'brick',lipFinish:'cream',glossShade:'gRose',blushColor:'peach',eyeColor:'copperRose',eyeFinish:'matte',linerStyle:'classic',linerColor:'brown',lashStyle:'wispy',lowerSmoke:.25,glamEyes:1}},
 tg_cashmere:{n:'Cashmere Spice',t:'Mocha eyes, rosewood lip',g:'#4a3028,#a07a62',d:1,look:'natural',adj:{light:4,contrast:4,color:2,warmth:2,softness:10},
  beauty:{smooth:36,foundation:20,concealer:24,blemish:75,scars:65,wrinkles:26,contour:22,highlight:32,bronzer:14,tan:26,blush:14,eyeShadow:34,eyeLiner:22,lashes:42,mascara:34,browMakeup:22,tint:54,gloss:32,faceLight:16},
  sh:{color:'rosewood',lipFinish:'cream',glossShade:'gRose',blushColor:'rose',eyeColor:'mochaSilk',eyeFinish:'matte',linerStyle:'fine',linerColor:'brown',lashStyle:'wispy',lowerSmoke:.2,glamEyes:1}},
-tg_pumpkin:{n:'Pumpkin Spice',t:'Peach-bronze glow',g:'#c86a2a,#f0b070',d:1,look:'glow',adj:{light:4,contrast:4,color:3,warmth:3,softness:10},
+tg_pumpkin:{n:'Pumpkin Spice',t:'Peach-bronze glow, spiced lip',g:'#c86a2a,#f0b070',d:1,look:'glow',adj:{light:4,contrast:4,color:3,warmth:3,softness:10},
  beauty:{smooth:38,foundation:20,concealer:24,blemish:75,scars:65,wrinkles:26,contour:22,highlight:38,bronzer:18,tan:34,blush:14,eyeShadow:38,eyeLiner:24,lashes:44,mascara:34,browMakeup:22,tint:52,gloss:38,faceLight:18},
- sh:{color:'teaRose',lipFinish:'cream',glossShade:'gHoney',blushColor:'peach',eyeColor:'amber',eyeFinish:'shimmer',linerStyle:'classic',linerColor:'brown',lashStyle:'wispy',lowerSmoke:.2,glamEyes:1}},
+ sh:{color:'cognac',lipFinish:'cream',glossShade:'gHoney',blushColor:'peach',eyeColor:'copperRose',eyeFinish:'shimmer',linerStyle:'classic',linerColor:'brown',lashStyle:'wispy',lowerSmoke:.2,glamEyes:1}},
 tg_mulled:{n:'Mulled Wine',t:'Wine eyes, wine lip',g:'#3e1424,#8a3048',d:1,look:'rose',adj:{light:3,contrast:6,color:2,warmth:-2,vignette:3,softness:10},
  beauty:{smooth:40,foundation:22,concealer:26,blemish:80,scars:70,wrinkles:28,contour:26,highlight:34,blush:14,eyeShadow:48,eyeLiner:34,lashes:54,mascara:40,browMakeup:24,tint:66,gloss:28,faceLight:16},
  sh:{color:'wine',lipFinish:'cream',glossShade:'gRose',blushColor:'rose',eyeColor:'wineE',eyeFinish:'matte',linerStyle:'classic',linerColor:'black',lashStyle:'volume',lowerSmoke:.35,glamEyes:1}},
@@ -2330,18 +2336,18 @@ tg_sharp:{men:1,n:'Autumn Sharp',t:'Crisp and warm',g:'#2e2a26,#7a6a58',d:1,look
 tg_warm:{men:1,n:'Harvest Warmth',t:'Healthy, rested glow',g:'#3a2a1e,#8a6040',d:1,look:'natural',adj:{light:3,contrast:5,color:2,warmth:3,detail:5},
  beauty:{smooth:28,foundation:16,concealer:32,blemish:70,scars:60,wrinkles:18,contour:20,bronzer:16,matte:30,browMakeup:18,eyeBright:10},sh:{}}}},
 {id:'christmas',name:'Christmas',from:[12,1],to:[12,31],until:'Until Dec 31',g:'#3a0c14,#1e3a2a',looks:{
-xm_velvet:{n:'Velvet Noel',t:'Classic red, pearl lids',g:'#5a0c18,#a8182c',d:1,look:'rose',adj:{light:3,contrast:6,color:2,warmth:-2,vignette:3,softness:10},
+xm_velvet:{n:'Velvet Noel',t:'Classic red, rosy shimmer lids',g:'#5a0c18,#a8182c',d:1,look:'rose',adj:{light:3,contrast:6,color:2,warmth:-2,vignette:3,softness:10},
  beauty:{smooth:40,foundation:22,concealer:26,blemish:80,scars:70,wrinkles:28,contour:26,highlight:36,blush:14,eyeShadow:36,eyeLiner:40,lashes:56,mascara:40,browMakeup:26,tint:64,gloss:26,faceLight:18},
- sh:{color:'red',lipFinish:'cream',glossShade:'gCherry',blushColor:'rose',eyeColor:'pearlChamp',eyeFinish:'shimmer',linerStyle:'wing',linerColor:'black',lashStyle:'volume',lowerSmoke:.2,glamEyes:1}},
-xm_frost:{n:'Frosted Champagne',t:'Pearl eyes, rosy glow',g:'#c8b8a8,#7a8a98',d:1,look:'glow',adj:{light:5,contrast:3,color:2,warmth:-1,softness:12},
+ sh:{color:'red',lipFinish:'cream',glossShade:'gCherry',blushColor:'rose',eyeColor:'antiqueRose',eyeFinish:'shimmer',linerStyle:'wing',linerColor:'black',lashStyle:'volume',lowerSmoke:.2,glamEyes:1}},
+xm_frost:{n:'Frosted Champagne',t:'Rose-pearl eyes, mauve-rose lip',g:'#c8b8a8,#7a8a98',d:1,look:'glow',adj:{light:5,contrast:3,color:2,warmth:-1,softness:12},
  beauty:{smooth:40,foundation:20,concealer:26,blemish:80,scars:70,wrinkles:28,contour:20,highlight:44,blush:14,eyeShadow:40,eyeLiner:24,lashes:48,mascara:36,browMakeup:22,tint:52,gloss:36,faceLight:20},
- sh:{color:'petalRose',lipFinish:'cream',glossShade:'gRose',blushColor:'pink',eyeColor:'pearlChamp',eyeFinish:'shimmer',linerStyle:'fine',linerColor:'brown',lashStyle:'wispy',lowerSmoke:.15,glamEyes:1}},
-xm_mistletoe:{n:'Mistletoe Rose',t:'Rose-gold eyes, soft rose',g:'#8a3a52,#e8a0b4',d:1,look:'rose',adj:{light:4,contrast:4,color:3,warmth:-1,softness:12},
+ sh:{color:'mauveRose',lipFinish:'cream',glossShade:'gRose',blushColor:'pink',eyeColor:'roseQuartz',eyeFinish:'shimmer',linerStyle:'fine',linerColor:'brown',lashStyle:'wispy',lowerSmoke:.15,glamEyes:1}},
+xm_mistletoe:{n:'Mistletoe Rose',t:'Rose-gold eyes, deep rose lip',g:'#8a3a52,#e8a0b4',d:1,look:'rose',adj:{light:4,contrast:4,color:3,warmth:-1,softness:12},
  beauty:{smooth:40,foundation:20,concealer:26,blemish:80,scars:70,wrinkles:28,contour:22,highlight:38,blush:14,eyeShadow:42,eyeLiner:28,lashes:50,mascara:38,browMakeup:22,tint:56,gloss:34,faceLight:18},
- sh:{color:'cleanRose',lipFinish:'cream',glossShade:'gRose',blushColor:'rose',eyeColor:'roseGold',eyeFinish:'shimmer',linerStyle:'classic',linerColor:'brown',lashStyle:'wispy',lowerSmoke:.2,glamEyes:1}},
-xm_snow:{n:'Snow Queen',t:'Icy shimmer, velvet rose',g:'#9aa8c0,#e8eef6',d:1,look:'glow',adj:{light:5,contrast:4,color:2,warmth:-3,softness:12},
+ sh:{color:'deepRose',lipFinish:'cream',glossShade:'gRose',blushColor:'rose',eyeColor:'roseGold',eyeFinish:'shimmer',linerStyle:'classic',linerColor:'brown',lashStyle:'wispy',lowerSmoke:.2,glamEyes:1}},
+xm_snow:{n:'Snow Queen',t:'Icy shimmer, berry lip',g:'#9aa8c0,#e8eef6',d:1,look:'glow',adj:{light:5,contrast:4,color:2,warmth:-3,softness:12},
  beauty:{smooth:42,foundation:20,concealer:26,blemish:80,scars:70,wrinkles:28,contour:24,highlight:44,blush:14,eyeShadow:44,eyeLiner:32,lashes:56,mascara:40,browMakeup:24,tint:58,gloss:32,faceLight:20},
- sh:{color:'velvetRose',lipFinish:'cream',glossShade:'gRose',blushColor:'pink',eyeColor:'moonstone',eyeFinish:'shimmer',linerStyle:'wing',linerColor:'black',lashStyle:'volume',lowerSmoke:.2,glamEyes:1}},
+ sh:{color:'berry',lipFinish:'cream',glossShade:'gRose',blushColor:'pink',eyeColor:'smokedMauve',eyeFinish:'shimmer',linerStyle:'wing',linerColor:'black',lashStyle:'volume',lowerSmoke:.2,glamEyes:1}},
 xm_crisp:{men:1,n:'Winter Crisp',t:'Fresh and sharp',g:'#1e2a36,#7890a8',d:1,look:'professional',adj:{light:4,contrast:6,color:1,warmth:-2,detail:7},
  beauty:{smooth:30,foundation:16,concealer:32,blemish:70,scars:60,wrinkles:18,contour:22,matte:38,browMakeup:20,eyeBright:12},sh:{}},
 xm_fireside:{men:1,n:'Fireside',t:'Warm and polished',g:'#2a1a14,#7a3a24',d:1,look:'natural',adj:{light:3,contrast:6,color:2,warmth:2,vignette:3,detail:5},
@@ -2350,12 +2356,12 @@ xm_fireside:{men:1,n:'Fireside',t:'Warm and polished',g:'#2a1a14,#7a3a24',d:1,lo
 ny_midnight:{n:'Midnight Sparkle',t:'Gold smoke, deep red lip',g:'#1a1428,#8a6a2a',d:1,look:'rose',adj:{light:2,contrast:7,color:2,warmth:-1,vignette:4,softness:10},
  beauty:{smooth:40,foundation:22,concealer:26,blemish:80,scars:70,wrinkles:28,contour:28,highlight:40,blush:14,eyeShadow:52,eyeLiner:38,lashes:58,mascara:42,browMakeup:26,tint:64,gloss:28,faceLight:18},
  sh:{color:'spicedRed',lipFinish:'cream',glossShade:'gRose',blushColor:'mauve',eyeColor:'bronze',eyeFinish:'shimmer',linerStyle:'wing',linerColor:'black',lashStyle:'volume',lowerSmoke:.35,glamEyes:1}},
-ny_toast:{n:'Champagne Toast',t:'Champagne glow, glossy lip',g:'#e2cfa8,#b08a52',d:1,look:'glow',adj:{light:5,contrast:4,color:2,warmth:1,softness:12},
+ny_toast:{n:'Champagne Toast',t:'Copper-champagne eyes, glossy rose lip',g:'#e2cfa8,#b08a52',d:1,look:'glow',adj:{light:5,contrast:4,color:2,warmth:1,softness:12},
  beauty:{smooth:40,foundation:20,concealer:26,blemish:80,scars:70,wrinkles:28,contour:22,highlight:46,bronzer:12,tan:24,blush:14,eyeShadow:42,eyeLiner:26,lashes:50,mascara:36,browMakeup:22,tint:54,gloss:40,faceLight:20},
- sh:{color:'champRose',lipFinish:'cream',glossShade:'gRose',blushColor:'peach',eyeColor:'brulee',eyeFinish:'shimmer',linerStyle:'classic',linerColor:'brown',lashStyle:'wispy',lowerSmoke:.2,glamEyes:1}},
-ny_glam:{n:'Black Tie Glam',t:'Espresso smoke, velvet rose',g:'#1a1210,#5a3a30',d:1,look:'rose',adj:{light:2,contrast:7,color:2,warmth:-2,vignette:4,softness:10},
+ sh:{color:'polishedRose',lipFinish:'cream',glossShade:'gRose',blushColor:'peach',eyeColor:'copperRose',eyeFinish:'shimmer',linerStyle:'classic',linerColor:'brown',lashStyle:'wispy',lowerSmoke:.2,glamEyes:1}},
+ny_glam:{n:'Black Tie Glam',t:'Espresso smoke, mulberry lip',g:'#1a1210,#5a3a30',d:1,look:'rose',adj:{light:2,contrast:7,color:2,warmth:-2,vignette:4,softness:10},
  beauty:{smooth:42,foundation:22,concealer:26,blemish:80,scars:70,wrinkles:28,contour:30,highlight:36,blush:14,eyeShadow:56,eyeLiner:42,lashes:60,mascara:44,browMakeup:28,tint:62,gloss:26,faceLight:16},
- sh:{color:'velvetRose',lipFinish:'cream',glossShade:'gRose',blushColor:'mauve',eyeColor:'espressoE',eyeFinish:'matte',linerStyle:'wing',linerColor:'black',lashStyle:'volume',lowerSmoke:.45,glamEyes:1}},
+ sh:{color:'mulberry',lipFinish:'cream',glossShade:'gRose',blushColor:'mauve',eyeColor:'espressoE',eyeFinish:'matte',linerStyle:'wing',linerColor:'black',lashStyle:'volume',lowerSmoke:.45,glamEyes:1}},
 ny_rosegold:{n:'Rose Gold Glam',t:'Rose-gold shimmer',g:'#b0705a,#f0c0a8',d:1,look:'glow',adj:{light:4,contrast:4,color:3,warmth:0,softness:12},
  beauty:{smooth:40,foundation:20,concealer:26,blemish:80,scars:70,wrinkles:28,contour:24,highlight:42,blush:14,eyeShadow:46,eyeLiner:28,lashes:52,mascara:38,browMakeup:22,tint:56,gloss:36,faceLight:18},
  sh:{color:'polishedRose',lipFinish:'cream',glossShade:'gRose',blushColor:'rose',eyeColor:'copperRose',eyeFinish:'shimmer',linerStyle:'classic',linerColor:'brown',lashStyle:'wispy',lowerSmoke:.25,glamEyes:1}},
@@ -2365,7 +2371,8 @@ ny_blacktie:{men:1,n:'Black Tie',t:'Crisp, camera-ready',g:'#101216,#4a4e5a',d:1
  beauty:{smooth:30,foundation:18,concealer:32,blemish:72,scars:62,wrinkles:20,contour:26,matte:40,browMakeup:22,eyeBright:10},sh:{}}}}];
 
 /* glam seasonal eyes: shadow blends further up the lid toward the crease; smoky looks reach highest */
-SEASONS.forEach(function(se){for(var lk in se.looks){var lv=se.looks[lk];if(lv.men||!lv.sh||!lv.beauty||!lv.beauty.eyeShadow)continue;lv.sh.shadowReach=(lv.sh.lowerSmoke||0)>=.3?1.4:1.22}});
+SEASONS.forEach(function(se){for(var lk in se.looks){var lv=se.looks[lk];if(lv.men||!lv.sh||!lv.beauty||!lv.beauty.eyeShadow)continue;lv.sh.shadowReach=(lv.sh.lowerSmoke||0)>=.3?1.6:1.45}});
+SEASONS.forEach(function(se){for(var lk in se.looks){var lv=se.looks[lk];if(lv.men||!lv.beauty||!lv.beauty.tint)continue;var B=lv.beauty;B.eyeShadow=Math.max(B.eyeShadow||0,50);B.blush=Math.max(B.blush||0,26);B.bronzer=Math.max(B.bronzer||0,24);B.contour=Math.max(B.contour||0,24);B.highlight=Math.max(B.highlight||0,38);lv.beauty.tint=Math.max(lv.beauty.tint,66);lv.sh.lipFinish='cream';if(!lv.sh.glossShade||lv.sh.glossShade==='clear')lv.sh.glossShade='gRose'}});
 var KEYS={},MENK={};SEASONS.forEach(function(s){for(var k in s.looks){var v=s.looks[k];VIBES[k]=v;KEYS[k]=s.id;if(v.men)MENK[k]=1}});
 function md(m,d){return m*100+d}
 function inSeason(s,now){var t=md(now.getMonth()+1,now.getDate()),a=md(s.from[0],s.from[1]),b=md(s.to[0],s.to[1]);return a<=b?(t>=a&&t<=b):(t>=a||t<=b)}
@@ -2417,6 +2424,8 @@ var lastSig=active().map(function(s){return s.id}).join();
 setInterval(function(){var sig=active().map(function(s){return s.id}).join();if(sig!==lastSig){lastSig=sig;render()}},60000);
 /* glam seasonal looks get the same very subtle nose refinement as the glam finishes (women only) */
 var _avS=applyVibe;applyVibe=async function(k){var r=await _avS.apply(this,arguments);try{if(KEYS[k]&&!MENK[k]&&window.frameStyle!=='men'&&lastRecipe&&lastRecipe.key===k&&beauty.points&&beauty.points.nose&&(beauty.nose||0)>-4){beauty.nose=-4;try{syncBeauty()}catch(e){}invalidate();try{checkpoint()}catch(e){}}}catch(e){}return r};
+/* seasonal lipsticks finish glossy, never dry: gloss is set after the look's general limits are applied */
+var _avG=applyVibe;applyVibe=async function(k){var r=await _avG.apply(this,arguments);try{if(KEYS[k]&&!MENK[k]&&window.frameStyle!=='men'&&lastRecipe&&lastRecipe.key===k&&beauty.lipOutline&&(beauty.tint||0)>0){var gv=Math.round(52*Math.max(.7,Math.min(1.25,strengthMult/.9)));if((beauty.gloss||0)<gv){beauty.gloss=gv;try{syncBeauty()}catch(e){}invalidate();try{checkpoint()}catch(e){}}}}catch(e){}return r};
 }catch(e){console.warn('v41 seasonal',e)}})();
 </script>
 <script>
@@ -2537,5 +2546,15 @@ var extra=sections(det,input,W,H,32);
 extra.forEach(function(f){if(faces.length>=MAX)return;if(!faces.some(function(g){return same(g,f,W,H)}))faces.push(f)});
 return Object.assign({},result,{faceLandmarks:faces})}catch(e){return result}};
 }catch(e){console.warn('v46 group faces',e)}})();
+</script>
+<script>
+/* v47: Film Portrait reworked - soft film warmth without the washed-out, sallow grade: rosewood lip with a glossy finish, bronze and blush on the cheeks, visible bronze lids */
+;(function(){try{var F=VIBES.film;if(!F)return;
+F.t='Soft film glow, rosewood lip';F.look='rose';
+F.adj={light:3,contrast:5,color:2,warmth:3,fade:2,vignette:3,softness:8};
+F.beauty=Object.assign({},F.beauty,{smooth:36,foundation:20,concealer:24,blemish:75,scars:60,wrinkles:24,contour:24,bronzer:24,tan:26,highlight:36,blush:26,eyeShadow:46,eyeLiner:30,lashes:44,mascara:34,browMakeup:22,tint:66,gloss:40});
+F.sh=Object.assign({},F.sh,{color:'rosewood',lipFinish:'cream',glossShade:'gRose',blushColor:'rose',eyeColor:'bronze',eyeFinish:'matte',linerStyle:'classic',linerColor:'brown',lashStyle:'wispy',lipNat:0,glamEyes:1});
+document.querySelectorAll('.vibe[data-vibe="film"] span').forEach(function(e){e.textContent=F.t});
+}catch(e){console.warn('v47 film',e)}})();
 </script>
 </body></html>
