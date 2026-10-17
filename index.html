@@ -2592,4 +2592,50 @@ if(notes.length>1){var v=VIBES[k];setTimeout(function(){try{toast((v?v.n+' appli
 }catch(e){console.warn('smart',e)}return r};
 }catch(e){console.warn('v48 smart touch-ups',e)}})();
 </script>
+<script>
+/* v49: Calmer layout for new visitors.
+   Order in the studio: Finishes -> Strength -> Seasonal -> Work & LinkedIn -> Eyes (Eye Lift, keep my eye makeup) -> colours -> More looks (folded) -> All tools.
+   One Women / Men choice (next to Finishes and on the photo), fewer buttons in the studio bar. */
+;(function(){function run(){try{
+var $=function(s){return document.querySelector(s)};
+var fin=$('#finWrap'),finRow=$('#finRow'),season=$('#seasonWrap'),strength=$('#strength'),edit=$('#edit');if(!fin||!finRow||!edit)return;
+if(document.getElementById('fcLayout'))return;
+/* 1. strength sits right under the Finishes it controls */
+if(strength){var sh=strength.previousElementSibling;var sWrap=document.createElement('div');sWrap.id='strengthWrap';if(sh&&sh.tagName==='H3'){sh.textContent='How strong';sWrap.appendChild(sh)}
+var hint=document.createElement('p');hint.className='lookHint';hint.id='strengthHint';hint.textContent='Changes the look you picked. Glam and Max make it bolder.';sWrap.appendChild(strength);sWrap.appendChild(hint);finRow.parentNode.insertBefore(sWrap,finRow.nextSibling)}
+/* 2. eyes together, after the looks */
+var el=$('#eyeLiftQuick'),keep=$('label.keepEyes'),colors=$('#toColors');
+var eyes=document.createElement('div');eyes.id='eyesWrap';var eh=document.createElement('h3');eh.className='vibesTitle';eh.textContent='Eyes';eyes.appendChild(eh);if(el)eyes.appendChild(el);if(keep)eyes.appendChild(keep);
+if(colors&&colors.parentNode===fin)fin.insertBefore(eyes,colors);else fin.appendChild(eyes);
+/* 3. the long list of extra looks is folded away until wanted */
+var vibes=$('#vibes');if(vibes){var head=vibes.parentNode.querySelector('#lookFilter')?vibes.parentNode.querySelector('#lookFilter').previousElementSibling:null,lf=$('#lookFilter'),lh=$('#lookHint');
+var d=document.createElement('details');d.id='moreLooks';var su=document.createElement('summary');su.innerHTML='<span>More looks</span><small>Tap to see more styles</small>';d.appendChild(su);
+var anchorC=$('#toColors');if(anchorC&&anchorC.parentNode===fin)fin.insertBefore(d,anchorC.nextSibling);else fin.appendChild(d);if(lh)d.appendChild(lh);d.appendChild(vibes);if(head&&head.tagName==='H3'&&head.textContent.indexOf('More looks')>=0)head.hidden=true;if(lf)lf.classList.add('fcHidden');
+d.addEventListener('toggle',function(){if(d.open){try{thumbKey=''}catch(e){}}})}
+/* 5. first impression: one quiet logo in the header, the brand promise as the headline */
+var ban=$('.fcBanner');if(ban)ban.classList.add('fcHidden');var tag=document.querySelector('header .tag');if(tag)tag.classList.add('fcHidden');
+var hero=$('.intro.heroNew');if(hero){var eb=hero.querySelector('.eyebrow'),h1=hero.querySelector('h1'),hp=h1&&h1.nextElementSibling;
+if(eb)eb.textContent='Natural glam · Flawless skin · One tap';if(h1)h1.innerHTML='Couture beauty<br><span>for every photo.</span>';
+if(hp&&hp.tagName==='P')hp.textContent='Upload a selfie, choose a look, save. Polished and natural, and your photos never leave your phone.'}
+/* 6. the look's detailed filters stay folded until someone wants to fine-tune */
+var pp=$('#presetPanel');if(pp){var fineOpen=false;var deco=function(){var hd=pp.querySelector('.ppHead');if(!hd||hd.querySelector('.ppToggle'))return;var sp=hd.querySelector('span');if(sp)sp.textContent='Looks great as is. Fine-tune any part if you like.';var bt=document.createElement('button');bt.type='button';bt.className='ppToggle';bt.setAttribute('aria-expanded',fineOpen?'true':'false');bt.textContent=fineOpen?'Hide fine-tuning':'Fine-tune this look';bt.onclick=function(){fineOpen=!fineOpen;pp.classList.toggle('ppOpen',fineOpen);bt.setAttribute('aria-expanded',fineOpen?'true':'false');bt.textContent=fineOpen?'Hide fine-tuning':'Fine-tune this look'};hd.appendChild(bt);pp.classList.toggle('ppOpen',fineOpen)};
+new MutationObserver(deco).observe(pp,{childList:true});deco()}
+/* 4. one Women / Men choice: hide the duplicate pickers (they keep working behind the scenes) */
+['#styleRow','#addDesk','#facePts'].forEach(function(s){var e=$(s);if(e)e.classList.add('fcHidden')});
+var m=document.createElement('style');m.id='fcLayout';m.textContent=
+'.fcHidden{display:none!important}'+
+'#strengthWrap{margin:6px 0 4px}#strengthWrap .strength{margin-bottom:4px}#strengthHint{margin:2px 0 10px}'+
+'#eyesWrap{margin:10px 0 6px}#eyesWrap #eyeLiftQuick{margin-bottom:10px}'+
+'#moreLooks{margin:14px 0 10px;border:1px solid #e6d7c0;border-radius:16px;background:#fffdfa;padding:0 12px}'+
+'#moreLooks>summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:52px;padding:6px 2px;font:700 16px/1.2 system-ui,-apple-system,"Segoe UI",sans-serif;color:#3a1f4a}'+
+'#moreLooks>summary::-webkit-details-marker{display:none}'+
+'#moreLooks>summary small{font-weight:500;font-size:12.5px;color:#7a6884;margin-left:auto}'+
+'#moreLooks>summary:after{content:"";width:8px;height:8px;border-right:2px solid #c9a24a;border-bottom:2px solid #c9a24a;transform:rotate(45deg);margin:0 4px 4px 6px;transition:transform .2s}'+
+'#moreLooks[open]>summary:after{transform:rotate(-135deg);margin-bottom:-2px}'+
+'#presetPanel:not(.ppOpen)>:not(.ppHead){display:none!important}#presetPanel:not(.ppOpen){min-height:0!important;height:auto!important;max-height:none!important;padding-top:14px!important;padding-bottom:14px!important}#presetPanel .ppHead{display:flex!important;flex-direction:column;align-items:center;text-align:center;gap:6px;min-height:0!important;height:auto!important;margin:0!important}#presetPanel .ppHead span{display:block}.ppToggle{border:1.5px solid #c9a24a;background:#fff;color:#4a2a52;border-radius:999px;padding:8px 14px;min-height:40px;font:650 14px system-ui,-apple-system,sans-serif;cursor:pointer}.ppToggle:focus-visible{outline:3px solid #c9a24a;outline-offset:2px}'+
+'#moreLooks[open]{padding-bottom:12px}#moreLooks>summary:focus-visible{outline:3px solid #c9a24a;outline-offset:2px;border-radius:12px}';
+document.head.appendChild(m);
+}catch(e){console.warn('v49 layout',e)}}
+if(document.readyState==='complete')setTimeout(run,500);else window.addEventListener('load',function(){setTimeout(run,500)});})();
+</script>
 </body></html>
