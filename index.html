@@ -2581,7 +2581,7 @@ var _avS48=applyVibe;applyVibe=async function(k){var r=await _avS48.apply(this,a
 if(!lastRecipe||lastRecipe.key!==k||!beauty||!beauty.points||!beauty.featurePoints)return r;
 var men=window.frameStyle==='men',work=WORK.test(k),notes=[],changed=false;
 if(men){if((beauty.blemish||0)<65){beauty.blemish=65;changed=true}if((beauty.scars||0)<45){beauty.scars=45;changed=true}}
-else if(!work){
+else if(!work&&k!=='artist'){
  if((beauty.blemish||0)<78){beauty.blemish=78;changed=true}if((beauty.scars||0)<62){beauty.scars=62;changed=true}notes.push('blemishes covered');
  var m=measure(beauty)||{};window.__smart=m;
  if(m.nose){var n=-Math.round(Math.max(0,Math.min(8,(m.nose-1.25)*25)));if(n<0&&(beauty.nose||0)>n){beauty.nose=n;changed=true;notes.push('nose refined')}}
@@ -2685,7 +2685,7 @@ function blur(a,W,H,r){var t=new Float32Array(W*H),o=new Float32Array(W*H);for(v
 function inPoly(x,y,P){var c=false;for(var i=0,j=P.length-1;i<P.length;j=i++){var a=P[i],b=P[j];if(((a.y>y)!==(b.y>y))&&(x<(b.x-a.x)*(y-a.y)/(b.y-a.y)+a.x))c=!c}return c}
 function enrich(d,i,k,dark){var r=d[i],g=d[i+1],b=d[i+2],L=.299*r+.587*g+.114*b,s=1+.22*k,L2=L*(1-dark*k);for(var c=0;c<3;c++){var v=[r,g,b][c];d[i+c]=Math.max(0,Math.min(255,L2+(v-L)*s))}}
 function lips(d,w,h,b,a){var lo=b.lipOutline;if(!lo||lo.length<6||typeof lipCoverage!=='function')return;var xs=lo.map(function(p){return p.x*w}),ys=lo.map(function(p){return p.y*h}),X0=Math.max(0,Math.floor(Math.min.apply(null,xs))),X1=Math.min(w-1,Math.ceil(Math.max.apply(null,xs))),Y0=Math.max(0,Math.floor(Math.min.apply(null,ys))),Y1=Math.min(h-1,Math.ceil(Math.max.apply(null,ys)));
-for(var y=Y0;y<=Y1;y++)for(var x=X0;x<=X1;x++){var m=0;try{m=lipCoverage(x+.5,y+.5,w,h,b)||0}catch(e){}if(m<=.01)continue;enrich(d,(y*w+x)*4,a*m,.1)}}
+for(var y=Y0;y<=Y1;y++)for(var x=X0;x<=X1;x++){var m=0;try{m=lipCoverage(x+.5,y+.5,w,h,b)||0}catch(e){}if(m<=.01)continue;enrich(d,(y*w+x)*4,a*m*.7,.03)}}
 function eyes(d,w,h,b,a){var fp=b.featurePoints||{},EC=b.eyeContours||[];for(var e=0;e<EC.length&&e<2;e++){var up=EC[e];if(!up||up.length<5)continue;var low=[];for(var i=0;i<9;i++){var p=fp[(e===0?'lL':'lR')+i];if(p)low.push(p)}if(low.length<5)continue;
 var U=up.map(function(p){return{x:p.x*w,y:p.y*h}}),Lw=low.map(function(p){return{x:p.x*w,y:p.y*h}}),xs=U.concat(Lw).map(function(p){return p.x}),ys=U.concat(Lw).map(function(p){return p.y}),ex0=Math.min.apply(null,xs),ex1=Math.max.apply(null,xs),span=ex1-ex0;if(span<8)continue;
 /* the visible eye (white + iris) is protected */
@@ -2736,7 +2736,7 @@ try{thumbKey=''}catch(e){}
    except Makeup Artist, where the client's own lip and eye colours are also kept true. */
 ;(function(){try{
 if(typeof beautyPixels!=='function')return;
-if(typeof VIBES==='object'&&VIBES.artist){VIBES.artist.adj={light:0,contrast:2,color:0,warmth:0,softness:3,detail:4,vignette:2};VIBES.artist.beauty=Object.assign({},VIBES.artist.beauty,{faceLight:0,foundation:6,concealer:14,smooth:20})}
+if(typeof VIBES==='object'&&VIBES.artist){VIBES.artist.adj={light:0,contrast:2,color:0,warmth:0,softness:3,detail:4,vignette:2};VIBES.artist.beauty=Object.assign({},VIBES.artist.beauty,{faceLight:0,foundation:6,concealer:14,smooth:20,blemish:50,scars:40,wrinkles:24})}
 function guard(o,d,w,h,b,X0,Y0,X1,Y1){var artist=!!b.artist,fo=b.faceOutline,xs=fo.map(function(p){return p.x*w}),ys=fo.map(function(p){return p.y*h}),fx0=Math.min.apply(null,xs),fx1=Math.max.apply(null,xs),fy0=Math.min.apply(null,ys),fy1=Math.max.apply(null,ys),fw=fx1-fx0,fh=fy1-fy0;
 var fp=b.featurePoints||{},EY=artist?[]:[fp.eyeLeft,fp.eyeRight].filter(Boolean).map(function(e){return{x:e.x*w,y:e.y*h-fh*.02}}),erx=fw*.17,ery=fh*.09;
 var LB=null;if(!artist){try{var lo=b.lipOutline;if(lo&&lo.length>5&&typeof lipCoverage==='function'){var lx=lo.map(function(p){return p.x*w}),ly=lo.map(function(p){return p.y*h}),pd=(Math.max.apply(null,ly)-Math.min.apply(null,ly))*.4+3;LB=[Math.min.apply(null,lx)-pd,Math.min.apply(null,ly)-pd,Math.max.apply(null,lx)+pd,Math.max.apply(null,ly)+pd]}}catch(e){LB=null}}
