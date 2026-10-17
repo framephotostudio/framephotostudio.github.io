@@ -2078,7 +2078,7 @@ fx_bold:{eyeColor:'taupe',sh:16,ln:16,la:38,ma:30,lashStyle:'wispy',linerStyle:'
 for(var k in G){var V=VIBES[k];if(!V)continue;var g=G[k],B=V.beauty;
 B.eyeShadow=g.sh;B.eyeLiner=g.ln;B.lashes=g.la;B.mascara=g.ma;B.tan=Math.max(B.tan||0,g.tan);B.bronzer=Math.max(B.bronzer||0,g.bz);B.highlight=Math.max(B.highlight||0,32);
 V.sh=Object.assign({},V.sh,{eyeColor:g.eyeColor,eyeFinish:'matte',lashStyle:g.lashStyle,linerStyle:g.linerStyle,linerColor:g.linerColor,lowerSmoke:g.low,glamEyes:1});
-V.adj=Object.assign({},V.adj);if((V.adj.warmth||0)<2)V.adj.warmth=2}
+V.adj=Object.assign({},V.adj)}
 var _mb=menBoost;menBoost=function(v){var r=_mb(v);if(window.frameStyle==='men'&&r&&r.beauty){r=Object.assign({},r,{beauty:Object.assign({},r.beauty),sh:Object.assign({},r.sh||{})});delete r.beauty.nose;r.sh.lowerSmoke=0;r.sh.glamEyes=0;if(r.beauty.tan)r.beauty.tan=Math.round(r.beauty.tan*.6)}return r};
 var _av37=applyVibe;applyVibe=async function(k){var r=await _av37.apply(this,arguments);try{if(G[k]&&window.frameStyle!=='men'&&lastRecipe&&lastRecipe.key===k&&beauty.points&&beauty.points.nose&&(beauty.nose||0)>-4){beauty.nose=-4;try{syncBeauty()}catch(e){}invalidate();try{checkpoint()}catch(e){}}}catch(e){}return r};
 }catch(e){console.warn('v37',e)}})();
@@ -2710,7 +2710,7 @@ var LP=b.lipOutline&&b.lipOutline.length>5?b.lipOutline.map(function(p){return{x
 var L=new Float32Array(W*H),M=new Float32Array(W*H);for(var y=0;y<H;y++)for(var x=0;x<W;x++){var q=y*W+x,j=((y+Y0)*w+x+X0)*4,px=x+X0+.5,py=y+Y0+.5;L[q]=.299*d[j]+.587*d[j+1]+.114*d[j+2];var inside=inPoly(px,py,P);if(inside){for(var e=0;e<EX.length;e++)if(inPoly(px,py,EX[e])){inside=false;break}if(inside&&LP&&inPoly(px,py,LP))inside=false}M[q]=inside?1:0}
 M=blur(M,W,H,Math.max(2,Math.round(W*.03)));var big=blur(L,W,H,Math.max(3,Math.round(W*.07))),sm=blur(L,W,H,1);
 /* protect the lips and eyes from the sculpting pass (they get their own treatment) */
-for(var y2=0;y2<H;y2++)for(var x2=0;x2<W;x2++){var q2=y2*W+x2,m=M[q2];if(m<=.01)continue;var j2=((y2+Y0)*w+x2+X0)*4,Lv=L[q2],add=(sm[q2]-big[q2])*.32*a*m;if(Lv<18||Lv>245)add*=.4;for(var c=0;c<3;c++)d[j2+c]=Math.max(0,Math.min(255,d[j2+c]+add))}}
+for(var y2=0;y2<H;y2++)for(var x2=0;x2<W;x2++){var q2=y2*W+x2,m=M[q2];if(m<=.01)continue;var j2=((y2+Y0)*w+x2+X0)*4,Lv=L[q2],add=(sm[q2]-big[q2])*.22*a*m;if(Lv<18||Lv>245)add*=.4;for(var c=0;c<3;c++)d[j2+c]=Math.max(0,Math.min(255,d[j2+c]+add))}}
 function crisp(d,w,h,poly,amt){if(!poly||poly.length<3)return;var xs=poly.map(function(p){return p.x}),ys=poly.map(function(p){return p.y}),pad=4,X0=Math.max(0,Math.floor(Math.min.apply(null,xs))-pad),X1=Math.min(w-1,Math.ceil(Math.max.apply(null,xs))+pad),Y0=Math.max(0,Math.floor(Math.min.apply(null,ys))-pad),Y1=Math.min(h-1,Math.ceil(Math.max.apply(null,ys))+pad),W=X1-X0+1,H=Y1-Y0+1;if(W<4||H<4)return;
 var L=new Float32Array(W*H),M=new Float32Array(W*H);for(var y=0;y<H;y++)for(var x=0;x<W;x++){var q=y*W+x,j=((y+Y0)*w+x+X0)*4;L[q]=.299*d[j]+.587*d[j+1]+.114*d[j+2];M[q]=inPoly(x+X0+.5,y+Y0+.5,poly)?1:0}
 M=blur(M,W,H,2);var bl=blur(L,W,H,1);for(var y2=0;y2<H;y2++)for(var x2=0;x2<W;x2++){var q2=y2*W+x2;if(M[q2]<=.01)continue;var j2=((y2+Y0)*w+x2+X0)*4,add=Math.max(-18,Math.min(18,(L[q2]-bl[q2])*amt*M[q2]));for(var c=0;c<3;c++)d[j2+c]=Math.max(0,Math.min(255,d[j2+c]+add))}}
@@ -2727,5 +2727,41 @@ var st=document.createElement('style');st.textContent='#finRow .artistHidden{dis
 setInterval(function(){var bt=document.getElementById('artistMode');if(!bt)return;var on=!!(typeof lastRecipe!=='undefined'&&lastRecipe&&lastRecipe.key==='artist');if(bt.classList.contains('on')!==on){bt.classList.toggle('on',on);var g=bt.querySelector('.amGo');if(g)g.textContent=on?'Applied. Use How strong to adjust':'Enhance this look'}},400);
 try{thumbKey=''}catch(e){}
 }catch(e){console.warn('v51 artist',e)}})();
+</script>
+<script>
+/* v52: True skin tone guard - every look keeps the photo's own calm, studio lighting.
+   Foundation, concealer, highlight, bronzer, tan and the fill light may brighten, even out and add depth,
+   but they can no longer wash the skin yellow/golden or push its colour stronger than it was.
+   Rosy colour (blush) is still allowed. Lipstick and eye makeup are left to their looks,
+   except Makeup Artist, where the client's own lip and eye colours are also kept true. */
+;(function(){try{
+if(typeof beautyPixels!=='function')return;
+if(typeof VIBES==='object'&&VIBES.artist){VIBES.artist.adj={light:1,contrast:2,color:0,warmth:0,softness:3,detail:4,vignette:2};VIBES.artist.beauty=Object.assign({},VIBES.artist.beauty,{faceLight:6,foundation:8,concealer:24})}
+function guard(o,d,w,h,b,X0,Y0,X1,Y1){var artist=!!b.artist,fo=b.faceOutline,xs=fo.map(function(p){return p.x*w}),ys=fo.map(function(p){return p.y*h}),fx0=Math.min.apply(null,xs),fx1=Math.max.apply(null,xs),fy0=Math.min.apply(null,ys),fy1=Math.max.apply(null,ys),fw=fx1-fx0,fh=fy1-fy0;
+var fp=b.featurePoints||{},EY=artist?[]:[fp.eyeLeft,fp.eyeRight].filter(Boolean).map(function(e){return{x:e.x*w,y:e.y*h-fh*.02}}),erx=fw*.17,ery=fh*.09;
+var LB=null;if(!artist){try{var lo=b.lipOutline;if(lo&&lo.length>5&&typeof lipCoverage==='function'){var lx=lo.map(function(p){return p.x*w}),ly=lo.map(function(p){return p.y*h}),pd=(Math.max.apply(null,ly)-Math.min.apply(null,ly))*.4+3;LB=[Math.min.apply(null,lx)-pd,Math.min.apply(null,ly)-pd,Math.max.apply(null,lx)+pd,Math.max.apply(null,ly)+pd]}}catch(e){LB=null}}
+var RW=X1-X0+1;
+for(var y=Y0;y<=Y1;y++)for(var x=X0;x<=X1;x++){var k=((y-Y0)*RW+(x-X0))*3,j=(y*w+x)*4,r0=o[k],g0=o[k+1],b0=o[k+2],r1=d[j],g1=d[j+1],b1=d[j+2];
+if(Math.abs(r1-r0)+Math.abs(g1-g0)+Math.abs(b1-b0)<3)continue;
+var wt=1;if(LB&&x>=LB[0]&&x<=LB[2]&&y>=LB[1]&&y<=LB[3]){var lc=0;try{lc=Math.min(1,lipCoverage(x,y,w,h,b)||0)}catch(e){}wt*=1-lc}
+for(var e=0;e<EY.length;e++){var ex=(x-EY[e].x)/erx,ey=(y-EY[e].y)/ery,ee=ex*ex+ey*ey;if(ee<4)wt*=1-Math.min(1,Math.exp(-ee*1.2)*1.25)}
+if(wt<=.02)continue;
+var cbo=-.1687*r0-.3313*g0+.5*b0,cro=.5*r0-.4187*g0-.0813*b0,Y1v=.299*r1+.587*g1+.114*b1,cbn=-.1687*r1-.3313*g1+.5*b1,crn=.5*r1-.4187*g1-.0813*b1,co=Math.hypot(cbo,cro);
+var ua=co>.01?cbo/co:-.6,uc=co>.01?cro/co:.8;var va=uc,vc=-ua;if(va+vc<0){va=-va;vc=-vc}
+var dcb=cbn-cbo,dcr=crn-cro,pu=dcb*ua+dcr*uc,pv=dcb*va+dcr*vc;
+/* no yellow / green drift */
+var T=.6;if(pv<-T)pv=-T+(pv+T)*.08;
+/* no stronger skin colour than the photo had (lipstick in Makeup Artist may get a little richer) */
+var lim=co*(artist?.05:.02)+.5;if(pu>lim)pu=lim+(pu-lim)*.1;
+var cbg=cbo+pu*ua+pv*va,crg=cro+pu*uc+pv*vc;if(co<8){var dm=Math.hypot(dcb,dcr),sk=dm>.6?.6/dm:1,tn=Math.max(0,Math.min(1,(co-4)/4));cbg=(cbo+dcb*sk)*(1-tn)+cbg*tn;crg=(cro+dcr*sk)*(1-tn)+crg*tn}var cbf=cbn+(cbg-cbn)*wt,crf=crn+(crg-crn)*wt;
+var R=Y1v+1.402*crf,G=Y1v-.344136*cbf-.714136*crf,B=Y1v+1.772*cbf;d[j]=R<0?0:R>255?255:R;d[j+1]=G<0?0:G>255?255:G;d[j+2]=B<0?0:B>255?255:B}}
+var _bp52=beautyPixels;beautyPixels=function(d,w,h,b){var fo=b&&b.faceOutline;if(!fo||fo.length<3)return _bp52.apply(this,arguments);
+var X0,Y0,X1,Y1,o=null;try{var xs=fo.map(function(p){return p.x*w}),ys=fo.map(function(p){return p.y*h}),a0=Math.min.apply(null,xs),a1=Math.max.apply(null,xs),c0=Math.min.apply(null,ys),c1=Math.max.apply(null,ys),fw=a1-a0,fh=c1-c0;
+X0=Math.max(0,Math.floor(a0-fw*2.6));X1=Math.min(w-1,Math.ceil(a1+fw*2.6));Y0=Math.max(0,Math.floor(c0-fh*1.1));Y1=h-1;
+if(fw>=12&&X1>X0&&Y1>Y0){var RW=X1-X0+1;o=new Uint8ClampedArray(RW*(Y1-Y0+1)*3);for(var y=Y0;y<=Y1;y++){var k=(y-Y0)*RW*3,j=(y*w+X0)*4;for(var x=X0;x<=X1;x++,k+=3,j+=4){o[k]=d[j];o[k+1]=d[j+1];o[k+2]=d[j+2]}}}}catch(e){o=null}
+var r=_bp52.apply(this,arguments);if(o){try{guard(o,d,w,h,b,X0,Y0,X1,Y1)}catch(e){console.warn('tone guard',e)}}return r};
+window.__toneGuard=guard;
+try{thumbKey='';currentProcessed=null;invalidate()}catch(e){}
+}catch(e){console.warn('v52 tone guard',e)}})();
 </script>
 </body></html>
