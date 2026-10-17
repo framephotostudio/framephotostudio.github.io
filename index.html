@@ -2557,4 +2557,39 @@ F.sh=Object.assign({},F.sh,{color:'rosewood',lipFinish:'cream',glossShade:'gRose
 document.querySelectorAll('.vibe[data-vibe="film"] span').forEach(function(e){e.textContent=F.t});
 }catch(e){console.warn('v47 film',e)}})();
 </script>
+<script>
+/* v48: Smart touch-ups - when a women's look is applied, the face is measured and the look adapts:
+   - blemishes, pimples, scars and dark marks are covered on every look (Work looks keep their lighter ~35% cover)
+   - a wide nose is refined a little, only as much as the face needs (never more than a subtle -8)
+   - eyes that look small or hooded are opened gently with Eye Lift (only if Eye Lift was not already set by hand)
+   Men's looks get stronger blemish and scar cover, with the nose and eyes left alone. */
+;(function(){try{
+var WORK=/^w_/;
+function dims(){try{var s=originalPhoto||source;return{w:s.naturalWidth||s.width||1,h:s.naturalHeight||s.height||1}}catch(e){return{w:1,h:1}}}
+function measure(b){var fp=b&&b.featurePoints;if(!fp)return null;var D=dims(),W=D.w,H=D.h,dist=function(a,c){return a&&c?Math.hypot((a.x-c.x)*W,(a.y-c.y)*H):0};
+var icd=dist(fp.lL8,fp.lR8),nose=dist(fp.noseA,fp.noseB),out={};
+if(icd>4&&nose>4)out.nose=nose/icd;
+/* eye opening: how far the upper lid sits above the lower lid, relative to eye width */
+var ap=[];(b.eyeContours||[]).forEach(function(c,i){var low=i===0?[fp.lL3,fp.lL4,fp.lL5]:[fp.lR3,fp.lR4,fp.lR5],L0=i===0?fp.lL0:fp.lR0,L8=i===0?fp.lL8:fp.lR8;if(!c||c.length<5||!L0||!L8||low.some(function(p){return!p}))return;var ew=dist(L0,L8);if(ew<4)return;
+var lx=0,ly=0;low.forEach(function(p){lx+=p.x/3;ly+=p.y/3});var up=c.slice(Math.floor(c.length*.3),Math.ceil(c.length*.7)),ux=0,uy=0;up.forEach(function(p){ux+=p.x/up.length;uy+=p.y/up.length});ap.push(Math.hypot((ux-lx)*W,(uy-ly)*H)/ew)});
+if(ap.length)out.eye=ap.reduce(function(a,c){return a+c},0)/ap.length;
+return out}
+window.__smartMeasure=function(){return measure(beauty)};
+function syncLift(v){try{var a=document.getElementById('beauty-eyeLift'),o=document.getElementById('beauty-eyeLift-value'),qi=document.getElementById('elqRange'),qo=document.getElementById('elqVal');if(a)a.value=v;if(o)o.value=v;if(qi)qi.value=v;if(qo)qo.value=v}catch(e){}}
+var manualLift=0;document.addEventListener('input',function(e){if(e.target&&(e.target.id==='beauty-eyeLift'||e.target.id==='elqRange'))manualLift=+e.target.value||0},true);
+var _avS48=applyVibe;applyVibe=async function(k){var r=await _avS48.apply(this,arguments);try{
+if(!lastRecipe||lastRecipe.key!==k||!beauty||!beauty.points||!beauty.featurePoints)return r;
+var men=window.frameStyle==='men',work=WORK.test(k),notes=[],changed=false;
+if(men){if((beauty.blemish||0)<65){beauty.blemish=65;changed=true}if((beauty.scars||0)<45){beauty.scars=45;changed=true}}
+else if(!work){
+ if((beauty.blemish||0)<78){beauty.blemish=78;changed=true}if((beauty.scars||0)<62){beauty.scars=62;changed=true}notes.push('blemishes covered');
+ var m=measure(beauty)||{};window.__smart=m;
+ if(m.nose){var n=-Math.round(Math.max(0,Math.min(8,(m.nose-1.25)*25)));if(n<0&&(beauty.nose||0)>n){beauty.nose=n;changed=true;notes.push('nose refined')}}
+ if(m.eye&&!manualLift&&!(beauty.eyeLift>0)){var lift=Math.round(Math.max(0,Math.min(45,(.26-m.eye)/.08*45)));if(lift>=8){beauty.eyeLift=lift;syncLift(lift);changed=true;notes.push('eyes opened')}}
+}
+if(changed){try{syncBeauty()}catch(e){}invalidate();try{checkpoint()}catch(e){}}
+if(notes.length>1){var v=VIBES[k];setTimeout(function(){try{toast((v?v.n+' applied. ':'')+'Smart touch-ups: '+notes.join(', ')+'.')}catch(e){}},60)}
+}catch(e){console.warn('smart',e)}return r};
+}catch(e){console.warn('v48 smart touch-ups',e)}})();
+</script>
 </body></html>
