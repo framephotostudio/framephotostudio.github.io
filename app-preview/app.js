@@ -75,6 +75,7 @@
     var ex = document.getElementById('expandPhoto');
     if (ws && ex && !ws.classList.contains('expanded')) ex.click();
     addNewPhotoButton();
+    addToolStrip();
     sync();
   }
   function addNewPhotoButton() {
@@ -94,6 +95,42 @@
     });
     stage.insertBefore(bar, stage.firstChild);
   }
+  // ---------- quick tools strip: every tool one tap away ----------
+  var TOOLS = [
+    ['Looks', { tab: 'edit', find: 'Finishes' }], ['Blemish', { tab: 'beauty', group: 'Skin', ctl: 'beauty-blemish' }], ['Smooth skin', { tab: 'beauty', group: 'Skin', ctl: 'beauty-smooth' }],
+    ['Lipstick', { tab: 'beauty', group: 'Makeup', ctl: 'beauty-tint' }], ['Gloss', { tab: 'beauty', group: 'Makeup', ctl: 'beauty-gloss' }], ['Lashes', { tab: 'beauty', group: 'Makeup', ctl: 'beauty-lashes' }], ['Liner', { tab: 'beauty', group: 'Makeup', ctl: 'beauty-eyeLiner' }],
+    ['Eyeshadow', { tab: 'beauty', group: 'Makeup', ctl: 'beauty-eyeShadow' }], ['Blush', { tab: 'beauty', group: 'Makeup', ctl: 'beauty-blush' }], ['Contour', { tab: 'beauty', group: 'Makeup', ctl: 'beauty-contour' }],
+    ['Brows', { tab: 'beauty', group: 'Makeup', ctl: 'beauty-browMakeup' }], ['Eye lift', { tab: 'beauty', group: 'Facial features', ctl: 'beauty-eyeLift' }],
+    ['Nose', { tab: 'beauty', group: 'Facial features', ctl: 'beauty-nose' }], ['Hair', { tab: 'beauty', group: 'Hair', ctl: 'beauty-hairShine' }],
+    ['Crop', { click: '#quickCrop' }], ['Rotate', { click: '#quickRotate' }], ['Caption', { tab: 'edit', find: 'Add a caption' }]
+  ];
+  function goTool(t) {
+    tap('LIGHT');
+    if (t.click) { var c = document.querySelector(t.click); if (c) c.click(); return; }
+    var tb = document.querySelector('nav.tabs button[data-tab="' + t.tab + '"]'); if (tb) tb.click();
+    if (t.group) { var gb = Array.prototype.find.call(document.querySelectorAll('.beautyGroups button'), function (b) { return b.textContent.trim() === t.group; }); if (gb && !gb.classList.contains('active') && gb.getAttribute('aria-pressed') !== 'true') gb.click(); }
+    setTimeout(function () {
+      var target = null;
+      if (t.ctl) { var inp = document.getElementById(t.ctl); target = inp && (inp.closest('.range') || inp); }
+      if (t.find) target = Array.prototype.find.call(document.querySelectorAll('#edit h2,#edit h3,#edit summary'), function (h) { return h.textContent.indexOf(t.find) > -1; });
+      if (!target) return;
+      if (target.tagName === 'SUMMARY' && target.parentNode && !target.parentNode.open) target.parentNode.open = true;
+      var panel = document.querySelector('.workspace.expanded .panel');
+      var head = (document.getElementById('fcTools') ? document.getElementById('fcTools').offsetHeight : 0) + (document.querySelector('.editorActions') ? document.querySelector('.editorActions').offsetHeight : 0) + 12;
+      if (panel) { var y = target.getBoundingClientRect().top - panel.getBoundingClientRect().top + panel.scrollTop - head; panel.scrollTo({ top: Math.max(0, y), behavior: 'smooth' }); }
+      else target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      target.classList.add('fcFlash'); setTimeout(function () { target.classList.remove('fcFlash'); }, 1600);
+      sync();
+    }, 350);
+  }
+  function addToolStrip() {
+    if (document.getElementById('fcTools')) return;
+    var panel = document.querySelector('.panel'); if (!panel) return;
+    var strip = document.createElement('div'); strip.id = 'fcTools'; strip.setAttribute('aria-label', 'Quick tools');
+    TOOLS.forEach(function (x) { var b = document.createElement('button'); b.type = 'button'; b.textContent = x[0]; b.onclick = function () { goTool(x[1]); }; strip.appendChild(b); });
+    panel.insertBefore(strip, panel.firstChild);
+  }
+
   function watchStudio() {
     var sample = document.getElementById('heroSample');
     if (sample) sample.addEventListener('click', function () { setTimeout(enterStudio, 50); });
