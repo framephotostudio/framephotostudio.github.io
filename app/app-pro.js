@@ -85,7 +85,7 @@
     var act = $('#proActions'); if (!act) return;
     var o = new MutationObserver(function () { inject(); }); o.observe(act, { childList: true });
     function inject() {
-      if (!state.config || !state.config.pro.enabled || act.querySelector('.fcBuy')) return;
+      if (!state.config || !(state.config.pro.enabled || CFG.preview) || act.querySelector('.fcBuy')) return;
       var note = $('#proNote'); if (note) note.textContent = 'Start with a ' + state.config.pro.trialDays + '-day free trial. Cancel any time in your ' + (API.platform === 'ios' ? 'App Store' : 'Google Play') + ' settings. After the trial the subscription renews automatically at the price shown until cancelled.';
       var wrap = document.createElement('div'); wrap.className = 'fcBuy';
       wrap.innerHTML = '<button class="btn full fcBuyM">Start free trial · then ' + state.config.pro.priceMonth + '/month</button><button class="toolbtn full fcBuyY">Yearly · ' + state.config.pro.priceYear + '/year</button>' +
@@ -171,7 +171,7 @@
     s.innerHTML = '<section class="proCard"><button class="toolbtn proClose" id="fcSetClose" aria-label="Close">✕</button><div class="prolabel">✦ FACE COUTURE</div><h2>Settings</h2>' +
       '<p class="note" id="fcSetTier">' + (state.me ? ('Plan: ' + ({ paid: 'Pro', trial: 'Pro trial', promo: 'Promo', free: 'Free' }[state.me.tier] || state.me.tier) + ' · AI looks left today ' + state.me.left.today + ', this month ' + state.me.left.month) : 'Beauty tools work offline. AI looks need a connection.') + '</p>' +
       '<div class="fcSetList">' +
-      (state.config && state.config.pro.enabled ? '<button class="btn full" id="fcSetPro">' + (state.pro ? 'Manage subscription' : 'Try Face Couture Pro') + '</button>' : '') +
+      (state.config && (state.config.pro.enabled || CFG.preview) ? '<button class="btn full" id="fcSetPro">' + (state.pro ? 'Manage subscription' : 'Try Face Couture Pro') + '</button>' : '') +
       '<button class="toolbtn full" id="fcSetPromo">Enter a promo code</button><button class="toolbtn full" id="fcSetRestore">Restore purchases</button>' +
       '<button class="toolbtn full" id="fcSetPrivacy">Privacy policy</button><button class="toolbtn full" id="fcSetTerms">Terms of use</button>' +
       '<button class="toolbtn full" id="fcSetSupport">Contact support</button><button class="toolbtn full" id="fcSetDelete">Delete my data</button></div>' +
@@ -207,7 +207,7 @@
 
   // ---------- walkthrough preview (facecouture.app/app-preview): shows every screen without any backend or store ----------
   function previewMode() {
-    applyConfig({ pro: { enabled: true, trialDays: 14, priceMonth: '$7.99', priceYear: '$49.99', entitlement: 'pro' }, looks: { hidden: [] }, seasons: {}, tools: { glam: true, enhance: true, background: true, headshot: true, tryon: true, vanish: true, blur: true, travel: true }, flags: { showQuiz: true } });
+    applyConfig({ pro: { enabled: false, trialDays: 14, priceMonth: '$7.99', priceYear: '$49.99', entitlement: 'pro' }, looks: { hidden: [] }, seasons: {}, tools: { glam: true, enhance: true, background: true, headshot: true, tryon: true, vanish: true, blur: true, travel: true }, flags: { showQuiz: true } });
     state.me = { tier: 'free', left: { today: 2, month: 10 }, allowance: { perDay: 2, perMonth: 10 } };
     extendAI(); decorateProSheet();
     document.querySelectorAll('[data-tab="ai"]').forEach(function (b) { b.hidden = false; });

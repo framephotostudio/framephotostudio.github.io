@@ -28,7 +28,7 @@ html.fc-app.fc-studio .workspace.expanded .stage{flex:0 0 50%!important}
 html.fc-app.fc-studio #expandPhoto,html.fc-app.fc-studio .editorbar,html.fc-app.fc-studio .reelBox,html.fc-app.fc-studio .stagehead{display:none!important}
 html.fc-app.fc-studio #saveBar{display:none!important}
 html.fc-app.fc-studio body.hasSaveBar #quickSave{display:inline-flex!important}
-html.fc-app.fc-studio .editorActions{top:0!important}
+html.fc-app.fc-studio .editorActions{top:48px!important}
 #fcStudioBar{display:none}
 html.fc-app.fc-studio #fcStudioBar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 6px}
 #fcStudioBar button{border:1px solid #e2cfa0;background:#fffaf2;color:#6b3d86;border-radius:999px;min-height:38px;padding:0 14px;font:600 13px -apple-system,system-ui,sans-serif;cursor:pointer}
@@ -71,3 +71,11 @@ html.fc-app header .fcGear{position:absolute;right:10px;top:calc(env(safe-area-i
 html.fc-app .prolabel{letter-spacing:1.5px}
 
 #fcPreviewBadge{position:fixed;top:calc(env(safe-area-inset-top,0px) + 4px);left:50%;transform:translateX(-50%);z-index:95;background:#2b1636;color:#f3dfa6;font:700 10px/1 -apple-system,system-ui,sans-serif;letter-spacing:1px;padding:5px 10px;border-radius:999px;pointer-events:none;opacity:.9}
+
+/* quick tools strip under the photo */
+#fcTools{display:none}
+html.fc-app.fc-studio #fcTools{display:flex;gap:6px;overflow-x:auto;padding:8px 10px 6px;margin:0;position:sticky;top:0;z-index:5;background:#fffafd;border-bottom:1px solid #f1e8f7;scrollbar-width:none;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity}
+#fcTools::-webkit-scrollbar{display:none}
+#fcTools button{flex:0 0 auto;border:1px solid #e6d8ee;background:#fff;color:#4a2a63;border-radius:999px;padding:0 13px;min-height:34px;font:600 13px -apple-system,system-ui,sans-serif;white-space:nowrap;scroll-snap-align:start;cursor:pointer}
+#fcTools button:active{background:#f3e9f9}
+.fcFlash{outline:2px solid #c9a14a;outline-offset:3px;border-radius:12px;transition:outline-color .3s}
