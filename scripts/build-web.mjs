@@ -19,8 +19,10 @@ html = html.split(MP + '/wasm').join('./vendor/mediapipe/wasm').split(MP + '/vis
 // no website analytics inside the app
 html = html.replace(/<script[^>]*googletagmanager[^>]*><\/script>/g, '').replace(/<script>[^<]*gtag\([^<]*<\/script>/g, '');
 // app mode hook (native look and feel is layered on in app.css / app.js)
-html = html.replace('</head>', '<link rel="stylesheet" href="app.css"><script>window.__FC_APP=true</script></head>').replace('</body>', '<script src="app.js"></script></body>');
+{ const h = html.search(/<head(\s[^>]*)?>/i), hEnd = html.indexOf('>', h) + 1; html = html.slice(0, hEnd) + '<script>window.__FC_APP=true</script><script src="app-early.js"></script>' + html.slice(hEnd); }
+{ const i = html.indexOf('</head>'); html = html.slice(0, i) + '<link rel="stylesheet" href="app.css">' + html.slice(i); }
+{ const i = html.lastIndexOf('</body>'); html = html.slice(0, i) + '<script src="app.js"></script>' + html.slice(i); }
 fs.writeFileSync(path.join(OUT, 'index.html'), html);
-for (const f of ['app.css', 'app.js']) fs.copyFileSync(path.join('app', f), path.join(OUT, f));
+for (const f of ['app.css', 'app.js', 'app-early.js']) fs.copyFileSync(path.join('app', f), path.join(OUT, f));
 const left = (html.match(/https:\/\/(cdn\.jsdelivr|storage\.googleapis)[^"'`\s)]*/g) || []); if (left.length) console.warn('Still online:', [...new Set(left)]);
 console.log('web bundle ready');

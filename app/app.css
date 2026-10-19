@@ -1,3 +1,61 @@
-/* Face Couture app mode: full-screen, no browser feel */
-html,body{overscroll-behavior:none;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
-body{padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
+/* Face Couture app mode: full-screen studio with native tab bar (applies only inside the app) */
+html.fc-app,html.fc-app body{overscroll-behavior:none;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
+html.fc-app body{background:#fffafd;padding-top:0;padding-bottom:calc(74px + env(safe-area-inset-bottom,0px))!important;-webkit-user-select:none;user-select:none}
+html.fc-app input,html.fc-app textarea{-webkit-user-select:text;user-select:text}
+
+/* website-only sections are not shown in the app */
+html.fc-app .fcBanner,html.fc-app .featurestrip,html.fc-app #proofStrip,html.fc-app .sectiontitle,
+html.fc-app #previewList,html.fc-app .help,html.fc-app #installBtn,html.fc-app #shareNudge,
+html.fc-app #normalView,html.fc-app #deskCard,html.fc-app .intro .trust,html.fc-app .intro ul,
+html.fc-app .editorbar a[href^="http"],html.fc-app nav.tabs,html.fc-app footer>a[target],html.fc-app footer br:first-of-type{display:none!important}
+
+/* compact branded top bar that respects the notch */
+html.fc-app header{position:sticky;top:0;z-index:40;height:auto!important;min-height:0;padding:calc(env(safe-area-inset-top,0px) + 6px) 16px 6px!important;background:rgba(255,250,253,.92);-webkit-backdrop-filter:saturate(1.4) blur(14px);backdrop-filter:saturate(1.4) blur(14px);border-bottom:1px solid #eadff0;display:flex;justify-content:center}
+html.fc-app header .brand .logoSvg,html.fc-app header .logoSvg{height:34px!important;width:auto!important;max-width:60vw!important}
+html.fc-app header nav,html.fc-app header .tag,html.fc-app header a{display:none!important}
+html.fc-app .shell{padding-top:10px!important}
+
+/* welcome screen before a photo is chosen: hero, men/women choice, quiz */
+html.fc-app #styleRow{display:flex!important;justify-content:center;flex-wrap:wrap;gap:8px;margin:14px 0 4px}
+html.fc-app #styleRow span{width:100%;text-align:center;font-weight:700;color:#4a2a63}
+html.fc-app #styleRow button{min-height:42px;padding:0 16px;font-size:15px}
+html.fc-app:not(.fc-studio) .platformbar,html.fc-app:not(.fc-studio) .workspace,html.fc-app:not(.fc-studio) #fcTabBar,html.fc-app:not(.fc-studio) #saveBar,html.fc-app:not(.fc-studio) #dockPhoto{display:none!important}
+html.fc-app:not(.fc-studio) body{padding-bottom:env(safe-area-inset-bottom,0px)!important}
+
+/* studio: photo on top, tools below, tab bar at the bottom (full screen, like a native editor) */
+html.fc-app.fc-studio .workspace.expanded{padding:calc(env(safe-area-inset-top,0px) + 6px) 8px calc(72px + env(safe-area-inset-bottom,0px))!important;gap:6px!important}
+html.fc-app.fc-studio .workspace.expanded .stage{flex:0 0 50%!important}
+html.fc-app.fc-studio #expandPhoto,html.fc-app.fc-studio .editorbar,html.fc-app.fc-studio .reelBox,html.fc-app.fc-studio .stagehead{display:none!important}
+html.fc-app.fc-studio #saveBar{display:none!important}
+html.fc-app.fc-studio body.hasSaveBar #quickSave{display:inline-flex!important}
+html.fc-app.fc-studio .editorActions{top:0!important}
+#fcStudioBar{display:none}
+html.fc-app.fc-studio #fcStudioBar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 6px}
+#fcStudioBar button{border:1px solid #e2cfa0;background:#fffaf2;color:#6b3d86;border-radius:999px;min-height:38px;padding:0 14px;font:600 13px -apple-system,system-ui,sans-serif;cursor:pointer}
+#fcStudioBar .fcSave{border:0;color:#fff;padding:0 22px;background:linear-gradient(135deg,#6d3fd0,#c25aa8 70%,#c9a14a);box-shadow:0 6px 16px #6d3fd040}
+#fcStudioBar img{height:26px;width:auto;opacity:.95}
+html.fc-app.fc-studio .previewTools{padding-left:12px;flex-wrap:nowrap;align-items:center}
+html.fc-app.fc-studio .previewTools input[type=range]{flex:1 1 auto;min-width:60px}
+html.fc-app.fc-studio .stage{padding:8px!important}
+html.fc-app body:not(.ownPhoto) .intro.heroNew{margin-bottom:12px}
+html.fc-app .intro.heroNew h1{font-size:28px}
+
+/* native bottom tab bar */
+#fcTabBar{position:fixed;left:0;right:0;bottom:0;z-index:60;display:flex;justify-content:space-around;align-items:stretch;
+  padding:6px max(6px,env(safe-area-inset-left,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(6px,env(safe-area-inset-right,0px));
+  background:rgba(255,250,253,.94);-webkit-backdrop-filter:saturate(1.4) blur(16px);backdrop-filter:saturate(1.4) blur(16px);border-top:1px solid #eadff0}
+#fcTabBar button{flex:1;min-width:0;border:0;background:none;padding:4px 0 2px;display:flex;flex-direction:column;align-items:center;gap:3px;color:#8a7a99;font:600 10.5px/1.1 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;letter-spacing:.1px;cursor:pointer}
+#fcTabBar button svg{width:25px;height:25px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+#fcTabBar button.on{color:#6d3fd0}
+#fcTabBar button.on svg{stroke-width:2}
+#fcTabBar button:active{transform:scale(.94)}
+
+/* keep floating bars above the tab bar */
+html.fc-app #saveBar{bottom:calc(80px + env(safe-area-inset-bottom,0px))!important}
+html.fc-app body.hasSaveBar{padding-bottom:calc(150px + env(safe-area-inset-bottom,0px))!important}
+html.fc-app #toast{bottom:calc(150px + env(safe-area-inset-bottom,0px))!important;z-index:80}
+html.fc-app #leaveBar{bottom:calc(84px + env(safe-area-inset-bottom,0px))!important}
+html.fc-app .editorActions{top:calc(env(safe-area-inset-top,0px) + 47px)!important}
+
+/* legal row stays reachable (required in the stores) */
+html.fc-app footer{text-align:center;padding:14px 0 6px;font-size:12px}
