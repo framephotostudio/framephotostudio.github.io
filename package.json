@@ -1,0 +1,10 @@
+{
+  "name": "face-couture-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Face Couture by Always Luxe - iPhone and Android apps built from the facecouture.app site",
+  "scripts": {
+    "build:web": "node scripts/build-web.mjs",
+    "sync": "npm run build:web && npx cap sync"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "appId": "app.facecouture.studio",
+  "appName": "Face Couture",
+  "webDir": "www",
+  "backgroundColor": "#fffafd",
+  "ios": { "contentInset": "never", "scrollEnabled": true, "allowsLinkPreview": false },
+  "android": { "allowMixedContent": false },
+  "plugins": {
+    "SplashScreen": { "launchShowDuration": 1200, "backgroundColor": "#2b1636", "showSpinner": false },
+    "StatusBar": { "style": "LIGHT", "backgroundColor": "#2b1636" }
+  }
+}
