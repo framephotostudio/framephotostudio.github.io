@@ -1,1 +1,1 @@
-window.FC_CONFIG={"apiUrl":"","revenueCatIOS":"","revenueCatAndroid":"","analytics":false,"supportEmail":"hello@facecouture.app","version":"1.0.0"};
+window.FC_CONFIG={"apiUrl":"","revenueCatIOS":"","revenueCatAndroid":"","analytics":false,"preview":true,"supportEmail":"hello@facecouture.app","version":"1.0.0"};

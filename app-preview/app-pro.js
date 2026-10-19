@@ -93,6 +93,12 @@
       act.innerHTML = ''; act.appendChild(wrap);
       wrap.querySelector('.fcRestore').onclick = restore; wrap.querySelector('.fcPromo').onclick = promoPrompt;
       var m = wrap.querySelector('.fcBuyM'), y = wrap.querySelector('.fcBuyY');
+      if (CFG.preview) { // walkthrough mode: nothing is charged, nothing is real
+        m.textContent = 'Start free trial · then ' + state.config.pro.priceMonth + '/month'; y.textContent = 'Yearly · ' + state.config.pro.priceYear + '/year';
+        var pv = document.createElement('p'); pv.className = 'note'; pv.style.cssText = 'text-align:center;margin:8px 0 0;color:#9b3f79;font-weight:600'; pv.textContent = 'PREVIEW · tapping a plan only simulates a purchase. No store, no charge.'; wrap.appendChild(pv);
+        m.onclick = y.onclick = function () { haptic('MEDIUM'); setPro(true); toast('Preview: Pro unlocked on this device (nothing was charged).'); closeSheet(); try { closePro(); } catch (e) {} };
+        return;
+      }
       if (!purchasesReady()) { m.disabled = y.disabled = true; m.textContent = 'Subscriptions open soon'; return; }
       offerings().then(function (cur) {
         var mp = cur && (cur.monthly || (cur.availablePackages || []).filter(function (p) { return /month/i.test(p.identifier); })[0]);
@@ -199,9 +205,24 @@
     window.addEventListener('fc:saved', function () { API.track('save'); });
   }
 
+  // ---------- walkthrough preview (facecouture.app/app-preview): shows every screen without any backend or store ----------
+  function previewMode() {
+    applyConfig({ pro: { enabled: true, trialDays: 14, priceMonth: '$7.99', priceYear: '$49.99', entitlement: 'pro' }, looks: { hidden: [] }, seasons: {}, tools: { glam: true, enhance: true, background: true, headshot: true, tryon: true, vanish: true, blur: true, travel: true }, flags: { showQuiz: true } });
+    state.me = { tier: 'free', left: { today: 2, month: 10 }, allowance: { perDay: 2, perMonth: 10 } };
+    extendAI(); decorateProSheet();
+    document.querySelectorAll('[data-tab="ai"]').forEach(function (b) { b.hidden = false; });
+    try { aiReady = true; } catch (e) {}
+    var g = $('#generate');
+    if (g) g.addEventListener('click', function (ev) { ev.stopImmediatePropagation(); ev.preventDefault(); toast('Preview: AI looks run once the AI backend is connected. Everything else here is real.'); }, true);
+    var st = $('#aiStatus'); if (st) st.textContent = 'Preview mode: this screen shows the AI tools. Generation switches on with the backend.';
+    document.addEventListener('click', function (ev) { if (ev.target && ev.target.closest && ev.target.closest('#fcSetPro')) { /* handled by settings */ } }, true);
+    var badge = document.createElement('div'); badge.id = 'fcPreviewBadge'; badge.textContent = 'PREVIEW · nothing is charged'; document.body.appendChild(badge);
+  }
+
   function init() {
     if (!API) return;
     addSettingsButtons();
+    if (!API.url && CFG.preview) { previewMode(); return; }
     if (!API.url) return; // backend not configured yet: beauty studio only
     extendAI(); decorateProSheet();
     refresh().then(initPurchases).then(trackStudio);
