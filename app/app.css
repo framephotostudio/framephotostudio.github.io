@@ -44,7 +44,7 @@ html.fc-app .intro.heroNew h1{font-size:28px}
 #fcTabBar{position:fixed;left:0;right:0;bottom:0;z-index:60;display:flex;justify-content:space-around;align-items:stretch;
   padding:6px max(6px,env(safe-area-inset-left,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(6px,env(safe-area-inset-right,0px));
   background:rgba(255,250,253,.94);-webkit-backdrop-filter:saturate(1.4) blur(16px);backdrop-filter:saturate(1.4) blur(16px);border-top:1px solid #eadff0}
-#fcTabBar button{flex:1;min-width:0;border:0;background:none;padding:4px 0 2px;display:flex;flex-direction:column;align-items:center;gap:3px;color:#8a7a99;font:600 10.5px/1.1 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;letter-spacing:.1px;cursor:pointer}
+#fcTabBar button[hidden]{display:none!important}#fcTabBar button[data-tab="ai"]:not([hidden]){display:flex!important}#fcTabBar button{flex:1;min-width:0;border:0;background:none;padding:4px 0 2px;display:flex;flex-direction:column;align-items:center;gap:3px;color:#8a7a99;font:600 10.5px/1.1 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;letter-spacing:.1px;cursor:pointer}
 #fcTabBar button svg{width:25px;height:25px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 #fcTabBar button.on{color:#6d3fd0}
 #fcTabBar button.on svg{stroke-width:2}
@@ -59,3 +59,13 @@ html.fc-app .editorActions{top:calc(env(safe-area-inset-top,0px) + 47px)!importa
 
 /* legal row stays reachable (required in the stores) */
 html.fc-app footer{text-align:center;padding:14px 0 6px;font-size:12px}
+
+/* settings, paywall, AI extras */
+.fcGear{border:0;background:none;color:#6b3d86;padding:6px;border-radius:50%;cursor:pointer;display:inline-flex}
+html.fc-app header .fcGear{position:absolute;right:10px;top:calc(env(safe-area-inset-top,0px) + 8px)}
+#fcStudioBar .fcGear{min-height:0;padding:4px;border:0;background:none}
+.fcBuy .btn{margin-top:6px}.fcLegal{font-size:12px;color:#7a6b88;text-align:center;margin-top:10px}.fcLegal a{color:#6d3fd0}
+.linklike{border:0;background:none;color:#6d3fd0;font:inherit;font-size:12px;padding:0;cursor:pointer;text-decoration:underline}
+.fcSetList{display:grid;gap:8px;margin:12px 0}
+#fcTryon label,#fcGlamOpts label{display:block;font-size:14px;font-weight:600;margin:10px 0 4px}#fcTryon select,#fcGlamOpts select{width:100%}
+html.fc-app .prolabel{letter-spacing:1.5px}

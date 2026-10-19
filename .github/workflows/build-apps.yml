@@ -18,6 +18,7 @@ jobs:
       - name: Store review prompt plugin (optional)
         run: npm install @capacitor-community/in-app-review@latest || echo 'review plugin skipped'
       - run: npm run build:web
+        env: { FC_API_URL: '${{ vars.FC_API_URL }}', FC_RC_IOS: '${{ vars.FC_RC_IOS }}', FC_RC_ANDROID: '${{ vars.FC_RC_ANDROID }}', FC_SUPPORT_EMAIL: '${{ vars.FC_SUPPORT_EMAIL }}', APP_VERSION: '1.0.0' }
       - run: npx cap add android
       - run: bash scripts/native-setup.sh android
         env: { APP_VERSION: '1.0.0', BUILD_NUMBER: '${{ github.run_number }}' }
@@ -37,6 +38,7 @@ jobs:
       - name: Store review prompt plugin (optional)
         run: npm install @capacitor-community/in-app-review@latest || echo 'review plugin skipped'
       - run: npm run build:web
+        env: { FC_API_URL: '${{ vars.FC_API_URL }}', FC_RC_IOS: '${{ vars.FC_RC_IOS }}', FC_RC_ANDROID: '${{ vars.FC_RC_ANDROID }}', FC_SUPPORT_EMAIL: '${{ vars.FC_SUPPORT_EMAIL }}', APP_VERSION: '1.0.0' }
       - run: npx cap add ios
       - run: bash scripts/native-setup.sh ios
         env: { APP_VERSION: '1.0.0', BUILD_NUMBER: '${{ github.run_number }}' }

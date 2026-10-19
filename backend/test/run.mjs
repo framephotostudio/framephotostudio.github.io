@@ -1,0 +1,44 @@
+import worker from '../src/index.js';
+const store=new Map();
+const KV={get:async(k,t)=>{const v=store.get(k);if(v==null)return null;return t==='json'?JSON.parse(v):v},put:async(k,v)=>{store.set(k,String(v))},delete:async k=>store.delete(k),list:async({prefix})=>({keys:[...store.keys()].filter(k=>k.startsWith(prefix)).map(name=>({name}))})};
+const env={KV,OPENAI_API_KEY:'sk-test',ADMIN_PASSPHRASE:'luxe-pass',APP_SIGNING_SECRET:'s3cret',ALLOWED_ORIGINS:'https://facecouture.app,capacitor://localhost',COST_PER_GEN_MEDIUM:'0.04',COST_PER_GEN_HIGH:'0.17'};
+const ctx={waitUntil:p=>{pending.push(p)}};const pending=[];
+let providerMode='ok';
+globalThis.fetch=async(url,opt)=>{ if(String(url).includes('api.openai.com')){ if(providerMode==='ok')return new Response(JSON.stringify({data:[{b64_json:'AAAA'}],usage:{output_tokens:1000,input_tokens_details:{image_tokens:300,text_tokens:100}}}),{status:200}); if(providerMode==='credits')return new Response(JSON.stringify({error:{message:'billing hard limit reached'}}),{status:400}); if(providerMode==='timeout')throw new Error('aborted');} return new Response('{}',{status:200})};
+const req=(p,o={})=>new Request('https://api.facecouture.app'+p,{...o,headers:{origin:'capacitor://localhost','content-type':'application/json',...(o.headers||{})}});
+const call=async(p,o)=>{const r=await worker.fetch(req(p,o),env,ctx);await Promise.all(pending.splice(0));const t=await r.text();let j;try{j=JSON.parse(t)}catch{j=t}return [r.status,j,r.headers]};
+const img='data:image/jpeg;base64,'+Buffer.from('fakejpeg').toString('base64');
+let [s,j,h]=await call('/api/status');console.log('status',s,j,'cors',h.get('access-control-allow-origin'));
+[s,j]=await call('/api/hello',{method:'POST',body:JSON.stringify({platform:'ios'})});const tok=j.token;console.log('hello',s,!!tok);
+const A={authorization:'Bearer '+tok};
+[s,j]=await call('/api/ai',{method:'POST',headers:A,body:JSON.stringify({task:'glam',image:img})});console.log('no consent ->',s,j.code);
+providerMode='credits';[s,j]=await call('/api/ai',{method:'POST',headers:A,body:JSON.stringify({task:'tryon',image:img,garment:img,category:'bag',consent:true})});console.log('provider credits ->',s,j.code,j.error);
+providerMode='timeout';[s,j]=await call('/api/ai',{method:'POST',headers:A,body:JSON.stringify({task:'vanish',image:img,detail:'the chair',consent:true})});console.log('timeout ->',s,j.code);
+providerMode='ok';
+[s,j]=await call('/api/me',{headers:A});console.log('after failures ->',j.left,'(expect today 2, month 10)');
+[s,j]=await call('/api/ai',{method:'POST',headers:A,body:JSON.stringify({task:'glam',image:img,consent:true})});console.log('glam ok ->',s,j.task,j.left,String(j.image).slice(0,22));
+[s,j]=await call('/api/refine',{method:'POST',headers:A,body:JSON.stringify({image:img,consent:true,platform:'Instagram',outfit:'business',background:'paris'})});console.log('refine ok ->',s,j.task,j.left);
+[s,j]=await call('/api/me',{headers:A});console.log('me ->',s,j.tier,j.left,'(failures must not count: expect month 8 left)');
+// allowance exhaustion: free perDay=2 -> third today blocked
+[s,j]=await call('/api/ai',{method:'POST',headers:A,body:JSON.stringify({task:'enhance',image:img,consent:true})});console.log('3rd today ->',s,j.code,j.error);
+// bad token
+[s,j]=await call('/api/ai',{method:'POST',headers:{authorization:'Bearer a.b.c.d'},body:JSON.stringify({task:'enhance',image:img,consent:true})});console.log('bad token ->',s,j.code);
+// admin
+[s,j]=await call('/api/admin/login',{method:'POST',body:JSON.stringify({passphrase:'nope'})});console.log('admin bad ->',s);
+[s,j]=await call('/api/admin/login',{method:'POST',body:JSON.stringify({passphrase:'luxe-pass'})});const AT={authorization:'Bearer '+j.token};console.log('admin ok ->',s);
+[s,j]=await call('/api/admin/overview',{headers:AT});console.log('overview ->',s,JSON.stringify(j.spend),JSON.stringify(j.ai.byTool),j.users,j.costProjection.rows[1]);
+[s,j]=await call('/api/admin/config',{method:'POST',headers:AT,body:JSON.stringify({spend:{monthlyCeilingUSD:0.05}})});console.log('ceiling set ->',s,j.config.version,j.config.spend.monthlyCeilingUSD);
+[s,j]=await call('/api/hello',{method:'POST',body:JSON.stringify({platform:'android'})});const B={authorization:'Bearer '+j.token};
+[s,j]=await call('/api/ai',{method:'POST',headers:B,body:JSON.stringify({task:'headshot',image:img,consent:true})});console.log('ceiling block ->',s,j.code);
+[s,j]=await call('/api/status');console.log('status under ceiling ->',j.ai_ready);
+[s,j]=await call('/api/admin/config/rollback',{method:'POST',headers:AT,body:JSON.stringify({version:1})});console.log('rollback ->',s,j.config&&j.config.version,j.config&&j.config.spend.monthlyCeilingUSD);
+[s,j]=await call('/api/admin/promo',{method:'POST',headers:AT,body:JSON.stringify({code:'glow14',kind:'pro',days:14,maxUses:2})});console.log('promo create ->',s,Object.keys(j.config.promos));
+[s,j]=await call('/api/promo/redeem',{method:'POST',headers:B,body:JSON.stringify({code:'glow14'})});console.log('redeem ->',s,j.kind);
+[s,j]=await call('/api/promo/redeem',{method:'POST',headers:B,body:JSON.stringify({code:'glow14'})});console.log('redeem again ->',s,j.error);
+[s,j]=await call('/api/me',{headers:B});console.log('me after promo ->',j.tier,j.allowance);
+[s,j]=await call('/api/webhooks/revenuecat',{method:'POST',body:JSON.stringify({event:{type:'INITIAL_PURCHASE',period_type:'TRIAL',app_user_id:j.tier&&'x',expiration_at_ms:Date.now()+14*864e5}})});console.log('webhook ->',s);
+[s,j]=await call('/api/event',{method:'POST',headers:B,body:JSON.stringify({name:'look_applied',look:'glam'})});[s,j]=await call('/api/event',{method:'POST',headers:B,body:JSON.stringify({name:'open',campaign:'tiktok_oct',country:'US'})});
+[s,j]=await call('/api/admin/overview',{headers:AT});console.log('events ->',j.events.look_applied,j.topLooks,j.campaigns,j.countries,'dau',j.users.dau);
+[s,j]=await call('/api/delete-my-data',{method:'POST',headers:B});console.log('delete ->',s,j.ok);
+[s,j]=await call('/admin');console.log('admin page ->',s,String(j).length>5000);
+[s,j,h]=await call('/api/status',{headers:{origin:'https://evil.example'}});console.log('cors evil ->',h.get('access-control-allow-origin'));

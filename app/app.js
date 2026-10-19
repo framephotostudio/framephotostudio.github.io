@@ -11,6 +11,7 @@
 
   // ---------- bottom tab bar (drives the studio's existing tabs) ----------
   var ICONS = {
+    ai: '<path d="M12 4l1.5 3.8L17.3 9.3l-3.8 1.5L12 14.6l-1.5-3.8L6.7 9.3l3.8-1.5z"/><path d="M5 16l.7 1.8 1.8.7-1.8.7L5 21l-.7-1.8-1.8-.7 1.8-.7z"/><path d="M19 15l.6 1.4 1.4.6-1.4.6L19 19l-.6-1.4-1.4-.6 1.4-.6z"/>',
     edit: '<path d="M12 3l1.8 4.6L18.5 9l-4.7 1.4L12 15l-1.8-4.6L5.5 9l4.7-1.4z"/><path d="M18 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/>',
     beauty: '<path d="M9 21h6"/><path d="M10 21V11h4v10"/><path d="M10 11l1-6.5c.2-1 1.8-1 2 0l1 6.5"/>',
     frames: '<rect x="3.5" y="3.5" width="17" height="17" rx="3"/><rect x="7.5" y="7.5" width="9" height="9" rx="1.5"/>',
@@ -18,7 +19,7 @@
     video: '<rect x="3" y="6" width="13" height="12" rx="2.5"/><path d="M16 10.5l5-3v9l-5-3z"/>',
     share: '<path d="M12 15V3.5"/><path d="M7.5 8L12 3.5 16.5 8"/><path d="M5 12.5V19a1.5 1.5 0 0 0 1.5 1.5h11A1.5 1.5 0 0 0 19 19v-6.5"/>'
   };
-  var LABELS = { edit: 'Studio', beauty: 'Beauty', frames: 'Frames', formats: 'Formats', video: 'Video', share: 'Save' };
+  var LABELS = { edit: 'Studio', beauty: 'Beauty', ai: 'AI', frames: 'Frames', formats: 'Formats', video: 'Video', share: 'Save' };
 
   function buildTabBar() {
     if (document.getElementById('fcTabBar')) return;
@@ -29,7 +30,7 @@
     bar.setAttribute('aria-label', 'Studio sections');
     Array.prototype.forEach.call(src, function (b) {
       var t = b.dataset.tab;
-      if (!ICONS[t] || b.hidden) return;
+      if (!ICONS[t]) return;
       var btn = document.createElement('button');
       btn.type = 'button';
       btn.dataset.tab = t;
@@ -52,6 +53,7 @@
         }
         sync();
       });
+      btn.hidden = b.hidden; if (b.hidden) new MutationObserver(function () { btn.hidden = b.hidden; }).observe(b, { attributes: true, attributeFilter: ['hidden'] });
       bar.appendChild(btn);
     });
     document.body.appendChild(bar);
@@ -82,7 +84,7 @@
     var bar = document.createElement('div');
     bar.id = 'fcStudioBar';
     var logo = document.querySelector('header .logoSvg');
-    bar.innerHTML = '<button type="button" class="fcNew">+ New photo</button>' + (logo ? '<img alt="" src="' + logo.getAttribute('src') + '">' : '') + '<button type="button" class="fcSave">Save</button>';
+    bar.innerHTML = '<button type="button" class="fcNew">＋ Photo</button>' + (logo ? '<img alt="" src="' + logo.getAttribute('src') + '">' : '') + '<button type="button" class="fcSave">Save</button>';
     bar.querySelector('.fcNew').addEventListener('click', function () { tap('LIGHT'); var f = document.getElementById('file'); if (f) f.click(); });
     bar.querySelector('.fcSave').addEventListener('click', function () {
       tap('MEDIUM');

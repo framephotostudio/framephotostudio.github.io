@@ -16,13 +16,21 @@ let html = fs.readFileSync(path.join(SITE, 'index.html'), 'utf8');
 html = html.split(MP + '/wasm').join('./vendor/mediapipe/wasm').split(MP + '/vision_bundle.mjs').join('./vendor/mediapipe/vision_bundle.mjs').split(ORT).join('./vendor/ort/')
   .split('https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task').join('./vendor/models/face_landmarker.task')
   .split('https://storage.googleapis.com/mediapipe-models/image_segmenter/selfie_segmenter/float16/latest/selfie_segmenter.tflite').join('./vendor/models/selfie_segmenter.tflite');
+// app-only adjustments to the studio code: the AI button talks to the Face Couture API when one is configured;
+// store-facing names use the current brand
+html = html.replace("$('#generate').onclick=async()=>{openPro();return;", "$('#generate').onclick=async()=>{if(!window.FC_API){openPro();return}")
+  .split('FRAME PRO').join('FACE COUTURE PRO').split('FRAME FREE').join('FACE COUTURE FREE');
+// per-build settings (backend URL and store keys come from repository variables; empty = feature stays off)
+fs.writeFileSync(path.join(OUT, 'app-config.js'), 'window.FC_CONFIG=' + JSON.stringify({
+  apiUrl: process.env.FC_API_URL || '', revenueCatIOS: process.env.FC_RC_IOS || '', revenueCatAndroid: process.env.FC_RC_ANDROID || '',
+  analytics: !!process.env.FC_API_URL, supportEmail: process.env.FC_SUPPORT_EMAIL || 'hello@facecouture.app', version: process.env.APP_VERSION || '1.0.0' }) + ';');
 // no website analytics inside the app
 html = html.replace(/<script[^>]*googletagmanager[^>]*><\/script>/g, '').replace(/<script>[^<]*gtag\([^<]*<\/script>/g, '');
 // app mode hook (native look and feel is layered on in app.css / app.js)
-{ const h = html.search(/<head(\s[^>]*)?>/i), hEnd = html.indexOf('>', h) + 1; html = html.slice(0, hEnd) + '<script>window.__FC_APP=true</script><script src="app-early.js"></script>' + html.slice(hEnd); }
+{ const h = html.search(/<head(\s[^>]*)?>/i), hEnd = html.indexOf('>', h) + 1; html = html.slice(0, hEnd) + '<script>window.__FC_APP=true</script><script src="app-config.js"></script><script src="app-early.js"></script><script src="app-api.js"></script>' + html.slice(hEnd); }
 { const i = html.indexOf('</head>'); html = html.slice(0, i) + '<link rel="stylesheet" href="app.css">' + html.slice(i); }
-{ const i = html.lastIndexOf('</body>'); html = html.slice(0, i) + '<script src="app.js"></script>' + html.slice(i); }
+{ const i = html.lastIndexOf('</body>'); html = html.slice(0, i) + '<script src="app.js"></script><script src="app-pro.js"></script>' + html.slice(i); }
 fs.writeFileSync(path.join(OUT, 'index.html'), html);
-for (const f of ['app.css', 'app.js', 'app-early.js']) fs.copyFileSync(path.join('app', f), path.join(OUT, f));
+for (const f of ['app.css', 'app.js', 'app-early.js', 'app-api.js', 'app-pro.js']) fs.copyFileSync(path.join('app', f), path.join(OUT, f));
 const left = (html.match(/https:\/\/(cdn\.jsdelivr|storage\.googleapis)[^"'`\s)]*/g) || []); if (left.length) console.warn('Still online:', [...new Set(left)]);
 console.log('web bundle ready');
