@@ -23,7 +23,7 @@ html = html.replace("$('#generate').onclick=async()=>{openPro();return;", "$('#g
 // per-build settings (backend URL and store keys come from repository variables; empty = feature stays off)
 fs.writeFileSync(path.join(OUT, 'app-config.js'), 'window.FC_CONFIG=' + JSON.stringify({
   apiUrl: process.env.FC_API_URL || '', revenueCatIOS: process.env.FC_RC_IOS || '', revenueCatAndroid: process.env.FC_RC_ANDROID || '',
-  analytics: !!process.env.FC_API_URL, supportEmail: process.env.FC_SUPPORT_EMAIL || 'hello@facecouture.app', version: process.env.APP_VERSION || '1.0.0' }) + ';');
+  analytics: !!process.env.FC_API_URL, preview: process.env.FC_PREVIEW === '1', supportEmail: process.env.FC_SUPPORT_EMAIL || 'hello@facecouture.app', version: process.env.APP_VERSION || '1.0.0' }) + ';');
 // no website analytics inside the app
 html = html.replace(/<script[^>]*googletagmanager[^>]*><\/script>/g, '').replace(/<script>[^<]*gtag\([^<]*<\/script>/g, '');
 // app mode hook (native look and feel is layered on in app.css / app.js)

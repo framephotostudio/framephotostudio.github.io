@@ -69,3 +69,5 @@ html.fc-app header .fcGear{position:absolute;right:10px;top:calc(env(safe-area-i
 .fcSetList{display:grid;gap:8px;margin:12px 0}
 #fcTryon label,#fcGlamOpts label{display:block;font-size:14px;font-weight:600;margin:10px 0 4px}#fcTryon select,#fcGlamOpts select{width:100%}
 html.fc-app .prolabel{letter-spacing:1.5px}
+
+#fcPreviewBadge{position:fixed;top:calc(env(safe-area-inset-top,0px) + 4px);left:50%;transform:translateX(-50%);z-index:95;background:#2b1636;color:#f3dfa6;font:700 10px/1 -apple-system,system-ui,sans-serif;letter-spacing:1px;padding:5px 10px;border-radius:999px;pointer-events:none;opacity:.9}
