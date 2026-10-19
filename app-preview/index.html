@@ -1394,7 +1394,7 @@ window.dataLayer=window.dataLayer||[];window.gtag=function(){dataLayer.push(argu
 const sc=document.createElement('script');sc.async=true;sc.src='https://www.googletagmanager.com/gtag/js?id='+FRAME_GA_ID;document.head.appendChild(sc);
 const track=(n,p)=>{try{gtag('event',n,p||{})}catch(e){}}; document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest('#openPro,#aiUpgrade,#packSave');if(!t)return;track(t.id==='packSave'?'platform_pack_download':'pro_click')},true);
 // Only event names and a few settings are sent. Photos and face data never leave the device.
-try{$('#file').addEventListener('change',()=>track('photo_uploaded'))}catch(e){}
+try{document.addEventListener('change',e=>{const t=e.target;if(!t||t.id!=='file')return;const f=t.files&&t.files[0];if(!f)return;track('photo_uploaded',{kind:/^video\//.test(f.type)?'video':'photo'})},true)}catch(e){}
 try{const _ag=autoGlow;autoGlow=async function(){track('auto_glow');return _ag.apply(this,arguments)}}catch(e){}
 try{const _av=applyVibe;applyVibe=async function(k){track('look_applied',{look:String(k)});return _av.apply(this,arguments)}}catch(e){}
 try{const _dl=download;download=function(){track('save_image');return _dl.apply(this,arguments)}}catch(e){}
@@ -1402,6 +1402,8 @@ try{$('#addDesk').addEventListener('click',()=>track('add_to_desktop_click'))}ca
 try{window.addEventListener('appinstalled',()=>track('app_installed'))}catch(e){}
 try{$('#modeToggle').addEventListener('click',()=>track('mode_toggle',{mode:document.body.classList.contains('simple')?'quick':'pro'}))}catch(e){}
 try{$('#heroSample').addEventListener('click',()=>track('try_sample'))}catch(e){}
+// key events: a finished photo shared from the phone's share sheet counts like a save
+try{if(navigator.share){const _sh=navigator.share.bind(navigator);navigator.share=function(d){const p=_sh(d);try{if(d&&d.files&&d.files.length)Promise.resolve(p).then(()=>track('share_image'),()=>{})}catch(e){}return p}}}catch(e){}
 }catch(e){}})();
 
 // v20: lip liner - a fine, darker line drawn just inside the lip edge
