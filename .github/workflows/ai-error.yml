@@ -1,0 +1,18 @@
+name: Read last AI error
+on:
+  push:
+    branches: [mobile-app]
+    paths: ['.github/workflows/ai-error.yml']
+permissions: { contents: write }
+jobs:
+  read:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          A=https://api.cloudflare.com/client/v4/accounts/${{ secrets.CLOUDFLARE_ACCOUNT_ID }}/storage/kv/namespaces
+          H="Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}"
+          ID=$(curl -s -H "$H" "$A?per_page=100" | jq -r '[.result[]|select(.title=="face-couture-kv" or .title=="face-couture-api-KV" or .title=="KV")][0].id')
+          mkdir -p /tmp/out; curl -s -H "$H" "$A/$ID/values/alert:last_provider_error" > /tmp/out/last-error.txt; cat /tmp/out/last-error.txt
+          git config user.name face-couture-ci; git config user.email hello@facecouture.app
+          git checkout --orphan ci-err; git rm -rfq --cached .; rm -rf out; mkdir out; cp /tmp/out/* out/; git add -f out; git commit -qm err; git push -qf origin HEAD:ci-err
