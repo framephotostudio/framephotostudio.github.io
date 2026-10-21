@@ -39,8 +39,11 @@ jobs:
       - name: Storage (KV)
         working-directory: backend
         run: |
-          ID=$(npx wrangler kv namespace list 2>/dev/null | jq -r '.[] | select(.title|test("face-couture-api-KV|face-couture-kv")) | .id' | head -1)
-          if [ -z "$ID" ]; then ID=$(npx wrangler kv namespace create KV 2>&1 | grep -oE '[0-9a-f]{32}' | head -1); fi
+          API=https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/storage/kv/namespaces
+          H="Authorization: Bearer $CLOUDFLARE_API_TOKEN"
+          L=$(curl -s -H "$H" "$API?per_page=100"); echo "$L" | jq -c '[.result[]?|{title,id}]'
+          ID=$(echo "$L" | jq -r '[.result[]? | select(.title=="face-couture-kv" or .title=="face-couture-api-KV" or .title=="KV")][0].id // empty')
+          if [ -z "$ID" ]; then ID=$(curl -s -X POST -H "$H" -H 'content-type: application/json' -d '{"title":"face-couture-kv"}' $API | jq -r '.result.id // empty'); fi
           echo "KV id: $ID"; test -n "$ID"
           sed -i "s/REPLACE_WITH_KV_ID/$ID/" wrangler.toml
       - name: Deploy
