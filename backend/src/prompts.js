@@ -16,14 +16,20 @@ const BACKDROPS = {
   dubai: 'a Dubai skyline at dusk with the Burj Khalifa softly blurred', bali: 'a Bali rice terrace with warm tropical light', maldives: 'a Maldives beach with turquoise water and an overwater villa',
   rome: 'Rome with the Colosseum softly blurred in warm light', tokyo: 'a Tokyo street at night with soft neon bokeh', alps: 'snow-capped Swiss Alps with clear morning light'
 };
-const KEEP_GLAM = 'She or he must stay instantly recognizable as the exact same person: identical face shape, bone structure, eye shape and color, nose, lip shape, skin tone and undertone (never lighter, never yellow or orange), same hair, same expression, same pose and framing. Photorealistic, natural skin texture with fine pores, no plastic or airbrushed doll look, no text, no extra people.';
+const KEEP_GLAM = 'Keep the same person with the same face, features, skin tone, hair, expression, pose, clothing and background. Photorealistic with natural skin texture.';
+export function simplePrompt(task, o = {}) {
+  if (task !== 'glam') return null;
+  const L = GLAM[o.intensity] || GLAM.glam;
+  return o.style === 'men' ? 'Lightly retouch this photo: clearer even skin and neatly groomed brows. Keep everything else the same. Photorealistic.'
+    : `Add ${L.name.toLowerCase()} makeup to this photo: ${L.makeup}. Keep everything else the same. Photorealistic.`;
+}
 const GLAM = {
-  soft: { name: 'Soft Glam', skin: 'luminous, even and dewy with a soft glow on the high points',
-    makeup: 'soft champagne and bronze eyeshadow blended into the crease, a thin brown liner hugging the upper lash line, full fluffy lashes, softly sculpted cheekbones with a rosy-peach blush and gentle highlight, brushed-up groomed brows, a rosy-nude satin lipstick filling the lips neatly to the corners' },
-  glam: { name: 'Red Carpet', skin: 'flawless satin finish, smooth and even, with a radiant highlight on the cheekbones',
-    makeup: 'a warm bronze smoky eye with shimmer on the lids, a sharp black winged eyeliner, voluminous luxury lash extensions, sculpted contour under the cheekbones and along the jaw, defined brows, a classic creamy red lipstick with a crisp clean lip line' },
-  max: { name: 'Editorial Glam', skin: 'airbrushed-flawless yet real, with strong sculpting and a glowing highlight',
-    makeup: 'a deep chocolate and gold smoky eye, dramatic voluminous lashes, sharp liner, strong contour and highlight, lifted defined brows, full glossy wine-berry lips slightly enhanced in volume' }
+  soft: { name: 'Soft Glam', skin: 'luminous, even and dewy with a soft glow on the cheekbones',
+    makeup: 'champagne and soft bronze eyeshadow blended into the crease, a thin brown liner along the upper lash line, full fluffy lashes, a rosy-peach blush, a gentle highlight, groomed brows, and a rosy-nude satin lipstick' },
+  glam: { name: 'Red Carpet', skin: 'smooth satin finish with a radiant glow',
+    makeup: 'a warm bronze smoky eyeshadow with shimmer on the lids, a black winged eyeliner, long voluminous lashes, warm bronzer and a soft highlight on the cheekbones, defined brows, and a classic creamy red lipstick' },
+  max: { name: 'Full Glam', skin: 'flawless, radiant and glowing',
+    makeup: 'a dramatic chocolate and gold smoky eyeshadow, bold black eyeliner, dramatic long lashes, bronzer and a glowing highlight on the cheekbones, defined brows, and a glossy wine-berry lipstick' }
 };
 const GROOM = {
   soft: 'clearer, more even skin with less redness and shine, softened under-eye darkness, tidy brows',
@@ -43,7 +49,7 @@ export function buildPrompt(task, o = {}) {
       const L = men ? GROOM[o.intensity] || GROOM.glam : GLAM[o.intensity] || GLAM.glam;
       p = men
         ? `Retouch this man like a high-end magazine grooming artist. The result must look noticeably more polished than the original: ${L}. No visible makeup, no lipstick, no eye makeup. Keep the background, clothing and lighting unchanged.`
-        : `Give this woman a ${L.name} makeover by a luxury celebrity makeup artist. The makeup must be clearly visible and beautiful in the final photo, like a professional beauty shoot: ${o.eyes ? o.eyes + ', ' : ''}${L.makeup}${o.lip ? ', ' + o.lip : ''}. Skin: ${L.skin}. Keep the background, clothing, hair and lighting unchanged.`;
+        : `Apply professional ${L.name} makeup to the woman in this photo, as a luxury makeup artist would for a beauty shoot, clearly visible and beautifully blended: ${o.eyes ? o.eyes + ', ' : ''}${L.makeup}${o.lip ? ', ' + o.lip : ''}. Skin: ${L.skin}. Do not change anything else in the photo.`;
       return p + ' ' + KEEP_GLAM;
     }
     case 'enhance':

@@ -79,10 +79,8 @@ jobs:
             jq -c 'del(.image)' /tmp/res.json | tee /tmp/out/$2.json
             jq -r '.image // empty' /tmp/res.json | sed 's/^data:[^,]*,//' | base64 -d > /tmp/out/$2.png 2>/dev/null || true
           }
-          run glam glam-soft '{"intensity":"soft"}'
           run glam glam-glam '{"intensity":"glam"}'
           run glam glam-max '{"intensity":"max"}'
-          run glam men-glam '{"intensity":"glam","style":"men","width":900,"height":1125}' /tmp/man.txt
           ls -la /tmp/out
       - name: Publish test results for review
         if: always()

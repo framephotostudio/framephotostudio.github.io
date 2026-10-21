@@ -2,7 +2,7 @@
 // Secret keys never leave this server. Photos are sent to the AI provider only for the edit the user asked for,
 // are never stored here, and are never used for training. No photos or face data are written to logs.
 import { getConfig, saveConfig, rollbackConfig, listConfigVersions, publicConfig } from './config.js';
-import { buildPrompt, TRAVEL_KEYS } from './prompts.js';
+import { buildPrompt, simplePrompt, TRAVEL_KEYS } from './prompts.js';
 import { ADMIN_HTML } from './admin-page.js';
 
 const enc = new TextEncoder();
@@ -159,16 +159,21 @@ async function generate(req, env, ctx, forcedTask) {
   let out = null, usage = null, status = 0, msg = '';
   try {
     if (env.GEMINI_API_KEY) {
-      const parts = [{ text: prompt }, inlinePart(b.image)];
-      if (task === 'tryon') parts.push(inlinePart(b.garment));
       const model = env.GEMINI_IMAGE_MODEL || 'gemini-2.5-flash-image';
-      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
-        method: 'POST', signal: ac.signal, headers: { 'content-type': 'application/json', 'x-goog-api-key': env.GEMINI_API_KEY },
-        body: JSON.stringify({ contents: [{ role: 'user', parts }], generationConfig: { responseModalities: ['IMAGE'], imageConfig: { aspectRatio: pickAspect(b.width, b.height) } } }) });
-      status = r.status; const j = await r.json().catch(() => ({}));
-      const img = (((j.candidates || [])[0] || {}).content || {}).parts?.find(x => x.inlineData || x.inline_data);
-      if (r.ok && img) { const d = img.inlineData || img.inline_data; out = `data:${d.mimeType || d.mime_type || 'image/png'};base64,${d.data}`; }
-      else msg = (j.error && j.error.message) || (j.promptFeedback && ('blocked ' + (j.promptFeedback.blockReason || ''))) || ((j.candidates || [])[0] || {}).finishReason || '';
+      const attempt = async (text) => {
+        const parts = [{ text }, inlinePart(b.image)];
+        if (task === 'tryon') parts.push(inlinePart(b.garment));
+        const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+          method: 'POST', signal: ac.signal, headers: { 'content-type': 'application/json', 'x-goog-api-key': env.GEMINI_API_KEY },
+          body: JSON.stringify({ contents: [{ role: 'user', parts }], generationConfig: { responseModalities: ['IMAGE'], imageConfig: { aspectRatio: pickAspect(b.width, b.height) } } }) });
+        status = r.status; const j = await r.json().catch(() => ({}));
+        const img = (((j.candidates || [])[0] || {}).content || {}).parts?.find(x => x.inlineData || x.inline_data);
+        if (r.ok && img) { const d = img.inlineData || img.inline_data; out = `data:${d.mimeType || d.mime_type || 'image/png'};base64,${d.data}`; msg = ''; }
+        else msg = (j.error && j.error.message) || (j.promptFeedback && ('blocked ' + (j.promptFeedback.blockReason || ''))) || ((j.candidates || [])[0] || {}).finishReason || '';
+      };
+      await attempt(prompt);
+      // the image model sometimes declines a long instruction (IMAGE_OTHER / NO_IMAGE / STOP without an image): one retry with a plain one
+      if (!out && status === 200 && !/SAFETY|PROHIBITED|blocked/i.test(msg)) { const sp = simplePrompt(task, b); if (sp) { await attempt(sp); if (out) await bump(env, 'stat:retry_ok:' + month()); } }
       if (!out && /SAFETY|PROHIBITED|blocked|IMAGE_SAFETY/i.test(msg)) msg = 'safety ' + msg;
     } else {
       const form = new FormData();
