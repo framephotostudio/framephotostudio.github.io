@@ -1,0 +1,57 @@
+name: Private AI test
+# Photos are encrypted end to end: inputs are locked to this workflow's key (kept in Cloudflare KV, never in the repo),
+# results are locked to the reviewer's public key. Nothing readable is published.
+on:
+  push:
+    branches: [mobile-app]
+    paths: ['private-test/**', '.github/workflows/private-ai-test.yml']
+permissions: { contents: write }
+concurrency: { group: private-ai, cancel-in-progress: false }
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    env:
+      H: 'Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}'
+      ACC: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Workflow key (private half stays in KV)
+        run: |
+          A=https://api.cloudflare.com/client/v4/accounts/$ACC/storage/kv/namespaces
+          KID=$(curl -s -H "$H" "$A?per_page=100" | jq -r '[.result[]|select(.title=="face-couture-kv" or .title=="face-couture-api-KV" or .title=="KV")][0].id')
+          echo "KVURL=$A/$KID/values" >> $GITHUB_ENV
+          curl -s -f -H "$H" "$A/$KID/values/ci:privkey" -o /tmp/ci.key || true
+          if ! openssl pkey -in /tmp/ci.key -noout 2>/dev/null; then
+            openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:3072 -out /tmp/ci.key 2>/dev/null
+            curl -s -X PUT -H "$H" --data-binary @/tmp/ci.key "$A/$KID/values/ci:privkey" | jq -c .success
+          fi
+          mkdir -p /tmp/pub; openssl pkey -in /tmp/ci.key -pubout -out /tmp/pub/workflow.pub
+      - name: Decrypt inputs, run the AI, encrypt results
+        run: |
+          mkdir -p /tmp/res
+          if [ -f private-test/inputs.enc ] && [ -f private-test/inputs.key.enc ]; then
+            openssl pkeyutl -decrypt -inkey /tmp/ci.key -pkeyopt rsa_padding_mode:oaep -in private-test/inputs.key.enc -out /tmp/k.bin
+            openssl enc -d -aes-256-cbc -pbkdf2 -pass file:/tmp/k.bin -in private-test/inputs.enc -out /tmp/in.tgz
+            mkdir -p /tmp/in && tar -xzf /tmp/in.tgz -C /tmp/in
+            U=$(cat private-test/url.txt)
+            jq -c '.[]' /tmp/in/jobs.json | while read -r J; do
+              NAME=$(echo "$J" | jq -r .name); IMG=$(echo "$J" | jq -r .image)
+              T=$(curl -s -X POST -H 'content-type: application/json' $U/api/hello -d '{"platform":"web"}' | jq -r .token)
+              printf 'data:image/jpeg;base64,' > /tmp/img.txt; base64 -w0 /tmp/in/$IMG >> /tmp/img.txt
+              echo "$J" | jq --rawfile img /tmp/img.txt '.req + {image:$img, consent:true}' > /tmp/req.json
+              curl -s -X POST -H 'content-type: application/json' -H "authorization: Bearer $T" $U/api/ai --data @/tmp/req.json > /tmp/r.json
+              jq -c 'del(.image)' /tmp/r.json | tee /tmp/res/$NAME.json
+              jq -r '.image // empty' /tmp/r.json | sed 's/^data:[^,]*,//' | base64 -d > /tmp/res/$NAME.png 2>/dev/null || true
+            done
+            curl -s -H "$H" "$KVURL/alert:last_provider_error" > /tmp/res/last-error.txt || true
+            rm -rf /tmp/in /tmp/in.tgz /tmp/img.txt /tmp/req.json /tmp/r.json
+          else echo "no inputs" > /tmp/res/none.txt; fi
+          tar -czf /tmp/res.tgz -C /tmp/res . ; openssl rand -out /tmp/rk.bin 32
+          openssl enc -aes-256-cbc -pbkdf2 -pass file:/tmp/rk.bin -in /tmp/res.tgz -out /tmp/pub/results.enc
+          openssl pkeyutl -encrypt -pubin -inkey private-test/reviewer.pub -pkeyopt rsa_padding_mode:oaep -in /tmp/rk.bin -out /tmp/pub/results.key.enc
+          rm -rf /tmp/res /tmp/res.tgz /tmp/rk.bin /tmp/k.bin
+      - name: Publish (encrypted only)
+        run: |
+          git config user.name face-couture-ci; git config user.email hello@facecouture.app
+          git checkout --orphan ci-private; git rm -rfq --cached .; rm -rf out; mkdir out; cp /tmp/pub/* out/
+          git add -f out; git commit -qm "private AI test (encrypted)"; git push -qf origin HEAD:ci-private
