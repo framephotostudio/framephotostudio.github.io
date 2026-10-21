@@ -14,5 +14,9 @@ jobs:
           H="Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}"
           ID=$(curl -s -H "$H" "$A?per_page=100" | jq -r '[.result[]|select(.title=="face-couture-kv" or .title=="face-couture-api-KV" or .title=="KV")][0].id')
           mkdir -p /tmp/out; curl -s -H "$H" "$A/$ID/values/alert:last_provider_error" > /tmp/out/last-error.txt; cat /tmp/out/last-error.txt
+          # owner-approved spending limit: $20/month (also the code default). Update a saved dashboard config if there is one.
+          C=$(curl -s -f -H "$H" "$A/$ID/values/config:current" || true)
+          if echo "$C" | jq -e . >/dev/null 2>&1; then echo "$C" | jq -c '.spend=((.spend//{})+{monthlyCeilingUSD:20})' > /tmp/c.json; curl -s -X PUT -H "$H" --data-binary @/tmp/c.json "$A/$ID/values/config:current" | jq -c .success; jq -c .spend /tmp/c.json > /tmp/out/spend-config.txt; else echo "no saved config (code default applies)" > /tmp/out/spend-config.txt; fi
+          curl -s -H "$H" "$A/$ID/values/spend:$(date -u +%Y-%m)" > /tmp/out/spend-month.txt || true
           git config user.name face-couture-ci; git config user.email hello@facecouture.app
           git checkout --orphan ci-err; git rm -rfq --cached .; rm -rf out; mkdir out; cp /tmp/out/* out/; git add -f out; git commit -qm err; git push -qf origin HEAD:ci-err

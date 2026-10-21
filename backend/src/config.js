@@ -14,7 +14,7 @@ export const DEFAULT_CONFIG = {
     anonymousWeb: { perDay: 1, perMonth: 3 }
   },
   // Owner spending ceiling for the whole service. AI stops automatically at the limit.
-  spend: { monthlyCeilingUSD: 10, alertAtPercent: 80, blockedMessage: 'AI looks are resting for the moment. Everything else works - try again later.' },
+  spend: { monthlyCeilingUSD: 20, alertAtPercent: 80, blockedMessage: 'AI looks are resting for the moment. Everything else works - try again later.' },
   // AI engine: 'fast' (about 4 cents, ~1.3K pixels) or 'pro' (about 13 cents, sharp 2K output)
   ai: { engine: 'std' },
   // Which AI tools are switched on.
