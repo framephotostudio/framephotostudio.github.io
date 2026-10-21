@@ -2,6 +2,7 @@ name: Build Face Couture apps
 on:
   push:
     branches: [mobile-app]
+    paths-ignore: ['backend/**', 'private-test/**', 'release/**', '.github/workflows/backend.yml', '.github/workflows/private-ai-test.yml', '.github/workflows/ai-error.yml', '.github/workflows/vendor-copy.yml', 'store/**']
   workflow_dispatch:
 permissions:
   contents: write
