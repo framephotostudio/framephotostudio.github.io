@@ -21,7 +21,7 @@ export function simplePrompt(task, o = {}) {
   if (task !== 'glam') return null;
   const L = GLAM[o.intensity] || GLAM.glam;
   return o.style === 'men' ? 'Lightly retouch this photo: clearer even skin and neatly groomed brows. Keep everything else the same. Photorealistic.'
-    : `Add expensive ${L.name.toLowerCase()} makeup to this woman: ${L.short}. Keep everything else the same. Photorealistic.`;
+    : `Add expensive ${L.name.toLowerCase()} makeup to ${o.who ? String(o.who).slice(0, 120) : 'this woman'}: ${L.short}. Keep everything else the same. Photorealistic.`;
 }
 // Luxury makeup-artist looks. Shape changes are done the way real makeup artists do them (contour and highlight), never by
 // reshaping the face, so the person stays exactly themselves and the model does not decline the edit.
@@ -55,7 +55,7 @@ export function buildPrompt(task, o = {}) {
       const L = men ? GROOM[o.intensity] || GROOM.glam : GLAM[o.intensity] || GLAM.glam;
       p = men
         ? `Retouch this man like a high-end magazine grooming artist. The result must look noticeably more polished than the original: ${L}. No visible makeup, no lipstick, no eye makeup. Keep the background, clothing and lighting unchanged.`
-        : `Apply ${L.name} makeup to the woman in this photo for a luxury beauty shoot. The makeup must be clearly visible and look expensive: ${o.eyes ? o.eyes + ', ' : ''}${L.makeup}${o.lip ? ', ' + o.lip : ''}. Skin: ${L.skin}. Do not change anything else in the photo.`;
+        : `Apply ${L.name} makeup to ${o.who ? String(o.who).slice(0, 120) : 'the woman in this photo'} for a luxury beauty shoot. The makeup must be clearly visible and look expensive: ${o.eyes ? o.eyes + ', ' : ''}${L.makeup}${o.lip ? ', ' + o.lip : ''}. Skin: ${L.skin}. Do not change anything else in the photo.`;
       return p + ' ' + KEEP_GLAM;
     }
     case 'enhance':
