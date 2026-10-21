@@ -1,0 +1,23 @@
+name: Copy offline model files for testing
+on:
+  workflow_dispatch:
+  push:
+    branches: [mobile-app]
+    paths: ['.github/workflows/vendor-copy.yml']
+permissions:
+  contents: write
+jobs:
+  copy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with: { ref: main, path: site }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm run build:web
+      - run: |
+          mkdir -p /tmp/v && cp -r www/vendor /tmp/v/ && ls -laR /tmp/v | head -40
+          git config user.name face-couture-ci; git config user.email hello@facecouture.app
+          git checkout --orphan ci-vendor; git rm -rfq --cached . ; rm -rf vendor; cp -r /tmp/v/vendor vendor
+          git add -f vendor; git commit -qm "offline model files (test copy)"; git push -qf origin HEAD:ci-vendor
