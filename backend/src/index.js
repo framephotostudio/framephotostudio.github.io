@@ -198,7 +198,7 @@ async function generate(req, env, ctx, forcedTask) {
     const code = status === 401 || status === 403 ? 'provider_auth' : status === 429 && !/quota|billing|credit/i.test(msg) ? 'provider_busy' : /billing|quota|credit|prepay|exhausted/i.test(msg) ? 'provider_credits' : /safety|policy/i.test(msg) ? 'safety' : 'provider';
     const friendly = { provider_auth: 'AI is not connected correctly. The owner has been notified.', provider_busy: 'AI is busy right now. Please try again in a minute.', provider_credits: 'AI credits need topping up. Please try again later.', safety: 'That edit could not be made. Try a different photo or description.', provider: 'The AI could not finish this edit. Your allowance was not used.' }[code];
     if (code === 'provider_auth' || code === 'provider_credits') await env.KV.put('alert:provider', code + ' ' + new Date().toISOString());
-    return err(friendly, 502, { code });
+    return err(friendly, 502, { code, detail: (status + ' ' + msg).slice(0, 160) });
   }
   // success: only now count usage and spend
   const actualCost = env.GEMINI_API_KEY ? +(env.COST_PER_GEN_GEMINI || 0.039) : estimateCost(usage, cost);
