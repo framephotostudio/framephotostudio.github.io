@@ -28,14 +28,15 @@ export function simplePrompt(task, o = {}) {
 const LUX = 'expensive high-end makeup applied by a celebrity makeup artist with luxury products: seamless blending with no harsh edges, ' +
   'a skin-like finish that looks real and expensive (even tone, visible natural skin texture, never cakey, never filtered or plastic), ' +
   'luxury lash extensions that follow her real lash line, long, full and softly separated, ' +
+  'a luxury retouch of the skin: smooth away under-eye creases, fine lines and wrinkles and any under-eye darkness, remove oily shine and greasy patches so the skin looks fresh and velvety, while keeping real skin texture so it never looks airbrushed, ' +
   'a soft matte contour along both sides of the nose with a fine highlight down the center of the bridge so the nose looks slightly slimmer while staying completely natural, ';
 const GLAM = {
-  soft: { name: 'Soft Glam', short: 'shimmery champagne-rose eyes, full fluffy lashes, rosy blush, soft contour, a glowing highlight and a glossy light rose lip',
+  soft: { name: 'Soft Glam', short: 'smooth fresh under-eyes with no fine lines or shine, shimmery champagne-rose eyes, full fluffy lashes, rosy blush, soft contour, a glowing highlight and a glossy light rose lip',
     skin: 'luminous, glowing and dewy, with a visible lit-from-within highlight on the cheekbones, nose bridge and cupid\'s bow',
     makeup: LUX + 'a soft night-out glam that is clearly visible, not barely there: shimmery champagne and rose-pink eyeshadow blended into the crease with a soft brown definition in the outer corners, a soft thin liner along the upper lashes, full fluffy lash extensions, a beautiful rosy-pink blush swept onto the cheeks, soft contour under the cheekbones, a luminous champagne highlight on the high points, softly defined brows, and a beautiful light rose lipstick finished with a glossy shine' },
-  glam: { name: 'Red Carpet', short: 'bronze smoky eyes, winged liner, long lashes, softly contoured nose and cheekbones, glowing skin and classic red lipstick', skin: 'smooth satin finish with a radiant glow on the high points',
+  glam: { name: 'Red Carpet', short: 'smooth fresh under-eyes with no fine lines or shine, bronze smoky eyes, winged liner, long lashes, softly contoured nose and cheekbones, glowing skin and classic red lipstick', skin: 'smooth satin finish with a radiant glow on the high points',
     makeup: LUX + 'a warm bronze smoky eyeshadow with a touch of champagne shimmer on the center of the lids, a sleek black winged eyeliner, dramatic lash extensions, warm bronzer and a soft sculpting shade under the cheekbones with a luminous highlight above, defined brows, and a classic creamy red lipstick with a crisp clean lip line' },
-  max: { name: 'Full Glam', short: 'soft-focus bronze smoky eyes, softly smudged liner, full fluffy lashes, sculpted cheekbones, glowing skin and a polished rose-berry lip',
+  max: { name: 'Full Glam', short: 'smooth fresh under-eyes with no fine lines or shine, soft-focus bronze smoky eyes, softly smudged liner, full fluffy lashes, sculpted cheekbones, glowing skin and a polished rose-berry lip',
     skin: 'flawless, radiant and glowing like a luxury magazine cover, still real skin',
     makeup: LUX + 'a refined soft-focus smoky eye in warm taupe, soft bronze and champagne, blended out seamlessly with no harsh edges and kept light enough that the eyes look bright and open, a soft smudged brown-black liner close to the upper lashes (no sharp or heavy line), full fluffy lash extensions, bronzer and gentle cheekbone sculpting with a satin highlight, softly defined brows, and a polished rose-berry satin lipstick' }
 };
