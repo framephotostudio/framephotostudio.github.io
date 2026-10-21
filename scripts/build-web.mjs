@@ -24,8 +24,8 @@ html = html.replace("$('#generate').onclick=async()=>{openPro();return;", "$('#g
 fs.writeFileSync(path.join(OUT, 'app-config.js'), 'window.FC_CONFIG=' + JSON.stringify({
   apiUrl: process.env.FC_API_URL || '', revenueCatIOS: process.env.FC_RC_IOS || '', revenueCatAndroid: process.env.FC_RC_ANDROID || '',
   analytics: !!process.env.FC_API_URL, preview: process.env.FC_PREVIEW === '1', supportEmail: process.env.FC_SUPPORT_EMAIL || 'hello@facecouture.app', version: process.env.APP_VERSION || '1.0.0' }) + ';');
-// no website analytics inside the app
-html = html.replace(/<script[^>]*googletagmanager[^>]*><\/script>/g, '').replace(/<script>[^<]*gtag\([^<]*<\/script>/g, '');
+// Google Analytics stays on in the app: the studio reports app_platform = ios | android with an anonymous app-only id
+// (no photos, no face data, no names; no ad signals, so no tracking prompt is needed).
 // app mode hook (native look and feel is layered on in app.css / app.js)
 { const h = html.search(/<head(\s[^>]*)?>/i), hEnd = html.indexOf('>', h) + 1; html = html.slice(0, hEnd) + '<script>window.__FC_APP=true</script><script src="app-config.js"></script><script src="app-early.js"></script><script src="app-api.js"></script>' + html.slice(hEnd); }
 { const i = html.indexOf('</head>'); html = html.slice(0, i) + '<link rel="stylesheet" href="app.css">' + html.slice(i); }

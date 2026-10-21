@@ -4,14 +4,14 @@ These match what the app actually does. Change them only if the app changes.
 
 ## Apple — App Privacy (App Store Connect → App Privacy)
 
-**Do you or your third-party partners collect data from this app?** Yes (only when AI Looks are used or analytics are on).
+**Do you or your third-party partners collect data from this app?** Yes. Google Analytics counts actions (no photos, no face data, no names, ad signals off); AI Looks send a photo only when used.
 
 | Data type | Collected? | Linked to identity? | Used for tracking? | Purpose |
 |---|---|---|---|---|
 | Photos or Videos | Yes — only when the user chooses an AI Look and agrees; sent to the AI provider for that one edit, not stored by us | No | No | App Functionality |
 | Purchases (purchase history) | Yes — via App Store / RevenueCat to grant Pro | No (device-level ID only) | No | App Functionality |
-| Product Interaction (taps on looks, saves, shares) | Yes — counts only, no photos | No | No | Analytics |
-| Device ID (a random install ID we create, not the advertising ID) | Yes | No | No | App Functionality (AI allowance, fraud prevention) |
+| Product Interaction (taps on looks, saves, shares) | Yes — counts only, no photos, sent to Google Analytics | No | No | Analytics |
+| Device ID (a random install ID we create, not the advertising ID) | Yes | No | No | Analytics; App Functionality (AI allowance, fraud prevention) |
 | Coarse Location (country from IP, no GPS) | Yes | No | No | Analytics |
 | Crash data | No (unless you add a crash reporter) | — | — | — |
 | Contact info, Health, Financial, Contacts, Browsing history, Search history, Sensitive info | Not collected | — | — | — |
@@ -32,7 +32,7 @@ These match what the app actually does. Change them only if the app changes.
 |---|---|---|---|---|---|
 | Photos | Yes (only for AI Looks) | Yes — with the AI provider for the edit | Yes | Optional | App functionality |
 | Purchase history | Yes | Yes (Google Play / RevenueCat) | No | Optional | App functionality |
-| App interactions | Yes | No | No | Optional | Analytics |
+| App interactions | Yes (Google Analytics, as our service provider) | No | No | Required | Analytics |
 | Device or other IDs (random install ID) | Yes | No | No | Required for AI Looks | App functionality, fraud prevention |
 | Approximate location (country from IP) | Yes | No | Yes | Optional | Analytics |
 
