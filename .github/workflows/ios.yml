@@ -43,7 +43,10 @@ jobs:
       - name: Create the iPhone project
         working-directory: native
         run: |
+          exec > >(tee -a "$GITHUB_WORKSPACE/ci.log") 2>&1
+          set -x
           npm install --no-audit --no-fund
+          npx cap --version
           npx cap add ios --packagemanager SPM
           npx --yes @capacitor/assets@3 generate --ios --iconBackgroundColor '#2B174A' --iconBackgroundColorDark '#2B174A' --splashBackgroundColor '#fbf8fc' --splashBackgroundColorDark '#fbf8fc'
           bash scripts/configure-ios.sh
@@ -64,6 +67,7 @@ jobs:
         working-directory: native/ios/App
         run: |
           set -o pipefail
+          exec > >(tee -a "$GITHUB_WORKSPACE/ci.log") 2>&1
           xcodebuild -project App.xcodeproj -scheme App -configuration Debug -sdk iphonesimulator \
             -derivedDataPath ../../build CODE_SIGNING_ALLOWED=NO build | tail -40
           DEV=$(xcrun simctl list devices available | grep -E 'iPhone 1[5-9]|iPhone 2[0-9]' | grep -v -i 'plus\|max\|mini\|SE' | head -1 | sed -E 's/.*\(([0-9A-F-]{36})\).*/\1/')
@@ -79,17 +83,18 @@ jobs:
           sleep 15
           xcrun simctl io "$DEV" screenshot ../../shots/launch-40s.png
 
-      - name: Save screenshots for review
-        if: steps.keys.outputs.signed != 'yes'
+      - name: Save log and screenshots for review
+        if: always()
         run: |
           git config user.name "face-couture-ci"
           git config user.email "hello@facecouture.app"
           git fetch origin ci-output || true
           git checkout --orphan ci-output-tmp
           git rm -rf --cached . > /dev/null
-          mkdir -p out && cp native/shots/*.png out/
-          git add -f out/*.png
-          git commit -m "iPhone simulator screenshots (run ${{ github.run_number }})"
+          mkdir -p out && cp native/shots/*.png out/ 2>/dev/null || true
+          cp ci.log out/ci.log 2>/dev/null || echo "no log" > out/ci.log
+          git add -f out/
+          git commit -m "iPhone build log and screenshots (run ${{ github.run_number }})"
           git push -f origin HEAD:ci-output
 
       - name: Sign and upload to TestFlight
