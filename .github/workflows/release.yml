@@ -1,6 +1,9 @@
 name: Release Face Couture apps
 # Signed builds uploaded to TestFlight and Google Play (closed testing). Needs the secrets listed in README.md.
 on:
+  # pushing a tag like ios-1.0.0-1 sends an iPhone build to TestFlight
+  push:
+    tags: ['ios-*']
   workflow_dispatch:
     inputs:
       version:
@@ -12,9 +15,11 @@ on:
         type: choice
         options: [internal, alpha, beta, production]
 env:
+  VERSION: ${{ inputs.version || '1.0.0' }}
   DEPS: "@capacitor/core@latest @capacitor/cli@latest @capacitor/android@latest @capacitor/ios@latest @capacitor/splash-screen@latest @capacitor/status-bar@latest @capacitor/share@latest @capacitor/filesystem@latest @capacitor/haptics@latest @capacitor/app@latest @capacitor/network@latest @capacitor/preferences@latest @capacitor/browser@latest @revenuecat/purchases-capacitor@latest"
 jobs:
   android:
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     env:
       HAS_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
@@ -30,9 +35,9 @@ jobs:
       - run: npm install $DEPS
       - run: npm install @capacitor-community/in-app-review@latest || true
       - run: npm run build:web
-        env: { FC_API_URL: '${{ vars.FC_API_URL }}', FC_RC_IOS: '${{ vars.FC_RC_IOS }}', FC_RC_ANDROID: '${{ vars.FC_RC_ANDROID }}', FC_SUPPORT_EMAIL: '${{ vars.FC_SUPPORT_EMAIL }}', APP_VERSION: '${{ inputs.version }}' }
+        env: { FC_API_URL: '${{ vars.FC_API_URL }}', FC_RC_IOS: '${{ vars.FC_RC_IOS }}', FC_RC_ANDROID: '${{ vars.FC_RC_ANDROID }}', FC_SUPPORT_EMAIL: '${{ vars.FC_SUPPORT_EMAIL }}', APP_VERSION: '${{ env.VERSION }}' }
       - run: npx cap add android && bash scripts/native-setup.sh android && npx cap sync android
-        env: { APP_VERSION: '${{ inputs.version }}', BUILD_NUMBER: '${{ github.run_number }}' }
+        env: { APP_VERSION: '${{ env.VERSION }}', BUILD_NUMBER: '${{ github.run_number }}' }
       - name: Upload key (created on first run if missing)
         id: key
         run: |
@@ -89,9 +94,9 @@ jobs:
       - run: npm install $DEPS
       - run: npm install @capacitor-community/in-app-review@latest || true
       - run: npm run build:web
-        env: { FC_API_URL: '${{ vars.FC_API_URL }}', FC_RC_IOS: '${{ vars.FC_RC_IOS }}', FC_RC_ANDROID: '${{ vars.FC_RC_ANDROID }}', FC_SUPPORT_EMAIL: '${{ vars.FC_SUPPORT_EMAIL }}', APP_VERSION: '${{ inputs.version }}' }
+        env: { FC_API_URL: '${{ vars.FC_API_URL }}', FC_RC_IOS: '${{ vars.FC_RC_IOS }}', FC_RC_ANDROID: '${{ vars.FC_RC_ANDROID }}', FC_SUPPORT_EMAIL: '${{ vars.FC_SUPPORT_EMAIL }}', APP_VERSION: '${{ env.VERSION }}' }
       - run: npx cap add ios && bash scripts/native-setup.sh ios && npx cap sync ios
-        env: { APP_VERSION: '${{ inputs.version }}', BUILD_NUMBER: '${{ github.run_number }}' }
+        env: { APP_VERSION: '${{ env.VERSION }}', BUILD_NUMBER: '${{ github.run_number }}' }
       - name: Check the Apple secrets
         run: |
           miss=""; [ -n "$KEY_ID" ] || miss="$miss APPSTORE_KEY_ID"; [ -n "$ISSUER" ] || miss="$miss APPSTORE_ISSUER_ID"
