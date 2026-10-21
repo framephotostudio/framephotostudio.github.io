@@ -13,6 +13,7 @@ jobs:
     env:
       H: 'Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}'
       ACC: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      ADMIN_PASSPHRASE: ${{ secrets.ADMIN_PASSPHRASE }}
     steps:
       - uses: actions/checkout@v4
       - name: Workflow key (private half stays in KV)
@@ -39,7 +40,8 @@ jobs:
               T=$(curl -s -X POST -H 'content-type: application/json' $U/api/hello -d '{"platform":"web"}' | jq -r .token)
               printf 'data:image/jpeg;base64,' > /tmp/img.txt; base64 -w0 /tmp/in/$IMG >> /tmp/img.txt
               echo "$J" | jq --rawfile img /tmp/img.txt '.req + {image:$img, consent:true}' > /tmp/req.json
-              curl -s -X POST -H 'content-type: application/json' -H "authorization: Bearer $T" $U/api/ai --data @/tmp/req.json > /tmp/r.json
+              EK=$(printf '%s' "$ADMIN_PASSPHRASE$ACC fc-device-sign" | sha256sum | cut -c1-48)
+              curl -s -X POST -H 'content-type: application/json' -H "authorization: Bearer $T" -H "x-fc-engine-key: $EK" $U/api/ai --data @/tmp/req.json > /tmp/r.json
               jq -c 'del(.image)' /tmp/r.json | tee /tmp/res/$NAME.json
               jq -r '.image // empty' /tmp/r.json | sed 's/^data:[^,]*,//' | base64 -d > /tmp/res/$NAME.png 2>/dev/null || true
             done

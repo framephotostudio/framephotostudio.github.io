@@ -156,16 +156,20 @@ async function generate(req, env, ctx, forcedTask) {
   const prompt = buildPrompt(task, { ...b, intensity: b.intensity, lip: b.lip, eyes: b.eyes, category: b.category });
   const started = Date.now();
   const ac = new AbortController(); const timer = setTimeout(() => ac.abort(), 150_000);
-  let out = null, usage = null, status = 0, msg = '';
+  let out = null, usage = null, status = 0, msg = '', usedPro = false;
   try {
     if (env.GEMINI_API_KEY) {
-      const model = env.GEMINI_IMAGE_MODEL || 'gemini-2.5-flash-image';
+      // engine: 'fast' (default) or 'pro' (sharper 2K output). Pro is used when the owner switches it on in the dashboard
+      // config (ai.engine = 'pro'), or for owner test runs that carry the signing key.
+      const wantPro = (cfg.ai && cfg.ai.engine === 'pro') || (b.engine === 'pro' && env.APP_SIGNING_SECRET && req.headers.get('x-fc-engine-key') === env.APP_SIGNING_SECRET);
+      const model = wantPro ? (env.GEMINI_PRO_IMAGE_MODEL || 'gemini-3-pro-image-preview') : (env.GEMINI_IMAGE_MODEL || 'gemini-2.5-flash-image');
+      usedPro = wantPro;
       const attempt = async (text) => {
         const parts = [{ text }, inlinePart(b.image)];
         if (task === 'tryon') parts.push(inlinePart(b.garment));
         const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
           method: 'POST', signal: ac.signal, headers: { 'content-type': 'application/json', 'x-goog-api-key': env.GEMINI_API_KEY },
-          body: JSON.stringify({ contents: [{ role: 'user', parts }], generationConfig: { responseModalities: ['TEXT', 'IMAGE'], imageConfig: { aspectRatio: pickAspect(b.width, b.height) } } }) });
+          body: JSON.stringify({ contents: [{ role: 'user', parts }], generationConfig: { responseModalities: ['TEXT', 'IMAGE'], imageConfig: Object.assign({ aspectRatio: pickAspect(b.width, b.height) }, usedPro ? { imageSize: '2K' } : {}) } }) });
         status = r.status; const j = await r.json().catch(() => ({}));
         const img = (((j.candidates || [])[0] || {}).content || {}).parts?.find(x => x.inlineData || x.inline_data);
         if (r.ok && img) { const d = img.inlineData || img.inline_data; out = `data:${d.mimeType || d.mime_type || 'image/png'};base64,${d.data}`; msg = ''; }
@@ -201,13 +205,13 @@ async function generate(req, env, ctx, forcedTask) {
     return err(friendly, 502, { code, detail: (status + ' ' + msg).slice(0, 160) });
   }
   // success: only now count usage and spend
-  const actualCost = env.GEMINI_API_KEY ? +(env.COST_PER_GEN_GEMINI || 0.039) : estimateCost(usage, cost);
+  const actualCost = env.GEMINI_API_KEY ? (usedPro ? +(env.COST_PER_GEN_GEMINI_PRO || 0.134) : +(env.COST_PER_GEN_GEMINI || 0.039)) : estimateCost(usage, cost);
   ctx.waitUntil(Promise.all([
     bump(env, `use:${dev.id}:${day()}`, 1, 2 * 86400), bump(env, `use:${dev.id}:${month()}`, 1, 40 * 86400),
     bumpFloat(env, 'spend:' + month(), actualCost), bump(env, 'stat:gen:' + task + ':' + month()), bump(env, 'stat:gen_total:' + month()),
     bump(env, 'stat:gen_tier:' + al.tier + ':' + month()), bump(env, 'stat:latency_ms:' + month(), Date.now() - started), spendAlert(env)
   ]));
-  return json({ image: out, task, quality, ms: Date.now() - started, left: { today: al.left.today - 1, month: al.left.month - 1 } });
+  return json({ image: out, task, quality, engine: usedPro ? 'pro' : 'fast', ms: Date.now() - started, left: { today: al.left.today - 1, month: al.left.month - 1 } });
 }
 function inlinePart(u) { const i = u.indexOf(','); return { inline_data: { mime_type: u.slice(5, u.indexOf(';')), data: u.slice(i + 1) } }; }
 function pickAspect(w, h) { const r = (+w || 1) / (+h || 1); const opts = [['1:1', 1], ['4:5', .8], ['3:4', .75], ['2:3', 2 / 3], ['9:16', 9 / 16], ['5:4', 1.25], ['4:3', 4 / 3], ['3:2', 1.5], ['16:9', 16 / 9]]; return opts.reduce((a, o) => Math.abs(Math.log(o[1] / r)) < Math.abs(Math.log(a[1] / r)) ? o : a)[0]; }

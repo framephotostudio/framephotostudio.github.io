@@ -20,6 +20,8 @@ ALLOWED_ORIGINS = "https://facecouture.app,https://www.facecouture.app,capacitor
 IMAGE_MODEL = "gpt-image-1"
 GEMINI_IMAGE_MODEL = "gemini-2.5-flash-image"
 COST_PER_GEN_GEMINI = "0.039"
+GEMINI_PRO_IMAGE_MODEL = "gemini-3-pro-image-preview"
+COST_PER_GEN_GEMINI_PRO = "0.134"
 # cost assumptions used for the dashboard (USD per generation, by quality)
 COST_PER_GEN_MEDIUM = "0.04"
 COST_PER_GEN_HIGH = "0.17"
