@@ -3229,4 +3229,203 @@ var e=1e9;for(var i=0;i<k.P.length;i++){var a=k.P[i],q=k.P[(i+1)%k.P.length],dx=
 var base=Math.min(1,e/Math.max(.7,w*.0015));return Math.max(c,base*.95*Math.min(1,(.24-d)/.08))}catch(err){}return c};
 }catch(e){console.warn('v64 lip corners',e)}})();
 </script>
-<script src="app.js"></script><script src="app-pro.js"></script></body></html>
+<script src="app.js"></script><script src="app-pro.js"></script><script>
+/* Face Couture · Face Sculpt v1
+   Landmark-driven smooth reshaping (slimmer jaw, refined nose, fuller lips, lifted brow tail).
+   Works from the face layout the site already detects. Eyes are anchored so they never move. */
+(function(){
+  'use strict';
+  var V = function(x,y){return {x:x,y:y};};
+  // level presets: women / men
+  var PRESET = {
+    women: {jaw:1, cheek:1, chin:1, nose:1, lips:1, brow:1},
+    men:   {jaw:.75, cheek:.9, chin:0, nose:.7, lips:0, brow:0}
+  };
+  function sculpt(data,w,h,b,level,style){
+    if(!level||!b||!b.faceOutline||b.faceOutline.length<36||!b.lipOutline||b.lipOutline.length<20)return false;
+    var fp=b.featurePoints||{};
+    var P=function(p){return V(p.x*w,p.y*h);};
+    var O=b.faceOutline.map(P);
+    var T=O[0],C=O[18],R=O[8],L=O[28];
+    var faceW=Math.hypot(R.x-L.x,R.y-L.y),faceH=Math.hypot(C.x-T.x,C.y-T.y);
+    if(faceW<40||faceH<40)return false;
+    var ux=(C.x-T.x)/faceH,uy=(C.y-T.y)/faceH; // down the face
+    var nx=-uy,ny=ux;                        // across the face
+    var M=V((R.x+L.x)/2,(R.y+L.y)/2);
+    var side=function(p){return (p.x-M.x)*nx+(p.y-M.y)*ny;};
+    // head turn: nose offset from the face centre, -1..1
+    var nose=fp.noseC?P(fp.noseC):M;
+    var yaw=Math.max(-1,Math.min(1,side(nose)/(faceW*.5)));
+    var turn=Math.abs(yaw);
+    var cl=function(v){return Math.max(0,Math.min(1,v));};
+    var gJaw=cl(1-(turn-.8)/.6),gNose=cl(1-(turn-.35)/.5),gLip=cl(1-(turn-.6)/.6);
+    if(gJaw<=0.05)return false;
+    var k=PRESET[style==='men'?'men':'women'];
+    var lv=level;
+    var movers=[],anchors=[];
+    // weight of a side: the far (compressed) side of a turned face gets less
+    var sideW=function(p){var s=side(p);if(!yaw)return 1;return (s*yaw>0)?cl(1-turn/.75):1;};
+    function push(g,p,vx,vy,sig){movers.push({g:g,x:p.x,y:p.y,vx:vx,vy:vy,s2:2*sig*sig});}
+    // ---- jaw / lower cheeks: pull the contour toward the face's centre line
+    //      index distance from chin -> profile (women: V-shape strongest at the jaw angle)
+    var profW=[0,.18,.42,.70,.92,1,.95,.78,.52,.30],  // k=0 chin .. k=9 cheek (outline 9 / 27)
+        profM=[0,.05,.18,.40,.62,.78,.92,1,.85,.55];  // men: jowl/lower cheek, keep a strong chin
+    var prof=style==='men'?profM:profW;
+    var jawSig=faceW*.105, jawMag=faceW*.052*k.jaw*lv*gJaw;
+    for(var kk=1;kk<=9;kk++){
+      [18+kk,18-kk].forEach(function(i){
+        var p=O[i],s=side(p),dir=s>0?-1:1,m=jawMag*prof[kk]*sideW(p);
+        // a touch of lift at the jaw angle reads as "snatched" rather than just narrow
+        var lift=style==='men'?0:jawMag*prof[kk]*.22*(kk>=4&&kk<=7?1:.4)*sideW(p);
+        push('jaw',p,dir*nx*m-ux*lift,dir*ny*m-uy*lift,jawSig);
+      });
+    }
+    // chin: tiny shortening + softer point for women
+    if(k.chin){var ch=jawMag*.30*k.chin;push('jaw',C,-ux*ch,-uy*ch,jawSig*.9);}
+    else push('jaw',C,0,0,jawSig*.9);
+    // upper outline stays put (forehead, temples): anchors for the jaw group
+    [0,1,2,3,4,5,6,7,29,30,31,32,33,34,35].forEach(function(i){push('jaw',O[i],0,0,jawSig);});
+    // ---- nose: narrow the wings toward the bridge
+    if(fp.noseA&&fp.noseB&&k.nose){
+      var A=P(fp.noseA),B=P(fp.noseB),nw=Math.hypot(B.x-A.x,B.y-A.y),nm=nw*.13*k.nose*lv*gNose,ns=nw*.34;
+      var cx=(A.x+B.x)/2,cy=(A.y+B.y)/2,dx=(B.x-A.x)/nw,dy=(B.y-A.y)/nw;
+      push('nose',A,dx*nm,dy*nm,ns);push('nose',B,-dx*nm,-dy*nm,ns);
+      push('nose',V(cx,cy),0,0,ns*.8);
+      push('nose',V(nose.x,nose.y),0,0,ns*.8);
+    }
+    // ---- lips: fuller borders, mouth opening and corners hold still
+    if(k.lips){
+      var LO=b.lipOutline.map(P),LI=(b.lipInner||[]).map(P);
+      var lcx=0,lcy=0;LO.forEach(function(p){lcx+=p.x;lcy+=p.y;});lcx/=LO.length;lcy/=LO.length;
+      var lw=Math.hypot(LO[10].x-LO[0].x,LO[10].y-LO[0].y);
+      var lm=lw*.085*k.lips*lv*gLip,ls=lw*.15;
+      LO.forEach(function(p,i){
+        if(i===0||i===10){push('lips',p,0,0,ls);return;}           // corners fixed
+        var a=(p.x-lcx)*ux+(p.y-lcy)*uy;                            // + below centre
+        var t=Math.sin(Math.PI*((i%10)/10));                        // strongest mid-lip
+        var m=lm*t*(a<0?1:.85);                                     // upper lip a little more
+        push('lips',p,ux*m*(a<0?-1:1),uy*m*(a<0?-1:1),ls);
+      });
+      LI.forEach(function(p){push('lips',p,0,0,ls*.8);});
+    }
+    // ---- brow tail lift (women)
+    if(k.brow&&fp.bL0&&fp.bR0){
+      var bm=faceH*.012*k.brow*lv*gLip,bs=faceW*.055;
+      ['bL','bR'].forEach(function(key){
+        for(var i=0;i<10;i++){
+          var p=P(fp[key+i]);
+          // outer end of each brow = farther from the centre line
+          var outer=Math.min(1,Math.max(0,(Math.abs(side(p))/(faceW*.5)-.18)/.22));
+          push('brow',p,-ux*bm*outer*sideW(p),-uy*bm*outer*sideW(p),bs);
+        }
+      });
+    }
+    // eyes are always protected: every eye contour point is a hard anchor
+    var eyes=[];(b.eyeContours||[]).forEach(function(c){c.forEach(function(p){eyes.push(P(p));});});
+    ['lL','lR'].forEach(function(key){for(var i=0;i<9;i++)if(fp[key+i])eyes.push(P(fp[key+i]));});
+    var eyeSig=faceW*.035;
+    eyes.forEach(function(p){anchors.push({x:p.x,y:p.y,s2:2*eyeSig*eyeSig});});
+
+    // ---- displacement field on a coarse grid over the face region
+    var maxS=faceW*.11*3;
+    var x0=Math.max(0,Math.floor(Math.min.apply(null,O.map(function(p){return p.x;}))-maxS)),
+        x1=Math.min(w-1,Math.ceil(Math.max.apply(null,O.map(function(p){return p.x;}))+maxS)),
+        y0=Math.max(0,Math.floor(Math.min.apply(null,O.map(function(p){return p.y;}))-maxS)),
+        y1=Math.min(h-1,Math.ceil(Math.max.apply(null,O.map(function(p){return p.y;}))+maxS));
+    var gs=Math.max(2,Math.round(faceW/140)),gw=Math.ceil((x1-x0)/gs)+2,gh=Math.ceil((y1-y0)/gs)+2;
+    var DX=new Float32Array(gw*gh),DY=new Float32Array(gw*gh);
+    var groups={};movers.forEach(function(m){(groups[m.g]=groups[m.g]||[]).push(m);});
+    var gnames=Object.keys(groups);
+    for(var gy=0;gy<gh;gy++)for(var gx=0;gx<gw;gx++){
+      var qx=x0+gx*gs,qy=y0+gy*gs,ax=0,ay=0;
+      // eye protection factor
+      var eyeW=0;
+      for(var e=0;e<anchors.length;e++){var A2=anchors[e],d2=(qx-A2.x)*(qx-A2.x)+(qy-A2.y)*(qy-A2.y);if(d2<A2.s2*4.5){var wv=Math.exp(-d2/A2.s2);if(wv>eyeW)eyeW=wv;}}
+      for(var gi=0;gi<gnames.length;gi++){
+        var G=groups[gnames[gi]],sw=0,sx=0,sy=0,env=1;
+        for(var j=0;j<G.length;j++){
+          var m2=G[j],dd=(qx-m2.x)*(qx-m2.x)+(qy-m2.y)*(qy-m2.y);
+          if(dd>m2.s2*5)continue;
+          var wt=Math.exp(-dd/m2.s2);
+          sw+=wt;sx+=wt*m2.vx;sy+=wt*m2.vy;
+          if(m2.vx||m2.vy)env*=(1-wt);
+        }
+        if(sw<1e-6)continue;
+        env=1-env;                          // soft union of the moving points
+        ax+=sx/(sw+1e-3)*env;ay+=sy/(sw+1e-3)*env;
+      }
+      var keep=1-eyeW;
+      DX[gy*gw+gx]=ax*keep;DY[gy*gw+gx]=ay*keep;
+    }
+    // ---- backward warp (bilinear field, sharp Catmull-Rom sampling so skin texture stays crisp)
+    var rw=x1-x0+1,rh=y1-y0+1,src=new Uint8ClampedArray(rw*rh*4);
+    for(var y=0;y<rh;y++){var so=((y+y0)*w+x0)*4;src.set(data.subarray(so,so+rw*4),y*rw*4);}
+    var cr=function(t,o){var t2=t*t,t3=t2*t;o[0]=-.5*t3+t2-.5*t;o[1]=1.5*t3-2.5*t2+1;o[2]=-1.5*t3+2*t2+.5*t;o[3]=.5*t3-.5*t2;};
+    var wx=[0,0,0,0],wy=[0,0,0,0],acc=[0,0,0,0];
+    for(var yy=y0;yy<=y1;yy++){
+      var fy=(yy-y0)/gs,iy=Math.min(gh-2,Math.floor(fy)),ty=fy-iy;
+      for(var xx=x0;xx<=x1;xx++){
+        var fx=(xx-x0)/gs,ix=Math.min(gw-2,Math.floor(fx)),tx=fx-ix,g0=iy*gw+ix;
+        var dx=(DX[g0]*(1-tx)+DX[g0+1]*tx)*(1-ty)+(DX[g0+gw]*(1-tx)+DX[g0+gw+1]*tx)*ty;
+        var dy=(DY[g0]*(1-tx)+DY[g0+1]*tx)*(1-ty)+(DY[g0+gw]*(1-tx)+DY[g0+gw+1]*tx)*ty;
+        if(dx*dx+dy*dy<.0025)continue;
+        var sx2=xx-dx-x0,sy2=yy-dy-y0;
+        if(sx2<0)sx2=0;if(sy2<0)sy2=0;if(sx2>rw-1.001)sx2=rw-1.001;if(sy2>rh-1.001)sy2=rh-1.001;
+        var X0=sx2|0,Y0=sy2|0,o=(yy*w+xx)*4;
+        cr(sx2-X0,wx);cr(sy2-Y0,wy);acc[0]=acc[1]=acc[2]=acc[3]=0;
+        for(var m=0;m<4;m++){var py=Y0-1+m;if(py<0)py=0;else if(py>rh-1)py=rh-1;var row=py*rw,wym=wy[m];
+          for(var n=0;n<4;n++){var px=X0-1+n;if(px<0)px=0;else if(px>rw-1)px=rw-1;var q=(row+px)*4,ww=wym*wx[n];
+            acc[0]+=src[q]*ww;acc[1]+=src[q+1]*ww;acc[2]+=src[q+2]*ww;acc[3]+=src[q+3]*ww;}}
+        data[o]=acc[0];data[o+1]=acc[1];data[o+2]=acc[2];data[o+3]=acc[3];
+      }
+    }
+    return true;
+  }
+  window.FCSculpt={apply:sculpt};
+})();
+/* v66: Face Sculpt. A one-tap reshape row under "How strong": Off / Soft / Sculpted / Snatched.
+   Slims the jaw, refines the nose and (for women) fills out the lips and lifts the brow tail, from the face the studio already detected.
+   Runs last, so makeup moves with the face. Only the selected person is reshaped, eyes never move, and it is off until tapped. */
+;(function(){try{
+if(typeof beautyPixels!=='function'||!window.FCSculpt)return;
+var LV={off:0,soft:.5,sculpted:.85,snatched:1.25},level='off',rev=null;
+var curRev=function(){try{return photoRevision}catch(e){return 0}};
+window.__sculpt=function(){return level};
+var _bpS66=beautyPixels;beautyPixels=function(d,w,h,b){var r=_bpS66.apply(this,arguments);try{
+  /* a new photo starts natural: nothing is applied until it is tapped again */
+  if(level!=='off'&&rev!==curRev()){level='off';setTimeout(paint,0)}
+  if(level!=='off'&&b&&typeof beauty!=='undefined'&&beauty&&(b===beauty||b.points===beauty.points)&&b.faceOutline&&b.faceOutline.length>=36)
+    FCSculpt.apply(d,w,h,b,LV[level],window.frameStyle==='men'?'men':'women');
+}catch(e){console.warn('sculpt',e)}return r};
+/* undo / redo and saved projects remember the sculpt */
+if(typeof capture==='function'&&typeof restore==='function'){var _c66=capture,_r66=restore;
+  capture=function(){var o=JSON.parse(_c66.apply(this,arguments));o.sculpt=level;return JSON.stringify(o)};
+  restore=function(state){var r=_r66.apply(this,arguments);try{var v=JSON.parse(state);level=(v&&LV.hasOwnProperty(v.sculpt))?v.sculpt:'off';rev=curRev();paint()}catch(e){}return r}}
+var LABELS={women:['Off','Soft','Sculpted','Snatched'],men:['Off','Soft','Defined','Chiseled']},
+    HINT={women:'Slimmer jaw, refined nose and fuller lips. Your eyes stay exactly as they are.',men:'Slimmer jaw line and refined nose. Your eyes stay exactly as they are.'};
+var wrap=null;
+function paint(){if(!wrap)return;var sty=window.frameStyle==='men'?'men':'women';
+  wrap.querySelectorAll('button[data-sculpt]').forEach(function(btn,i){btn.textContent=LABELS[sty][i];var on=btn.dataset.sculpt===level;btn.classList.toggle('active',on);btn.setAttribute('aria-pressed',on?'true':'false')});
+  var hn=wrap.querySelector('#sculptHint');if(hn)hn.textContent=HINT[sty]}
+function build(){if(document.getElementById('sculptWrap'))return true;var sw=document.getElementById('strengthWrap');if(!sw||!sw.parentNode)return false;
+  wrap=document.createElement('div');wrap.id='sculptWrap';
+  wrap.innerHTML='<h3 class="vibesTitle">Face sculpt</h3><div class="strength" id="sculpt" role="group" aria-label="Face sculpt">'+
+    Object.keys(LV).map(function(k){return '<button type="button" data-sculpt="'+k+'" aria-pressed="false"></button>'}).join('')+
+    '</div><p class="lookHint" id="sculptHint"></p>';
+  sw.parentNode.insertBefore(wrap,sw.nextSibling);
+  wrap.addEventListener('click',function(e){var btn=e.target.closest&&e.target.closest('button[data-sculpt]');if(!btn)return;var k=btn.dataset.sculpt;if(k===level)return;
+    level=k;rev=curRev();paint();
+    try{gtag('event','face_sculpt',{level:k,style:window.frameStyle==='men'?'men':'women'})}catch(err){}
+    if(typeof source==='undefined'||!source)return;
+    var faced=typeof beauty!=='undefined'&&beauty&&beauty.faceOutline&&beauty.faceOutline.length>=36;
+    if(k!=='off'&&!faced){try{toast('Finding your face first. The sculpt appears as soon as it is detected.')}catch(err){}}
+    try{invalidate()}catch(err){}try{checkpoint()}catch(err){}});
+  var st=document.createElement('style');st.id='fcSculptCss';st.textContent='#sculptWrap{margin:6px 0 4px}#sculptWrap .strength{margin-bottom:4px}#sculptHint{margin:2px 0 10px}#sculpt button.active{background:linear-gradient(135deg,#6d3fd0,#c25aa8)!important;color:#fff!important;box-shadow:0 0 0 2px var(--gold)}';document.head.appendChild(st);
+  /* Women / Men switch: relabel quietly. Reset buttons also clear the sculpt. */
+  document.addEventListener('click',function(e){if(e.target.closest&&e.target.closest('#resetBeauty,#reset'))level='off';setTimeout(paint,0)},true);
+  paint();return true}
+function go(){if(!build()){var n=0,t=setInterval(function(){if(build()||++n>40)clearInterval(t)},250)}}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',go);else go();
+}catch(e){console.warn('v66 face sculpt',e)}})();
+</script>
+</body></html>
