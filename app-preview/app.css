@@ -79,3 +79,6 @@ html.fc-app.fc-studio #fcTools{display:flex;gap:6px;overflow-x:auto;padding:8px 
 #fcTools button{flex:0 0 auto;border:1px solid #e6d8ee;background:#fff;color:#4a2a63;border-radius:999px;padding:0 13px;min-height:34px;font:600 13px -apple-system,system-ui,sans-serif;white-space:nowrap;scroll-snap-align:start;cursor:pointer}
 #fcTools button:active{background:#f3e9f9}
 .fcFlash{outline:2px solid #c9a14a;outline-offset:3px;border-radius:12px;transition:outline-color .3s}
+
+/* the app header already clears the notch; the site adds the same space on <html>, which doubled it */
+html.fc-app{padding-top:0!important}
