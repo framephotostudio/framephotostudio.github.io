@@ -129,7 +129,9 @@ async function generate(req, env, ctx, forcedTask) {
   const dev = await auth(req, env);
   if (!dev) return err('Please reopen the app so it can reconnect, then try again.', 401, { code: 'auth' });
   const ip = req.headers.get('cf-connecting-ip') || '0';
-  if (!(await rateLimit(env, 'gen:' + dev.id, 6, 60)) || !(await rateLimit(env, 'genip:' + ip, 30, 60))) return err('Please wait a moment before the next generation.', 429, { code: 'rate' });
+  // owner test runs (signed with the private engine key) are not limited by the per-device allowance or rate limits
+  const ownerTest = !!(env.APP_SIGNING_SECRET && req.headers.get('x-fc-engine-key') === env.APP_SIGNING_SECRET);
+  if (!ownerTest && !(await rateLimit(env, 'gen:' + dev.id, 6, 60)) || !(await rateLimit(env, 'genip:' + ip, 30, 60))) return err('Please wait a moment before the next generation.', 429, { code: 'rate' });
 
   let b; try { b = await req.json(); } catch { return err('Bad request'); }
   const task = forcedTask || (TASKS.includes(b.task) ? b.task : null);
@@ -150,7 +152,7 @@ async function generate(req, env, ctx, forcedTask) {
   const spent = await spentThisMonth(env);
   if (spent + cost > cfg.spend.monthlyCeilingUSD) { await bump(env, 'stat:blocked_ceiling:' + month()); return err(cfg.spend.blockedMessage, 503, { code: 'ceiling' }); }
   const al = await allowanceCheck(env, dev, cfg);
-  if (!al.ok) return err(al.left.today === 0 && al.left.month > 0 ? `You've used today's ${al.allowance.perDay} AI looks. More tomorrow.` : `You've used this month's ${al.allowance.perMonth} AI looks.`, 402, { code: 'allowance', tier: al.tier, left: al.left });
+  if (!ownerTest && !al.ok) return err(al.left.today === 0 && al.left.month > 0 ? `You've used today's ${al.allowance.perDay} AI looks. More tomorrow.` : `You've used this month's ${al.allowance.perMonth} AI looks.`, 402, { code: 'allowance', tier: al.tier, left: al.left });
 
   // build the provider request (Google Gemini image model; OpenAI kept as a fallback provider)
   const prompt = buildPrompt(task, { ...b, intensity: b.intensity, lip: b.lip, eyes: b.eyes, category: b.category });

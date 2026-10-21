@@ -35,9 +35,9 @@ jobs:
             openssl enc -d -aes-256-cbc -pbkdf2 -pass file:/tmp/k.bin -in private-test/inputs.enc -out /tmp/in.tgz
             mkdir -p /tmp/in && tar -xzf /tmp/in.tgz -C /tmp/in
             U=$(cat private-test/url.txt)
+            T=$(curl -s -X POST -H 'content-type: application/json' $U/api/hello -d '{"platform":"web"}' | jq -r .token)
             jq -c '.[]' /tmp/in/jobs.json | while read -r J; do
               NAME=$(echo "$J" | jq -r .name); IMG=$(echo "$J" | jq -r .image)
-              T=$(curl -s -X POST -H 'content-type: application/json' $U/api/hello -d '{"platform":"web"}' | jq -r .token)
               printf 'data:image/jpeg;base64,' > /tmp/img.txt; base64 -w0 /tmp/in/$IMG >> /tmp/img.txt
               echo "$J" | jq --rawfile img /tmp/img.txt '.req + {image:$img, consent:true}' > /tmp/req.json
               EK=$(printf '%s' "$ADMIN_PASSPHRASE$ACC fc-device-sign" | sha256sum | cut -c1-48)
