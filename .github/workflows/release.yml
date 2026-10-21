@@ -16,6 +16,9 @@ env:
 jobs:
   android:
     runs-on: ubuntu-latest
+    env:
+      HAS_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+      HAS_PLAY: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON != '' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/checkout@v4
@@ -43,7 +46,7 @@ jobs:
             base64 -w0 upload.jks > upload.jks.b64; echo "$PASS" > password.txt
           fi
       - uses: actions/upload-artifact@v4
-        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 == '' }}
+        if: env.HAS_KEYSTORE != 'true'
         with: { name: android-upload-key, path: "upload.jks.b64\npassword.txt", retention-days: 3 }
       - name: Signed release bundle (.aab)
         run: |
@@ -56,7 +59,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with: { name: face-couture-android-release, path: "android/app/build/outputs/bundle/release/*.aab\nandroid/app/build/outputs/apk/release/*.apk" }
       - name: Upload to Google Play
-        if: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON != '' }}
+        if: env.HAS_PLAY == 'true'
         uses: r0adkll/upload-google-play@v1
         with:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
@@ -65,58 +68,51 @@ jobs:
           track: ${{ inputs.android_track }}
           status: completed
   ios:
-    runs-on: macos-latest
+    # Intel Macs: GitHub's Apple-chip Macs often have no capacity
+    runs-on: macos-15-intel
+    timeout-minutes: 90
+    env:
+      # either naming works (APPSTORE_* from the README, or ASC_*)
+      KEY_ID: ${{ secrets.APPSTORE_KEY_ID || secrets.ASC_KEY_ID }}
+      ISSUER: ${{ secrets.APPSTORE_ISSUER_ID || secrets.ASC_ISSUER_ID }}
+      KEY_P8: ${{ secrets.APPSTORE_PRIVATE_KEY || secrets.ASC_KEY_P8 }}
+      TEAM: ${{ secrets.APPLE_TEAM_ID }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/checkout@v4
         with: { ref: main, path: site }
       - uses: actions/setup-node@v4
         with: { node-version: 22 }
+      - name: Use the newest Xcode
+        run: |
+          X=$(ls -d /Applications/Xcode_*.app | grep -v -i beta | sort -V | tail -1); sudo xcode-select -s "$X"; xcodebuild -version
       - run: npm install $DEPS
       - run: npm install @capacitor-community/in-app-review@latest || true
       - run: npm run build:web
         env: { FC_API_URL: '${{ vars.FC_API_URL }}', FC_RC_IOS: '${{ vars.FC_RC_IOS }}', FC_RC_ANDROID: '${{ vars.FC_RC_ANDROID }}', FC_SUPPORT_EMAIL: '${{ vars.FC_SUPPORT_EMAIL }}', APP_VERSION: '${{ inputs.version }}' }
       - run: npx cap add ios && bash scripts/native-setup.sh ios && npx cap sync ios
         env: { APP_VERSION: '${{ inputs.version }}', BUILD_NUMBER: '${{ github.run_number }}' }
-      - name: App Store Connect API key
-        if: ${{ secrets.APPSTORE_PRIVATE_KEY != '' }}
+      - name: Check the Apple secrets
         run: |
-          mkdir -p ~/.appstoreconnect/private_keys
-          echo "${{ secrets.APPSTORE_PRIVATE_KEY }}" > ~/.appstoreconnect/private_keys/AuthKey_${{ secrets.APPSTORE_KEY_ID }}.p8
-      - name: Create distribution certificate (first run only, when none is saved yet)
-        if: ${{ secrets.APPSTORE_PRIVATE_KEY != '' && secrets.IOS_DIST_CERT_P12_BASE64 == '' }}
-        env: { APPSTORE_ISSUER_ID: '${{ secrets.APPSTORE_ISSUER_ID }}', APPSTORE_KEY_ID: '${{ secrets.APPSTORE_KEY_ID }}', APPSTORE_PRIVATE_KEY: '${{ secrets.APPSTORE_PRIVATE_KEY }}' }
-        run: |
-          node scripts/asc-cert.mjs
-          echo "::warning::A new Apple Distribution certificate was created. Download the 'ios-distribution-certificate' artifact and save IOS_DIST_CERT_P12_BASE64 (dist.p12.b64) and IOS_DIST_CERT_PASSWORD (password.txt) as secrets, then re-run this workflow."
-      - uses: actions/upload-artifact@v4
-        if: ${{ secrets.APPSTORE_PRIVATE_KEY != '' && secrets.IOS_DIST_CERT_P12_BASE64 == '' }}
-        with: { name: ios-distribution-certificate, path: "dist.p12.b64\npassword.txt", retention-days: 3 }
-      - name: Distribution certificate
-        if: ${{ secrets.IOS_DIST_CERT_P12_BASE64 != '' }}
-        run: |
-          echo "${{ secrets.IOS_DIST_CERT_P12_BASE64 }}" | base64 -d > dist.p12
-          security create-keychain -p ci build.keychain; security default-keychain -s build.keychain; security unlock-keychain -p ci build.keychain
-          security import dist.p12 -k build.keychain -P "${{ secrets.IOS_DIST_CERT_PASSWORD }}" -T /usr/bin/codesign -T /usr/bin/security
-          security set-key-partition-list -S apple-tool:,apple: -s -k ci build.keychain
-      - name: Archive and upload to TestFlight
-        if: ${{ secrets.APPSTORE_PRIVATE_KEY != '' && secrets.IOS_DIST_CERT_P12_BASE64 != '' }}
+          miss=""; [ -n "$KEY_ID" ] || miss="$miss APPSTORE_KEY_ID"; [ -n "$ISSUER" ] || miss="$miss APPSTORE_ISSUER_ID"
+          [ -n "$KEY_P8" ] || miss="$miss APPSTORE_PRIVATE_KEY"; [ -n "$TEAM" ] || miss="$miss APPLE_TEAM_ID"
+          if [ -n "$miss" ]; then echo "::error::Missing GitHub secrets:$miss (see README.md)"; exit 1; fi
+      - name: Sign (Apple cloud signing, no certificate files needed) and upload to TestFlight
         run: |
           set -o pipefail
+          KEY="$RUNNER_TEMP/AuthKey_$KEY_ID.p8"; printf '%s\n' "$KEY_P8" > "$KEY"
+          AUTH="-allowProvisioningUpdates -authenticationKeyPath $KEY -authenticationKeyID $KEY_ID -authenticationKeyIssuerID $ISSUER"
           cd ios/App
           if [ -d App.xcworkspace ]; then TARGET="-workspace App.xcworkspace"; else TARGET="-project App.xcodeproj"; fi
-          xcodebuild $TARGET -scheme App -configuration Release -sdk iphoneos -archivePath build/App.xcarchive archive \
-            -allowProvisioningUpdates -authenticationKeyPath ~/.appstoreconnect/private_keys/AuthKey_${{ secrets.APPSTORE_KEY_ID }}.p8 \
-            -authenticationKeyID ${{ secrets.APPSTORE_KEY_ID }} -authenticationKeyIssuerID ${{ secrets.APPSTORE_ISSUER_ID }} \
-            DEVELOPMENT_TEAM="${{ secrets.APPLE_TEAM_ID }}" CODE_SIGN_STYLE=Automatic | tail -40
-          cat > ExportOptions.plist <<EOF
+          xcodebuild $TARGET -scheme App -configuration Release -destination 'generic/platform=iOS' \
+            -archivePath "$RUNNER_TEMP/App.xcarchive" archive $AUTH \
+            DEVELOPMENT_TEAM="$TEAM" CODE_SIGN_STYLE=Automatic | tail -60
+          cat > "$RUNNER_TEMP/ExportOptions.plist" <<EOF
           <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd"><plist version="1.0"><dict>
-          <key>method</key><string>app-store-connect</string><key>destination</key><string>upload</string><key>signingStyle</key><string>automatic</string><key>teamID</key><string>${{ secrets.APPLE_TEAM_ID }}</string></dict></plist>
+          <key>method</key><string>app-store-connect</string><key>destination</key><string>upload</string><key>signingStyle</key><string>automatic</string>
+          <key>teamID</key><string>$TEAM</string><key>manageAppVersionAndBuildNumber</key><false/><key>uploadSymbols</key><true/></dict></plist>
           EOF
-          xcodebuild -exportArchive -archivePath build/App.xcarchive -exportOptionsPlist ExportOptions.plist -exportPath build/out \
-            -allowProvisioningUpdates -authenticationKeyPath ~/.appstoreconnect/private_keys/AuthKey_${{ secrets.APPSTORE_KEY_ID }}.p8 \
-            -authenticationKeyID ${{ secrets.APPSTORE_KEY_ID }} -authenticationKeyIssuerID ${{ secrets.APPSTORE_ISSUER_ID }} | tail -40
-      - name: Not configured yet
-        if: ${{ secrets.APPSTORE_PRIVATE_KEY == '' || secrets.IOS_DIST_CERT_P12_BASE64 == '' }}
-        run: |
-          echo "::notice::iOS signing secrets are not set yet (APPSTORE_*, IOS_DIST_CERT_*, APPLE_TEAM_ID). The simulator test build still runs in 'Build Face Couture apps'. Add the secrets from README.md and re-run this workflow to upload to TestFlight."
+          xcodebuild -exportArchive -archivePath "$RUNNER_TEMP/App.xcarchive" -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" \
+            -exportPath "$RUNNER_TEMP/out" $AUTH | tail -60
+          rm -f "$KEY"
+          echo "::notice::Build ${{ github.run_number }} uploaded. It appears in TestFlight once Apple finishes processing (usually 10-30 minutes)."

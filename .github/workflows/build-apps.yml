@@ -3,6 +3,8 @@ on:
   push:
     branches: [mobile-app]
   workflow_dispatch:
+permissions:
+  contents: write
 jobs:
   android:
     runs-on: ubuntu-latest
@@ -27,13 +29,18 @@ jobs:
       - uses: actions/upload-artifact@v4
         with: { name: face-couture-android-test, path: android/app/build/outputs/apk/debug/*.apk }
   ios:
-    runs-on: macos-latest
+    # Intel Macs: GitHub's Apple-chip Macs often have no capacity
+    runs-on: macos-15-intel
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
       - uses: actions/checkout@v4
         with: { ref: main, path: site }
       - uses: actions/setup-node@v4
         with: { node-version: 22 }
+      - name: Use the newest Xcode
+        run: |
+          X=$(ls -d /Applications/Xcode_*.app | grep -v -i beta | sort -V | tail -1); sudo xcode-select -s "$X"; xcodebuild -version
       - run: npm install @capacitor/core@latest @capacitor/cli@latest @capacitor/android@latest @capacitor/ios@latest @capacitor/splash-screen@latest @capacitor/status-bar@latest @capacitor/share@latest @capacitor/filesystem@latest @capacitor/haptics@latest @capacitor/app@latest @capacitor/network@latest @capacitor/preferences@latest @capacitor/browser@latest @revenuecat/purchases-capacitor@latest
       - name: Store review prompt plugin (optional)
         run: npm install @capacitor-community/in-app-review@latest || echo 'review plugin skipped'
@@ -51,3 +58,18 @@ jobs:
           if [ -d App.xcworkspace ]; then TARGET="-workspace App.xcworkspace"; else TARGET="-project App.xcodeproj"; fi
           xcodebuild $TARGET -scheme App -sdk iphonesimulator -configuration Debug -derivedDataPath build CODE_SIGNING_ALLOWED=NO build | tail -60
           ls build/Build/Products/Debug-iphonesimulator/
+      - name: Open it on a simulated iPhone and take screenshots
+        run: |
+          DEV=$(xcrun simctl list devices available | grep -E 'iPhone 1[5-9]|iPhone 2[0-9]' | grep -v -i 'plus\|max\|mini\|SE\|air' | head -1 | sed -E 's/.*\(([0-9A-F-]{36})\).*/\1/')
+          echo "Simulator $DEV"; xcrun simctl boot "$DEV" || true; xcrun simctl bootstatus "$DEV" -b
+          xcrun simctl install "$DEV" ios/App/build/Build/Products/Debug-iphonesimulator/App.app
+          xcrun simctl launch "$DEV" app.facecouture.studio
+          mkdir -p shots; sleep 20; xcrun simctl io "$DEV" screenshot shots/ios-launch.png
+          sleep 20; xcrun simctl io "$DEV" screenshot shots/ios-40s.png
+      - name: Publish screenshots to the ci-output branch for review
+        if: always()
+        run: |
+          mkdir -p /tmp/out; cp shots/*.png /tmp/out/ 2>/dev/null || echo none > /tmp/out/none.txt
+          git config user.name face-couture-ci; git config user.email hello@facecouture.app
+          git checkout --orphan ci-shots; git rm -rfq --cached . ; rm -rf out; mkdir out; cp /tmp/out/* out/
+          git add -f out; git commit -qm "iOS simulator screenshots, run ${{ github.run_number }}"; git push -qf origin HEAD:ci-output
