@@ -1,4 +1,4 @@
-# Face Couture iPhone app: builds on GitHub's Macs (no Mac needed).
+# Face Couture iPhone app: builds on GitHub's Macs (no Mac needed). Run it again any time from the Actions tab.
 # Without the App Store Connect secrets it makes a test build and a simulator screenshot.
 # With them (ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_P8, APPLE_TEAM_ID) it signs the app and uploads it to TestFlight.
 name: iPhone app
