@@ -79,8 +79,12 @@ jobs:
             jq -c 'del(.image)' /tmp/res.json | tee /tmp/out/$2.json
             jq -r '.image // empty' /tmp/res.json | sed 's/^data:[^,]*,//' | base64 -d > /tmp/out/$2.png 2>/dev/null || true
           }
+          run glam glam-soft '{"intensity":"soft"}'
           run glam glam-glam '{"intensity":"glam"}'
           run glam glam-max '{"intensity":"max"}'
+          A=https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/storage/kv/namespaces
+          KID=$(curl -s -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "$A?per_page=100" | jq -r '[.result[]|select(.title=="face-couture-kv" or .title=="face-couture-api-KV" or .title=="KV")][0].id')
+          curl -s -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "$A/$KID/values/alert:last_provider_error" > /tmp/out/last-error.txt || true
           ls -la /tmp/out
       - name: Publish test results for review
         if: always()

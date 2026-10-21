@@ -21,15 +21,21 @@ export function simplePrompt(task, o = {}) {
   if (task !== 'glam') return null;
   const L = GLAM[o.intensity] || GLAM.glam;
   return o.style === 'men' ? 'Lightly retouch this photo: clearer even skin and neatly groomed brows. Keep everything else the same. Photorealistic.'
-    : `Add ${L.name.toLowerCase()} makeup to this photo: ${L.makeup}. Keep everything else the same. Photorealistic.`;
+    : `Add expensive ${L.name.toLowerCase()} makeup to this woman: ${L.short}. Keep everything else the same. Photorealistic.`;
 }
+// Luxury makeup-artist looks. Shape changes are done the way real makeup artists do them (contour and highlight), never by
+// reshaping the face, so the person stays exactly themselves and the model does not decline the edit.
+const LUX = 'expensive high-end makeup applied by a celebrity makeup artist with luxury products: seamless blending with no harsh edges, ' +
+  'a skin-like finish that looks real and expensive (even tone, visible natural skin texture, never cakey, never filtered or plastic), ' +
+  'luxury lash extensions that follow her real lash line, long, full and softly separated, ' +
+  'a soft matte contour along both sides of the nose with a fine highlight down the center of the bridge so the nose looks slightly slimmer while staying completely natural, ';
 const GLAM = {
-  soft: { name: 'Soft Glam', skin: 'luminous, even and dewy with a soft glow on the cheekbones',
-    makeup: 'champagne and soft bronze eyeshadow blended into the crease, a thin brown liner along the upper lash line, full fluffy lashes, a rosy-peach blush, a gentle highlight, groomed brows, and a rosy-nude satin lipstick' },
-  glam: { name: 'Red Carpet', skin: 'smooth satin finish with a radiant glow',
-    makeup: 'a warm bronze smoky eyeshadow with shimmer on the lids, a black winged eyeliner, long voluminous lashes, warm bronzer and a soft highlight on the cheekbones, defined brows, and a classic creamy red lipstick' },
-  max: { name: 'Full Glam', skin: 'flawless, radiant and glowing',
-    makeup: 'a dramatic chocolate and gold smoky eyeshadow, bold black eyeliner, dramatic long lashes, bronzer and a glowing highlight on the cheekbones, defined brows, and a glossy wine-berry lipstick' }
+  soft: { name: 'Soft Glam', short: 'champagne eyeshadow, fluffy lashes, softly contoured nose, rosy blush, dewy skin and nude-rose lipstick', skin: 'luminous and dewy with a soft glow on the cheekbones',
+    makeup: LUX + 'champagne and soft rose-gold eyeshadow blended into the crease, a thin brown liner close to the lashes, a rosy-peach blush, a gentle champagne highlight, softly groomed brows, and a rosy-nude satin lipstick neatly filled to the corners' },
+  glam: { name: 'Red Carpet', short: 'bronze smoky eyes, winged liner, long lashes, softly contoured nose and cheekbones, glowing skin and classic red lipstick', skin: 'smooth satin finish with a radiant glow on the high points',
+    makeup: LUX + 'a warm bronze smoky eyeshadow with a touch of champagne shimmer on the center of the lids, a sleek black winged eyeliner, dramatic lash extensions, warm bronzer and a soft sculpting shade under the cheekbones with a luminous highlight above, defined brows, and a classic creamy red lipstick with a crisp clean lip line' },
+  max: { name: 'Full Glam', short: 'deep smoky eyes, dramatic lashes, contoured nose and cheekbones, glowing skin and glossy wine lipstick', skin: 'flawless and radiant, glowing like a magazine cover',
+    makeup: LUX + 'a deep chocolate and gold smoky eye, bold black eyeliner, extra-full dramatic lash extensions, bronzer and strong cheekbone sculpting with a glowing highlight, sharply defined brows, and a glossy wine-berry lipstick' }
 };
 const GROOM = {
   soft: 'clearer, more even skin with less redness and shine, softened under-eye darkness, tidy brows',
@@ -49,7 +55,7 @@ export function buildPrompt(task, o = {}) {
       const L = men ? GROOM[o.intensity] || GROOM.glam : GLAM[o.intensity] || GLAM.glam;
       p = men
         ? `Retouch this man like a high-end magazine grooming artist. The result must look noticeably more polished than the original: ${L}. No visible makeup, no lipstick, no eye makeup. Keep the background, clothing and lighting unchanged.`
-        : `Apply professional ${L.name} makeup to the woman in this photo, as a luxury makeup artist would for a beauty shoot, clearly visible and beautifully blended: ${o.eyes ? o.eyes + ', ' : ''}${L.makeup}${o.lip ? ', ' + o.lip : ''}. Skin: ${L.skin}. Do not change anything else in the photo.`;
+        : `Apply ${L.name} makeup to the woman in this photo for a luxury beauty shoot. The makeup must be clearly visible and look expensive: ${o.eyes ? o.eyes + ', ' : ''}${L.makeup}${o.lip ? ', ' + o.lip : ''}. Skin: ${L.skin}. Do not change anything else in the photo.`;
       return p + ' ' + KEEP_GLAM;
     }
     case 'enhance':

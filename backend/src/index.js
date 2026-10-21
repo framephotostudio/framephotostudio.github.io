@@ -165,11 +165,11 @@ async function generate(req, env, ctx, forcedTask) {
         if (task === 'tryon') parts.push(inlinePart(b.garment));
         const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
           method: 'POST', signal: ac.signal, headers: { 'content-type': 'application/json', 'x-goog-api-key': env.GEMINI_API_KEY },
-          body: JSON.stringify({ contents: [{ role: 'user', parts }], generationConfig: { responseModalities: ['IMAGE'], imageConfig: { aspectRatio: pickAspect(b.width, b.height) } } }) });
+          body: JSON.stringify({ contents: [{ role: 'user', parts }], generationConfig: { responseModalities: ['TEXT', 'IMAGE'], imageConfig: { aspectRatio: pickAspect(b.width, b.height) } } }) });
         status = r.status; const j = await r.json().catch(() => ({}));
         const img = (((j.candidates || [])[0] || {}).content || {}).parts?.find(x => x.inlineData || x.inline_data);
         if (r.ok && img) { const d = img.inlineData || img.inline_data; out = `data:${d.mimeType || d.mime_type || 'image/png'};base64,${d.data}`; msg = ''; }
-        else msg = (j.error && j.error.message) || (j.promptFeedback && ('blocked ' + (j.promptFeedback.blockReason || ''))) || ((j.candidates || [])[0] || {}).finishReason || '';
+        else { const c0 = (j.candidates || [])[0] || {}; const said = (c0.content && c0.content.parts || []).map(x => x.text || '').join(' ').slice(0, 200); msg = (j.error && j.error.message) || (j.promptFeedback && ('blocked ' + (j.promptFeedback.blockReason || ''))) || ((c0.finishReason || '') + ' ' + (c0.finishMessage || '') + ' ' + said).trim(); }
       };
       await attempt(prompt);
       // the image model sometimes declines a long instruction (IMAGE_OTHER / NO_IMAGE / STOP without an image): one retry with a plain one
