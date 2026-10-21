@@ -1,0 +1,86 @@
+name: Deploy AI server
+# Deploys backend/ to Cloudflare Workers, sets its secrets from GitHub, then runs a live test on the sample portrait.
+on:
+  workflow_dispatch:
+  push:
+    branches: [mobile-app]
+    paths: ['backend/**', '.github/workflows/backend.yml']
+permissions:
+  contents: write
+concurrency: { group: backend, cancel-in-progress: false }
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with: { ref: main, path: site }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Install wrangler
+        working-directory: backend
+        run: npm install --no-audit --no-fund
+      - name: workers.dev address
+        id: sub
+        run: |
+          API=https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/workers/subdomain
+          SUB=$(curl -s -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" $API | jq -r '.result.subdomain // empty')
+          if [ -z "$SUB" ]; then
+            for c in facecouture facecouture-app face-couture-luxe; do
+              R=$(curl -s -X PUT -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" -H 'content-type: application/json' -d "{\"subdomain\":\"$c\"}" $API)
+              echo "$R" | jq -c '{success,errors}'
+              if [ "$(echo "$R" | jq -r .success)" = "true" ]; then SUB=$c; break; fi
+            done
+          fi
+          echo "subdomain: $SUB"; echo "sub=$SUB" >> $GITHUB_OUTPUT
+      - name: Storage (KV)
+        working-directory: backend
+        run: |
+          ID=$(npx wrangler kv namespace list 2>/dev/null | jq -r '.[] | select(.title|test("face-couture-api-KV|face-couture-kv")) | .id' | head -1)
+          if [ -z "$ID" ]; then ID=$(npx wrangler kv namespace create KV 2>&1 | grep -oE '[0-9a-f]{32}' | head -1); fi
+          echo "KV id: $ID"; test -n "$ID"
+          sed -i "s/REPLACE_WITH_KV_ID/$ID/" wrangler.toml
+      - name: Deploy
+        working-directory: backend
+        run: npx wrangler deploy 2>&1 | tail -20
+      - name: Secrets
+        working-directory: backend
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          ADMIN_PASSPHRASE: ${{ secrets.ADMIN_PASSPHRASE }}
+        run: |
+          printf '%s' "$GEMINI_API_KEY" | npx wrangler secret put GEMINI_API_KEY >/dev/null
+          printf '%s' "$ADMIN_PASSPHRASE" | npx wrangler secret put ADMIN_PASSPHRASE >/dev/null
+          printf '%s' "$(printf '%s' "$ADMIN_PASSPHRASE$CLOUDFLARE_ACCOUNT_ID fc-device-sign" | sha256sum | cut -c1-48)" | npx wrangler secret put APP_SIGNING_SECRET >/dev/null
+          echo "secrets set"
+      - name: Live test on the sample portrait
+        env: { SUB: '${{ steps.sub.outputs.sub }}' }
+        run: |
+          U=https://face-couture-api.$SUB.workers.dev; echo "$U" > /tmp/url.txt; mkdir -p /tmp/out; echo "$U" > /tmp/out/url.txt
+          sleep 8
+          curl -s $U/api/status | tee /tmp/out/status.json; echo
+          python3 - <<'PY'
+          import re,base64,json
+          s=open('site/index.html',encoding='utf-8').read()
+          m=re.search(r"demoImage\.src='(data:image/jpeg;base64,[^']+)'",s); open('/tmp/sample.txt','w').write(m.group(1))
+          PY
+          run(){ # task name extra-json
+            T=$(curl -s -X POST -H 'content-type: application/json' -H 'origin: https://facecouture.app' $U/api/hello -d '{"platform":"web"}' | jq -r .token)
+            jq -n --rawfile img /tmp/sample.txt --arg task "$1" --argjson extra "$3" '{task:$task,image:($img|rtrimstr("\n")),consent:true,width:1024,height:1536}+$extra' > /tmp/req.json
+            curl -s -X POST -H 'content-type: application/json' -H "authorization: Bearer $T" -H 'origin: https://facecouture.app' $U/api/ai --data @/tmp/req.json > /tmp/res.json
+            jq -c 'del(.image)' /tmp/res.json | tee /tmp/out/$2.json
+            jq -r '.image // empty' /tmp/res.json | sed 's/^data:[^,]*,//' | base64 -d > /tmp/out/$2.png 2>/dev/null || true
+          }
+          run glam glam-soft '{"intensity":"soft"}'
+          run glam glam-max '{"intensity":"max"}'
+          ls -la /tmp/out
+      - name: Publish test results for review
+        if: always()
+        run: |
+          cp site/index.html /tmp/keep.html 2>/dev/null || true
+          git config user.name face-couture-ci; git config user.email hello@facecouture.app
+          git checkout --orphan ci-ai; git rm -rfq --cached . ; rm -rf out; mkdir out; cp /tmp/out/* out/ 2>/dev/null || echo none > out/none.txt
+          git add -f out; git commit -qm "AI server live test, run ${{ github.run_number }}"; git push -qf origin HEAD:ci-ai

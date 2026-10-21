@@ -1,0 +1,18 @@
+import worker from '../src/index.js';
+const store=new Map();
+const KV={get:async(k,t)=>{const v=store.get(k);if(v==null)return null;return t==='json'?JSON.parse(v):v},put:async(k,v)=>{store.set(k,String(v))},delete:async k=>store.delete(k),list:async({prefix})=>({keys:[...store.keys()].filter(k=>k.startsWith(prefix)).map(name=>({name}))})};
+const env={KV,GEMINI_API_KEY:'g-test',ADMIN_PASSPHRASE:'p',APP_SIGNING_SECRET:'s',ALLOWED_ORIGINS:'capacitor://localhost'};
+const pending=[];const ctx={waitUntil:p=>pending.push(p)};let mode='ok',seen=null;
+globalThis.fetch=async(url,opt)=>{seen={url:String(url),body:JSON.parse(opt.body),key:opt.headers['x-goog-api-key']};
+ if(mode==='ok')return new Response(JSON.stringify({candidates:[{content:{parts:[{text:'here'},{inlineData:{mimeType:'image/png',data:'QUJD'}}]}}]}));
+ if(mode==='safety')return new Response(JSON.stringify({candidates:[{finishReason:'IMAGE_SAFETY'}]}));
+ return new Response(JSON.stringify({error:{message:'Your prepayment credits are depleted'}}),{status:429})};
+const call=async(p,o={})=>{const r=await worker.fetch(new Request('https://x'+p,{...o,headers:{origin:'capacitor://localhost','content-type':'application/json',...(o.headers||{})}}),env,ctx);await Promise.all(pending.splice(0));return [r.status,await r.json()]};
+const img='data:image/jpeg;base64,'+Buffer.from('jpg').toString('base64');
+let [s,j]=await call('/api/status');console.log('ready',j.ai_ready);
+[s,j]=await call('/api/hello',{method:'POST',body:JSON.stringify({platform:'ios'})});const A={authorization:'Bearer '+j.token};
+[s,j]=await call('/api/ai',{method:'POST',headers:A,body:JSON.stringify({task:'glam',image:img,consent:true,width:800,height:1000})});
+console.log('glam',s,String(j.image).slice(0,30),seen.url.split('/').pop(),seen.key,seen.body.generationConfig,seen.body.contents[0].parts.length);
+mode='safety';[s,j]=await call('/api/ai',{method:'POST',headers:A,body:JSON.stringify({task:'glam',image:img,consent:true})});console.log('safety',s,j.code);
+mode='credits';[s,j]=await call('/api/ai',{method:'POST',headers:A,body:JSON.stringify({task:'tryon',image:img,garment:img,consent:true})});console.log('credits',s,j.code,seen.body.contents[0].parts.length);
+console.log('spend',store.get('spend:'+new Date().toISOString().slice(0,7)));

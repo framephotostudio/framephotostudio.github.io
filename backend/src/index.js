@@ -125,7 +125,7 @@ async function me(req, env) {
 const TASKS = ['refine', 'glam', 'enhance', 'background', 'travel', 'headshot', 'tryon', 'vanish', 'blur'];
 async function generate(req, env, ctx, forcedTask) {
   const cfg = await getConfig(env);
-  if (!env.OPENAI_API_KEY) return err('AI is not connected yet. Local looks and tools are available now.', 503, { code: 'not_configured' });
+  if (!env.GEMINI_API_KEY && !env.OPENAI_API_KEY) return err('AI is not connected yet. Local looks and tools are available now.', 503, { code: 'not_configured' });
   const dev = await auth(req, env);
   if (!dev) return err('Please reopen the app so it can reconnect, then try again.', 401, { code: 'auth' });
   const ip = req.headers.get('cf-connecting-ip') || '0';
@@ -152,43 +152,51 @@ async function generate(req, env, ctx, forcedTask) {
   const al = await allowanceCheck(env, dev, cfg);
   if (!al.ok) return err(al.left.today === 0 && al.left.month > 0 ? `You've used today's ${al.allowance.perDay} AI looks. More tomorrow.` : `You've used this month's ${al.allowance.perMonth} AI looks.`, 402, { code: 'allowance', tier: al.tier, left: al.left });
 
-  // build the provider request
+  // build the provider request (Google Gemini image model; OpenAI kept as a fallback provider)
   const prompt = buildPrompt(task, { ...b, intensity: b.intensity, lip: b.lip, eyes: b.eyes, category: b.category });
-  const form = new FormData();
-  form.append('model', env.IMAGE_MODEL || 'gpt-image-1');
-  form.append('prompt', prompt);
-  form.append('size', pickSize(b.width, b.height));
-  form.append('quality', quality);
-  form.append('input_fidelity', 'high');       // keeps the face and skin faithful
-  form.append('n', '1');
-  form.append('image[]', dataUrlToBlob(b.image), 'photo.jpg');
-  if (task === 'tryon') form.append('image[]', dataUrlToBlob(b.garment), 'garment.jpg');
-  if (task === 'vanish' && b.mask) form.append('mask', dataUrlToBlob(b.mask), 'mask.png');
-
   const started = Date.now();
   const ac = new AbortController(); const timer = setTimeout(() => ac.abort(), 150_000);
-  let r, j;
+  let out = null, usage = null, status = 0, msg = '';
   try {
-    r = await fetch('https://api.openai.com/v1/images/edits', { method: 'POST', headers: { authorization: 'Bearer ' + env.OPENAI_API_KEY }, body: form, signal: ac.signal });
-    j = await r.json().catch(() => ({}));
+    if (env.GEMINI_API_KEY) {
+      const parts = [{ text: prompt }, inlinePart(b.image)];
+      if (task === 'tryon') parts.push(inlinePart(b.garment));
+      const model = env.GEMINI_IMAGE_MODEL || 'gemini-2.5-flash-image';
+      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+        method: 'POST', signal: ac.signal, headers: { 'content-type': 'application/json', 'x-goog-api-key': env.GEMINI_API_KEY },
+        body: JSON.stringify({ contents: [{ role: 'user', parts }], generationConfig: { responseModalities: ['IMAGE'], imageConfig: { aspectRatio: pickAspect(b.width, b.height) } } }) });
+      status = r.status; const j = await r.json().catch(() => ({}));
+      const img = (((j.candidates || [])[0] || {}).content || {}).parts?.find(x => x.inlineData || x.inline_data);
+      if (r.ok && img) { const d = img.inlineData || img.inline_data; out = `data:${d.mimeType || d.mime_type || 'image/png'};base64,${d.data}`; }
+      else msg = (j.error && j.error.message) || (j.promptFeedback && ('blocked ' + (j.promptFeedback.blockReason || ''))) || ((j.candidates || [])[0] || {}).finishReason || '';
+      if (!out && /SAFETY|PROHIBITED|blocked|IMAGE_SAFETY/i.test(msg)) msg = 'safety ' + msg;
+    } else {
+      const form = new FormData();
+      form.append('model', env.IMAGE_MODEL || 'gpt-image-1'); form.append('prompt', prompt); form.append('size', pickSize(b.width, b.height));
+      form.append('quality', quality); form.append('input_fidelity', 'high'); form.append('n', '1');
+      form.append('image[]', dataUrlToBlob(b.image), 'photo.jpg');
+      if (task === 'tryon') form.append('image[]', dataUrlToBlob(b.garment), 'garment.jpg');
+      if (task === 'vanish' && b.mask) form.append('mask', dataUrlToBlob(b.mask), 'mask.png');
+      const r = await fetch('https://api.openai.com/v1/images/edits', { method: 'POST', headers: { authorization: 'Bearer ' + env.OPENAI_API_KEY }, body: form, signal: ac.signal });
+      status = r.status; const j = await r.json().catch(() => ({}));
+      if (r.ok && j.data && j.data[0]) { out = 'data:image/png;base64,' + j.data[0].b64_json; usage = j.usage || null; } else msg = (j.error && j.error.message) || '';
+    }
   } catch (e) {
     clearTimeout(timer);
     await bump(env, 'stat:fail_timeout:' + month());
     return err('The AI took too long. Your allowance was not used - please try again.', 504, { code: 'timeout' });
   }
   clearTimeout(timer);
-  if (!r.ok || !j.data || !j.data[0]) {
+  if (!out) {
     await bump(env, 'stat:fail_provider:' + month());
-    const msg = (j.error && j.error.message) || '';
-    const code = r.status === 401 ? 'provider_auth' : r.status === 429 ? 'provider_busy' : /billing|quota|credit/i.test(msg) ? 'provider_credits' : /safety|policy/i.test(msg) ? 'safety' : 'provider';
+    await env.KV.put('alert:last_provider_error', (status + ' ' + msg).slice(0, 300) + ' @ ' + new Date().toISOString(), { expirationTtl: 30 * 86400 });
+    const code = status === 401 || status === 403 ? 'provider_auth' : status === 429 && !/quota|billing|credit/i.test(msg) ? 'provider_busy' : /billing|quota|credit|prepay|exhausted/i.test(msg) ? 'provider_credits' : /safety|policy/i.test(msg) ? 'safety' : 'provider';
     const friendly = { provider_auth: 'AI is not connected correctly. The owner has been notified.', provider_busy: 'AI is busy right now. Please try again in a minute.', provider_credits: 'AI credits need topping up. Please try again later.', safety: 'That edit could not be made. Try a different photo or description.', provider: 'The AI could not finish this edit. Your allowance was not used.' }[code];
     if (code === 'provider_auth' || code === 'provider_credits') await env.KV.put('alert:provider', code + ' ' + new Date().toISOString());
     return err(friendly, 502, { code });
   }
   // success: only now count usage and spend
-  const out = 'data:image/png;base64,' + j.data[0].b64_json;
-  const usage = j.usage || {};
-  const actualCost = estimateCost(usage, cost);
+  const actualCost = env.GEMINI_API_KEY ? +(env.COST_PER_GEN_GEMINI || 0.039) : estimateCost(usage, cost);
   ctx.waitUntil(Promise.all([
     bump(env, `use:${dev.id}:${day()}`, 1, 2 * 86400), bump(env, `use:${dev.id}:${month()}`, 1, 40 * 86400),
     bumpFloat(env, 'spend:' + month(), actualCost), bump(env, 'stat:gen:' + task + ':' + month()), bump(env, 'stat:gen_total:' + month()),
@@ -196,6 +204,8 @@ async function generate(req, env, ctx, forcedTask) {
   ]));
   return json({ image: out, task, quality, ms: Date.now() - started, left: { today: al.left.today - 1, month: al.left.month - 1 } });
 }
+function inlinePart(u) { const i = u.indexOf(','); return { inline_data: { mime_type: u.slice(5, u.indexOf(';')), data: u.slice(i + 1) } }; }
+function pickAspect(w, h) { const r = (+w || 1) / (+h || 1); const opts = [['1:1', 1], ['4:5', .8], ['3:4', .75], ['2:3', 2 / 3], ['9:16', 9 / 16], ['5:4', 1.25], ['4:3', 4 / 3], ['3:2', 1.5], ['16:9', 16 / 9]]; return opts.reduce((a, o) => Math.abs(Math.log(o[1] / r)) < Math.abs(Math.log(a[1] / r)) ? o : a)[0]; }
 function pickSize(w, h) { const r = (+w || 1) / (+h || 1); return r > 1.2 ? '1536x1024' : r < 0.83 ? '1024x1536' : '1024x1024'; }
 function dataUrlToBlob(u) { const i = u.indexOf(','); const mime = u.slice(5, u.indexOf(';')); const bin = atob(u.slice(i + 1)); const a = new Uint8Array(bin.length); for (let k = 0; k < bin.length; k++) a[k] = bin.charCodeAt(k); return new Blob([a], { type: mime }); }
 function estimateCost(usage, fallback) {
@@ -292,7 +302,7 @@ async function deleteMyData(req, env) {
 
 async function status(env) {
   const cfg = await getConfig(env); const spent = await spentThisMonth(env);
-  const ai_ready = !!env.OPENAI_API_KEY && spent < cfg.spend.monthlyCeilingUSD;
+  const ai_ready = !!(env.GEMINI_API_KEY || env.OPENAI_API_KEY) && spent < cfg.spend.monthlyCeilingUSD;
   return json({ ai_ready, ok: true, pro: cfg.pro.enabled, tools: cfg.tools });
 }
 

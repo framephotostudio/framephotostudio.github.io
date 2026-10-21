@@ -3,7 +3,8 @@ main = "src/index.js"
 compatibility_date = "2026-01-01"
 
 # Secrets (set with `npx wrangler secret put NAME`, never in this file):
-#   OPENAI_API_KEY      image model for AI Glam, backgrounds, headshots, Vanish, outfit try-on
+#   GEMINI_API_KEY      Google image model (AI Glam, backgrounds, headshots, Vanish, outfit try-on)
+#   OPENAI_API_KEY      (optional) fallback provider
 #   ADMIN_PASSPHRASE    owner login for /admin
 #   APP_SIGNING_SECRET  signs device tokens (any long random string)
 #   REVENUECAT_WEBHOOK_SECRET   (optional) shared secret for subscription webhooks
@@ -17,6 +18,8 @@ id = "REPLACE_WITH_KV_ID"          # created by: npx wrangler kv namespace creat
 OWNER_EMAIL = "dedeyou1@gmail.com"
 ALLOWED_ORIGINS = "https://facecouture.app,https://www.facecouture.app,capacitor://localhost,http://localhost,ionic://localhost"
 IMAGE_MODEL = "gpt-image-1"
+GEMINI_IMAGE_MODEL = "gemini-2.5-flash-image"
+COST_PER_GEN_GEMINI = "0.039"
 # cost assumptions used for the dashboard (USD per generation, by quality)
 COST_PER_GEN_MEDIUM = "0.04"
 COST_PER_GEN_HIGH = "0.17"
