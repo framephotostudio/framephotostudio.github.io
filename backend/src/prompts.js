@@ -29,6 +29,7 @@ const LUX = 'expensive high-end makeup applied by a celebrity makeup artist with
   'a skin-like finish that looks real and expensive (even tone, visible natural skin texture, never cakey, never filtered or plastic), ' +
   'luxury lash extensions that follow her real lash line, long, full and softly separated, ' +
   'a luxury retouch of the skin: smooth away under-eye creases, fine lines and wrinkles and any under-eye darkness, remove oily shine and greasy patches, clear away blemishes, spots, redness and small scars, and give the skin a smooth, even, expensive soft-focus finish like a luxury beauty filter, flawless yet still natural with fine texture (never plastic or waxy), ' +
+  'if the eyelids look heavy or hooded, gently lift and open them so the eyes look brighter and more awake (subtle and natural, same eye shape and color), ' +
   'a soft matte contour along both sides of the nose with a fine highlight down the center of the bridge so the nose looks slightly slimmer while staying completely natural, ';
 const GLAM = {
   soft: { name: 'Soft Glam', short: 'smooth flawless skin with no blemishes, fine lines or shine, shimmery champagne-rose eyes, full fluffy lashes, rosy blush, soft contour, a glowing highlight and a glossy light rose lip',
@@ -58,7 +59,7 @@ export function buildPrompt(task, o = {}) {
       const L = men ? GROOM[o.intensity] || GROOM.glam : GLAM[o.intensity] || GLAM.glam;
       p = men
         ? `Retouch this man like a high-end magazine grooming artist. The result must look noticeably more polished than the original: ${L}. No visible makeup, no lipstick, no eye makeup. Keep the background, clothing and lighting unchanged.`
-        : `Apply ${L.name} makeup to ${o.who ? String(o.who).slice(0, 120) : 'the woman in this photo'} for a luxury beauty shoot. The makeup must be clearly visible and look expensive: ${o.eyes ? o.eyes + ', ' : ''}${L.makeup}${o.lip ? ', ' + o.lip : ''}. Skin: ${L.skin}. Do not change anything else in the photo.`;
+        : `Apply ${L.name} makeup to ${o.who ? String(o.who).slice(0, 120) + ' (give every one of them the full look, each adapted to her own features and skin tone)' : 'the woman in this photo'} for a luxury beauty shoot. The makeup must be clearly visible and look expensive: ${o.eyes ? o.eyes + ', ' : ''}${L.makeup}${o.lip ? ', ' + o.lip : ''}. Skin: ${L.skin}. Do not change anything else in the photo.`;
       return p + ' ' + KEEP_GLAM;
     }
     case 'enhance':
