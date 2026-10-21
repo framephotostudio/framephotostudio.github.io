@@ -41,9 +41,13 @@ jobs:
               printf 'data:image/jpeg;base64,' > /tmp/img.txt; base64 -w0 /tmp/in/$IMG >> /tmp/img.txt
               echo "$J" | jq --rawfile img /tmp/img.txt '.req + {image:$img, consent:true}' > /tmp/req.json
               EK=$(printf '%s' "$ADMIN_PASSPHRASE$ACC fc-device-sign" | sha256sum | cut -c1-48)
-              curl -s -X POST -H 'content-type: application/json' -H "authorization: Bearer $T" -H "x-fc-engine-key: $EK" $U/api/ai --data @/tmp/req.json > /tmp/r.json
-              jq -c 'del(.image)' /tmp/r.json | tee /tmp/res/$NAME.json
-              jq -r '.image // empty' /tmp/r.json | sed 's/^data:[^,]*,//' | base64 -d > /tmp/res/$NAME.png 2>/dev/null || true
+              for TRY in 1 2; do
+                curl -s --max-time 170 -X POST -H 'content-type: application/json' -H "authorization: Bearer $T" -H "x-fc-engine-key: $EK" $U/api/ai --data @/tmp/req.json > /tmp/r.json || true
+                if jq -e '.image' /tmp/r.json >/dev/null 2>&1; then break; fi
+                sleep 5
+              done
+              (jq -c 'del(.image)' /tmp/r.json 2>/dev/null || echo "{\"error\":\"bad response\",\"body\":$(head -c 300 /tmp/r.json | jq -Rs .)}") | tee /tmp/res/$NAME.json || true
+              (jq -r '.image // empty' /tmp/r.json 2>/dev/null | sed 's/^data:[^,]*,//' | base64 -d > /tmp/res/$NAME.png) 2>/dev/null || true
             done
             curl -s -H "$H" "$KVURL/alert:last_provider_error" > /tmp/res/last-error.txt || true
             rm -rf /tmp/in /tmp/in.tgz /tmp/img.txt /tmp/req.json /tmp/r.json
