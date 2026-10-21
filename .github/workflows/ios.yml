@@ -1,0 +1,128 @@
+# Face Couture iPhone app: builds on GitHub's Macs (no Mac needed).
+# Without the App Store Connect secrets it makes a test build and a simulator screenshot.
+# With them (ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_P8, APPLE_TEAM_ID) it signs the app and uploads it to TestFlight.
+name: iPhone app
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'native/**'
+      - 'app-preview/**'
+      - '.github/workflows/ios.yml'
+
+concurrency:
+  group: ios-app
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  ios:
+    runs-on: macos-latest
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Use the newest Xcode
+        run: |
+          X=$(ls -d /Applications/Xcode_*.app | grep -v -i beta | sort -V | tail -1)
+          sudo xcode-select -s "$X"
+          xcodebuild -version
+
+      - name: Build the app files
+        working-directory: native
+        run: bash scripts/prepare-www.sh
+
+      - name: Create the iPhone project
+        working-directory: native
+        run: |
+          npm install --no-audit --no-fund
+          npx cap add ios --packagemanager SPM
+          npx --yes @capacitor/assets@3 generate --ios --iconBackgroundColor '#2B174A' --iconBackgroundColorDark '#2B174A' --splashBackgroundColor '#fbf8fc' --splashBackgroundColorDark '#fbf8fc'
+          bash scripts/configure-ios.sh
+          npx cap sync ios
+
+      - name: Check signing secrets
+        id: keys
+        env:
+          K: ${{ secrets.ASC_KEY_ID }}
+          I: ${{ secrets.ASC_ISSUER_ID }}
+          P: ${{ secrets.ASC_KEY_P8 }}
+          T: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          if [ -n "$K" ] && [ -n "$I" ] && [ -n "$P" ] && [ -n "$T" ]; then echo "signed=yes" >> "$GITHUB_OUTPUT"; else echo "signed=no" >> "$GITHUB_OUTPUT"; echo "Secrets not set yet: making a test build only."; fi
+
+      - name: Test build and simulator screenshot
+        if: steps.keys.outputs.signed != 'yes'
+        working-directory: native/ios/App
+        run: |
+          set -o pipefail
+          xcodebuild -project App.xcodeproj -scheme App -configuration Debug -sdk iphonesimulator \
+            -derivedDataPath ../../build CODE_SIGNING_ALLOWED=NO build | tail -40
+          DEV=$(xcrun simctl list devices available | grep -E 'iPhone 1[5-9]|iPhone 2[0-9]' | grep -v -i 'plus\|max\|mini\|SE' | head -1 | sed -E 's/.*\(([0-9A-F-]{36})\).*/\1/')
+          echo "Simulator: $DEV"
+          xcrun simctl boot "$DEV" || true
+          xcrun simctl bootstatus "$DEV" -b
+          APP=$(ls -d ../../build/Build/Products/Debug-iphonesimulator/App.app)
+          xcrun simctl install "$DEV" "$APP"
+          xcrun simctl launch "$DEV" app.facecouture
+          sleep 25
+          mkdir -p ../../shots
+          xcrun simctl io "$DEV" screenshot ../../shots/launch.png
+          sleep 15
+          xcrun simctl io "$DEV" screenshot ../../shots/launch-40s.png
+
+      - name: Save screenshots for review
+        if: steps.keys.outputs.signed != 'yes'
+        run: |
+          git config user.name "face-couture-ci"
+          git config user.email "hello@facecouture.app"
+          git fetch origin ci-output || true
+          git checkout --orphan ci-output-tmp
+          git rm -rf --cached . > /dev/null
+          mkdir -p out && cp native/shots/*.png out/
+          git add -f out/*.png
+          git commit -m "iPhone simulator screenshots (run ${{ github.run_number }})"
+          git push -f origin HEAD:ci-output
+
+      - name: Sign and upload to TestFlight
+        if: steps.keys.outputs.signed == 'yes'
+        working-directory: native/ios/App
+        env:
+          KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ISSUER: ${{ secrets.ASC_ISSUER_ID }}
+          KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          TEAM: ${{ secrets.APPLE_TEAM_ID }}
+          BUILD: ${{ github.run_number }}
+        run: |
+          set -o pipefail
+          KEY=$RUNNER_TEMP/AuthKey_$KEY_ID.p8
+          printf '%s\n' "$KEY_P8" > "$KEY"
+          AUTH="-allowProvisioningUpdates -authenticationKeyPath $KEY -authenticationKeyID $KEY_ID -authenticationKeyIssuerID $ISSUER"
+          xcodebuild -project App.xcodeproj -scheme App -configuration Release -destination 'generic/platform=iOS' \
+            -archivePath "$RUNNER_TEMP/App.xcarchive" archive \
+            DEVELOPMENT_TEAM="$TEAM" CODE_SIGN_STYLE=Automatic PRODUCT_BUNDLE_IDENTIFIER=app.facecouture \
+            MARKETING_VERSION=1.0.0 CURRENT_PROJECT_VERSION="$BUILD" $AUTH | tail -60
+          cat > "$RUNNER_TEMP/ExportOptions.plist" <<PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>upload</string>
+            <key>teamID</key><string>$TEAM</string>
+            <key>signingStyle</key><string>automatic</string>
+            <key>manageAppVersionAndBuildNumber</key><false/>
+            <key>uploadSymbols</key><true/>
+          </dict></plist>
+          PLIST
+          xcodebuild -exportArchive -archivePath "$RUNNER_TEMP/App.xcarchive" \
+            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" -exportPath "$RUNNER_TEMP/out" $AUTH | tail -60
+          rm -f "$KEY"
+          echo "Uploaded build $BUILD to App Store Connect. It appears in TestFlight after Apple finishes processing (usually 10-30 minutes)."
