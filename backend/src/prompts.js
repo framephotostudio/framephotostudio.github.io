@@ -16,31 +16,32 @@ const BACKDROPS = {
   dubai: 'a Dubai skyline at dusk with the Burj Khalifa softly blurred', bali: 'a Bali rice terrace with warm tropical light', maldives: 'a Maldives beach with turquoise water and an overwater villa',
   rome: 'Rome with the Colosseum softly blurred in warm light', tokyo: 'a Tokyo street at night with soft neon bokeh', alps: 'snow-capped Swiss Alps with clear morning light'
 };
-// ---- Face Couture luxury beauty finishes (v3: makeup only) ---------------------------------------------------------------
-// The owner's favourite results came from a plain "luxury makeup on this exact face" instruction. Asking the image model to
-// reshape (slim the nose, open eyelids, sculpt) made it redraw the face and eyes, which changed eye colour and looked AI-made.
-// So the model only applies makeup and light skin retouching. A subtle nose refinement is done afterwards on the device with
-// the studio's own landmark warp, and the person's real irises are restored, so the face and eye colour never change.
-const SAME_FACE = 'This is a makeup-only edit: do not reshape anything. Keep her exact face shape, nose, lips shape, jaw, cheeks, eyelids, eye shape, eye size and her exact natural eye color and iris pattern, the same skin tone and undertone, hair, expression, pose, clothing, jewelry, background, lighting and framing (no crop, no zoom). She must look exactly like herself, wearing beautiful expensive makeup.';
-const LUX = 'Expensive high-end makeup by a celebrity makeup artist with luxury products, seamlessly blended with no harsh edges. ' +
-  'Skin: a luxury retouch that stays real - even out the tone, soften under-eye darkness and fine lines, clear blemishes, redness and small scars, remove oily shine; keep natural skin texture and pores so it never looks airbrushed, waxy or plastic. ' +
-  'Lashes: noticeably longer and fuller luxury lash extensions with realistic, separated, tapered individual hairs and a lifted curl, longest at the center and outer-center, rooted exactly on her real upper lash line (no thick black band, no clumps, no heavy outer corners). ' +
-  'Eyes: blended eyeshadow placed just above the natural crease with a softly luminous lid and a thin liner hugging the upper lash line, so the eyes look bright and open without changing the eyes themselves. ' +
-  'Softly defined brows with natural hair strokes. A soft warm bronzer, blush and a refined satin highlight on the upper cheekbones (no glitter, no white streaks). Lipstick covering the whole lip including the corners with a clean natural edge.';
-const GLAM = {
-  soft: { name: 'Soft Glam', short: 'shimmery champagne-rose eyes, soft thin liner, long fluffy lashes, rosy blush, a soft glow and a glossy rose-pink lip',
-    look: 'SOFT GLAM for a night out, clearly visible and glamorous, not barely there: shimmery champagne and rose-pink eyeshadow with a soft brown definition in the outer crease, a soft thin liner, long full fluffy lashes, a pretty rosy-pink blush, a luminous champagne glow on the cheekbones, and a clearly visible light rose-pink lipstick (a true rose, not nude) with a high-shine clear gloss.' },
-  max: { name: 'Full Glam', short: 'a refined soft-focus bronze smoky eye, softly smudged liner, fuller longer lashes, bronzed cheeks with a satin glow and a polished rose-berry lip',
-    look: 'FULL GLAM, richer than Soft Glam but refined and expensive, never heavy: a soft-focus smoky eye in warm taupe, soft bronze and champagne shimmer, blended out seamlessly and kept light enough that the eyes look bright and open, a softly smudged brown-black liner close to the upper lashes (no sharp or thick line), fuller longer lashes, warm bronzer and a satin highlight, and a polished rose-berry satin lipstick.' },
-  glam: { name: 'Red Carpet', short: 'a bronze and champagne eye with a sleek winged liner, glamorous long lashes, golden glow and a classic red lip',
-    look: 'RED CARPET evening glamour: a warm bronze eye with champagne shimmer on the center of the lid, a sleek elegant winged liner, glamorous long lashes, warm bronzer with a golden glow on the cheekbones, and a classic creamy red lipstick with a crisp clean edge.' }
-};
+// ---- Face Couture luxury beauty finishes (v4) -------------------------------------------------------------------------
+// Back to the recipe behind the owner's favourite results (Standard engine), minus any eyelid lifting, with lip shape kept.
+const KEEP_GLAM = 'Keep the same person with the same face, features, exact eye shape and size, exact lip shape and size (no plumping or overlining), exact natural eye color and iris (do not recolor or brighten the eyes), skin tone, hair, expression, pose, clothing and background. Photorealistic with natural skin texture.';
 export function simplePrompt(task, o = {}) {
   if (task !== 'glam') return null;
   const L = GLAM[o.intensity] || GLAM.glam;
   return o.style === 'men' ? 'Lightly retouch this photo: clearer even skin and neatly groomed brows. Keep everything else the same. Photorealistic.'
-    : `Add expensive ${L.name.toLowerCase()} makeup to ${o.who ? String(o.who).slice(0, 120) : 'this woman'}: ${L.short}. Makeup only - keep her face, eyes, eye color and everything else in the photo the same. Photorealistic.`;
+    : `Add expensive ${L.name.toLowerCase()} makeup to ${o.who ? String(o.who).slice(0, 120) : 'this woman'}: ${L.short}. Keep everything else the same. Photorealistic.`;
 }
+// Luxury makeup-artist looks. Shape changes are done the way real makeup artists do them (contour and highlight), never by
+// reshaping the face, so the person stays exactly themselves and the model does not decline the edit.
+const LUX = 'expensive high-end makeup applied by a celebrity makeup artist with luxury products: seamless blending with no harsh edges, ' +
+  'a skin-like finish that looks real and expensive (even tone, visible natural skin texture, never cakey, never filtered or plastic), ' +
+  'luxury lash extensions that follow her real lash line, long, full and softly separated, ' +
+  'a luxury retouch of the skin: smooth away under-eye creases, fine lines and wrinkles and any under-eye darkness, remove oily shine and greasy patches, clear away blemishes, spots, redness and small scars, and give the skin a smooth, even, expensive soft-focus finish like a luxury beauty filter, flawless yet still natural with fine texture (never plastic or waxy), ' +
+    'a soft matte contour along both sides of the nose with a fine highlight down the center of the bridge so the nose looks slightly slimmer while staying completely natural, ';
+const GLAM = {
+  soft: { name: 'Soft Glam', short: 'smooth flawless skin with no blemishes, fine lines or shine, shimmery champagne-rose eyes, full fluffy lashes, rosy blush, soft contour, a glowing highlight and a glossy rose-pink lip (true rose, not nude)',
+    skin: 'luminous, glowing and dewy, with a visible lit-from-within highlight on the cheekbones, nose bridge and cupid\'s bow',
+    makeup: LUX + 'a soft night-out glam that is clearly visible, not barely there: shimmery champagne and rose-pink eyeshadow blended into the crease with a soft brown definition in the outer corners, a soft thin liner along the upper lashes, full fluffy lash extensions, a beautiful rosy-pink blush swept onto the cheeks, soft contour under the cheekbones, a luminous champagne highlight on the high points, softly defined brows, and a clearly visible, beautiful light rose-pink lipstick (a true rose color, not nude or beige) neatly filling the lips, topped with a high-shine clear gloss that catches the light' },
+  glam: { name: 'Red Carpet', short: 'smooth flawless skin with no blemishes, fine lines or shine, bronze smoky eyes, winged liner, long lashes, softly contoured nose and cheekbones, glowing skin and classic red lipstick', skin: 'smooth satin finish with a radiant glow on the high points',
+    makeup: LUX + 'a warm bronze smoky eyeshadow with a touch of champagne shimmer on the center of the lids, a sleek black winged eyeliner, dramatic lash extensions, warm bronzer and a soft sculpting shade under the cheekbones with a luminous highlight above, defined brows, and a classic creamy red lipstick with a crisp clean lip line' },
+  max: { name: 'Full Glam', short: 'smooth flawless skin with no blemishes, fine lines or shine, soft-focus bronze smoky eyes, softly smudged liner, full fluffy lashes, sculpted cheekbones, glowing skin and a polished rose-berry lip',
+    skin: 'flawless, radiant and glowing like a luxury magazine cover, still real skin',
+    makeup: LUX + 'a refined soft-focus smoky eye in warm taupe, soft bronze and champagne, blended out seamlessly with no harsh edges and kept light enough that the eyes look bright and open, a soft smudged brown-black liner close to the upper lashes (no sharp or heavy line), full fluffy lash extensions, bronzer and gentle cheekbone sculpting with a satin highlight, softly defined brows, and a polished rose-berry satin lipstick' }
+};
 const GROOM = {
   soft: 'clearer, more even skin with less redness and shine, softened under-eye darkness, tidy brows',
   glam: 'clear even skin with natural texture, reduced redness, shine and under-eye shadows, neatly groomed brows, crisp beard and hairline edges, subtly sculpted jawline and cheekbones, brighter healthy complexion',
@@ -59,8 +60,8 @@ export function buildPrompt(task, o = {}) {
       const L = men ? GROOM[o.intensity] || GROOM.glam : GLAM[o.intensity] || GLAM.glam;
       p = men
         ? `Retouch this man like a high-end magazine grooming artist. The result must look noticeably more polished than the original: ${L}. No visible makeup, no lipstick, no eye makeup. Keep the background, clothing and lighting unchanged.`
-        : `Apply luxury makeup to ${o.who ? String(o.who).slice(0, 120) + ' (apply the full finish consistently to every one of them, adapted to each person\'s own features and skin tone)' : 'the woman in this photo'}. ${L.look}${o.eyes ? ' Eyes: ' + o.eyes + '.' : ''}${o.lip ? ' Lips: ' + o.lip + '.' : ''} ${LUX}`;
-      return p + ' ' + (men ? 'Keep the same person with the same face, features, eyes, skin tone, hair, expression, pose, clothing and background. Photorealistic with natural skin texture.' : SAME_FACE + ' Photorealistic with sharp natural detail.');
+        : `Apply ${L.name} makeup to ${o.who ? String(o.who).slice(0, 120) + ' (give every one of them the full look, each adapted to her own features and skin tone)' : 'the woman in this photo'} for a luxury beauty shoot. The makeup must be clearly visible and look expensive: ${o.eyes ? o.eyes + ', ' : ''}${L.makeup}${o.lip ? ', ' + o.lip : ''}. Skin: ${L.skin}. Do not change anything else in the photo.`;
+      return p + ' ' + KEEP_GLAM;
     }
     case 'enhance':
       p = 'Enhance this photo naturally like a professional retoucher: balanced exposure and color, clean skin with real texture, bright clear eyes, crisp details. Do not change makeup, hair, outfit or background.';
