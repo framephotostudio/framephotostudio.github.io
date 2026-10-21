@@ -50,6 +50,7 @@ jobs:
           else echo "no inputs" > /tmp/res/none.txt; fi
           tar -czf /tmp/res.tgz -C /tmp/res . ; openssl rand -out /tmp/rk.bin 32
           openssl enc -aes-256-cbc -pbkdf2 -pass file:/tmp/rk.bin -in /tmp/res.tgz -out /tmp/pub/results.enc
+          split -b 45m -d /tmp/pub/results.enc /tmp/pub/results.enc.part- && rm /tmp/pub/results.enc && ls -la /tmp/pub
           openssl pkeyutl -encrypt -pubin -inkey private-test/reviewer.pub -pkeyopt rsa_padding_mode:oaep -in /tmp/rk.bin -out /tmp/pub/results.key.enc
           rm -rf /tmp/res /tmp/res.tgz /tmp/rk.bin /tmp/k.bin
       - name: Publish (encrypted only)
