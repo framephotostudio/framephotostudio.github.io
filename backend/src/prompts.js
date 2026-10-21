@@ -21,7 +21,7 @@ export function simplePrompt(task, o = {}) {
   if (task !== 'glam') return null;
   const L = GLAM[o.intensity] || GLAM.glam;
   return o.style === 'men' ? 'Lightly retouch this photo: clearer even skin and neatly groomed brows. Keep everything else the same. Photorealistic.'
-    : `Add expensive ${L.name.toLowerCase()} makeup to ${o.who ? String(o.who).slice(0, 120) : 'this woman'}: ${L.short}. Keep everything else the same. Photorealistic.`;
+    : `${LASHES} Add expensive ${L.name.toLowerCase()} makeup to ${o.who ? String(o.who).slice(0, 120) : 'this woman'}: ${L.short}. Keep everything else the same. Photorealistic.`;
 }
 // Luxury makeup-artist looks. Shape changes are done the way real makeup artists do them (contour and highlight), never by
 // reshaping the face, so the person stays exactly themselves and the model does not decline the edit.
@@ -31,6 +31,7 @@ const LUX = 'expensive high-end makeup applied by a celebrity makeup artist with
   'a luxury retouch of the skin: smooth away under-eye creases, fine lines and wrinkles and any under-eye darkness, remove oily shine and greasy patches, clear away blemishes, spots, redness and small scars, and give the skin a smooth, even, expensive soft-focus finish like a luxury beauty filter, flawless yet still natural with fine texture (never plastic or waxy), ' +
   'eye makeup placed the way a makeup artist opens hooded eyes: curled, lifted lashes, a light shimmer on the center of the lid and soft shading just above the natural crease, so the eyes look brighter and more open, ' +
   'a soft matte contour along both sides of the nose with a fine highlight down the center of the bridge so the nose looks slightly slimmer while staying completely natural, ';
+const LASHES = 'Most important: give her dramatically fuller, longer luxury volume lash extensions that are clearly noticeable at first glance - upper lashes about twice their current length, much denser and darker, curled upward and fanned out toward the outer corners, plus softly defined lower lashes - placed exactly along her real lash line.';
 const GLAM = {
   soft: { name: 'Soft Glam', short: 'smooth flawless skin with no blemishes, fine lines or shine, shimmery champagne-rose eyes, full fluffy lashes, rosy blush, soft contour, a glowing highlight and a glossy rose-pink lip (true rose, not nude)',
     skin: 'luminous, glowing and dewy, with a visible lit-from-within highlight on the cheekbones, nose bridge and cupid\'s bow',
@@ -59,7 +60,7 @@ export function buildPrompt(task, o = {}) {
       const L = men ? GROOM[o.intensity] || GROOM.glam : GLAM[o.intensity] || GLAM.glam;
       p = men
         ? `Retouch this man like a high-end magazine grooming artist. The result must look noticeably more polished than the original: ${L}. No visible makeup, no lipstick, no eye makeup. Keep the background, clothing and lighting unchanged.`
-        : `Apply ${L.name} makeup to ${o.who ? String(o.who).slice(0, 120) + ' (give every one of them the full look, each adapted to her own features and skin tone)' : 'the woman in this photo'} for a luxury beauty shoot. The makeup must be clearly visible and look expensive: ${o.eyes ? o.eyes + ', ' : ''}${L.makeup}${o.lip ? ', ' + o.lip : ''}. Skin: ${L.skin}. Do not change anything else in the photo.`;
+        : `${LASHES} Then apply ${L.name} makeup to ${o.who ? String(o.who).slice(0, 120) + ' (give every one of them the full look, each adapted to her own features and skin tone)' : 'the woman in this photo'} for a luxury beauty shoot. The makeup must be clearly visible and look expensive: ${o.eyes ? o.eyes + ', ' : ''}${L.makeup}${o.lip ? ', ' + o.lip : ''}. Skin: ${L.skin}. Do not change anything else in the photo.`;
       return p + ' ' + KEEP_GLAM;
     }
     case 'enhance':
