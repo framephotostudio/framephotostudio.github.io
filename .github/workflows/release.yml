@@ -1,9 +1,10 @@
 name: Release Face Couture apps
 # Signed builds uploaded to TestFlight and Google Play (closed testing). Needs the secrets listed in README.md.
 on:
-  # pushing a tag like ios-1.0.0-1 sends an iPhone build to TestFlight
+  # changing release/ios.txt on the mobile-app branch sends an iPhone build to TestFlight
   push:
-    tags: ['ios-*']
+    branches: [mobile-app]
+    paths: ['release/ios.txt']
   workflow_dispatch:
     inputs:
       version:
