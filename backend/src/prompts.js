@@ -16,7 +16,7 @@ const BACKDROPS = {
   dubai: 'a Dubai skyline at dusk with the Burj Khalifa softly blurred', bali: 'a Bali rice terrace with warm tropical light', maldives: 'a Maldives beach with turquoise water and an overwater villa',
   rome: 'Rome with the Colosseum softly blurred in warm light', tokyo: 'a Tokyo street at night with soft neon bokeh', alps: 'snow-capped Swiss Alps with clear morning light'
 };
-const KEEP_GLAM = 'Keep the same person with the same face, features, skin tone, hair, expression, pose, clothing and background. Photorealistic with natural skin texture.';
+const KEEP_GLAM = 'Keep the same person with the same face, features, exact natural eye color and iris (do not recolor or brighten the eyes), skin tone, hair, expression, pose, clothing and background. Photorealistic with natural skin texture.';
 export function simplePrompt(task, o = {}) {
   if (task !== 'glam') return null;
   const L = GLAM[o.intensity] || GLAM.glam;
@@ -34,8 +34,9 @@ const GLAM = {
     makeup: LUX + 'champagne and soft rose-gold eyeshadow blended into the crease, a thin brown liner close to the lashes, a rosy-peach blush, a gentle champagne highlight, softly groomed brows, and a rosy-nude satin lipstick neatly filled to the corners' },
   glam: { name: 'Red Carpet', short: 'bronze smoky eyes, winged liner, long lashes, softly contoured nose and cheekbones, glowing skin and classic red lipstick', skin: 'smooth satin finish with a radiant glow on the high points',
     makeup: LUX + 'a warm bronze smoky eyeshadow with a touch of champagne shimmer on the center of the lids, a sleek black winged eyeliner, dramatic lash extensions, warm bronzer and a soft sculpting shade under the cheekbones with a luminous highlight above, defined brows, and a classic creamy red lipstick with a crisp clean lip line' },
-  max: { name: 'Full Glam', short: 'deep smoky eyes, dramatic lashes, contoured nose and cheekbones, glowing skin and glossy wine lipstick', skin: 'flawless and radiant, glowing like a magazine cover',
-    makeup: LUX + 'a deep chocolate and gold smoky eye, bold black eyeliner, extra-full dramatic lash extensions, bronzer and strong cheekbone sculpting with a glowing highlight, sharply defined brows, and a glossy wine-berry lipstick' }
+  max: { name: 'Full Glam', short: 'soft-focus bronze smoky eyes, softly smudged liner, full fluffy lashes, sculpted cheekbones, glowing skin and a polished rose-berry lip',
+    skin: 'flawless, radiant and glowing like a luxury magazine cover, still real skin',
+    makeup: LUX + 'a refined soft-focus smoky eye in warm taupe, soft bronze and champagne, blended out seamlessly with no harsh edges and kept light enough that the eyes look bright and open, a soft smudged brown-black liner close to the upper lashes (no sharp or heavy line), full fluffy lash extensions, bronzer and gentle cheekbone sculpting with a satin highlight, softly defined brows, and a polished rose-berry satin lipstick' }
 };
 const GROOM = {
   soft: 'clearer, more even skin with less redness and shine, softened under-eye darkness, tidy brows',
