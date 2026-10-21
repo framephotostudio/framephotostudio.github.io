@@ -60,8 +60,9 @@ jobs:
         env: { SUB: '${{ steps.sub.outputs.sub }}' }
         run: |
           U=https://face-couture-api.$SUB.workers.dev; echo "$U" > /tmp/url.txt; mkdir -p /tmp/out; echo "$U" > /tmp/out/url.txt
-          sleep 8
-          curl -s $U/api/status | tee /tmp/out/status.json; echo
+          for i in $(seq 1 30); do C=$(curl -s -o /tmp/out/status.json -w '%{http_code}' $U/api/status || true); echo "try $i: $C"; [ "$C" = "200" ] && break; sleep 10; done
+          cat /tmp/out/status.json; echo
+          curl -sS -o /dev/null -w 'final %{http_code}\n' $U/api/status 2>&1 | tee /tmp/out/reach.txt || true
           python3 - <<'PY'
           import re,base64,json
           s=open('site/index.html',encoding='utf-8').read()
