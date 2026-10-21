@@ -1,1 +1,1 @@
-iPhone build request: 1.0.0 (attempt 2, with signing log)
+iPhone build request: 1.0.0 (attempt 3, cloud signing at export)
