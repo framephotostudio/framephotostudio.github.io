@@ -64,12 +64,13 @@ jobs:
           echo "Simulator $DEV"; xcrun simctl boot "$DEV" || true; xcrun simctl bootstatus "$DEV" -b
           xcrun simctl install "$DEV" ios/App/build/Build/Products/Debug-iphonesimulator/App.app
           xcrun simctl launch "$DEV" app.facecouture.studio
-          mkdir -p shots; sleep 20; xcrun simctl io "$DEV" screenshot shots/ios-launch.png
-          sleep 20; xcrun simctl io "$DEV" screenshot shots/ios-40s.png
+          mkdir -p shots; for t in 10 25 45 75; do sleep $((t - ${prev:-0})); prev=$t; xcrun simctl io "$DEV" screenshot shots/ios-${t}s.png; done
+          xcrun simctl spawn "$DEV" log show --last 3m --style compact --predicate 'process == "App"' > shots/app-log.txt 2>&1 || true
+          tail -c 60000 shots/app-log.txt > shots/app-log-tail.txt || true
       - name: Publish screenshots to the ci-output branch for review
         if: always()
         run: |
-          mkdir -p /tmp/out; cp shots/*.png /tmp/out/ 2>/dev/null || echo none > /tmp/out/none.txt
+          mkdir -p /tmp/out; cp shots/*.png shots/app-log-tail.txt /tmp/out/ 2>/dev/null || echo none > /tmp/out/none.txt
           git config user.name face-couture-ci; git config user.email hello@facecouture.app
           git checkout --orphan ci-shots; git rm -rfq --cached . ; rm -rf out; mkdir out; cp /tmp/out/* out/
           git add -f out; git commit -qm "iOS simulator screenshots, run ${{ github.run_number }}"; git push -qf origin HEAD:ci-output
