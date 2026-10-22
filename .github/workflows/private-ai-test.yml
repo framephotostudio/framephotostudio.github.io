@@ -48,6 +48,13 @@ jobs:
               done
               (jq -c 'del(.image)' /tmp/r.json 2>/dev/null || echo "{\"error\":\"bad response\",\"body\":$(head -c 300 /tmp/r.json | jq -Rs .)}") | tee /tmp/res/$NAME.json || true
               (jq -r '.image // empty' /tmp/r.json 2>/dev/null | sed 's/^data:[^,]*,//' | base64 -d > /tmp/res/$NAME.png) 2>/dev/null || true
+              # publish this one image right away (encrypted), so a stopped run keeps everything already paid for
+              mkdir -p /tmp/each; tar -czf /tmp/one.tgz -C /tmp/res $NAME.json $NAME.png 2>/dev/null || true
+              openssl rand -out /tmp/ok.bin 32; openssl enc -aes-256-cbc -pbkdf2 -pass file:/tmp/ok.bin -in /tmp/one.tgz -out /tmp/each/$NAME.enc
+              openssl pkeyutl -encrypt -pubin -inkey private-test/reviewer.pub -pkeyopt rsa_padding_mode:oaep -in /tmp/ok.bin -out /tmp/each/$NAME.key.enc
+              rm -f /tmp/ok.bin /tmp/one.tgz
+              ( cd /tmp/each && git init -q 2>/dev/null; git config user.name face-couture-ci; git config user.email hello@facecouture.app
+                git add -A && git commit -qm "$NAME" && git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" HEAD:ci-private-each ) || true
             done
             curl -s -H "$H" "$KVURL/alert:last_provider_error" > /tmp/res/last-error.txt || true
             rm -rf /tmp/in /tmp/in.tgz /tmp/img.txt /tmp/req.json /tmp/r.json
