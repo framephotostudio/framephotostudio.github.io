@@ -42,17 +42,27 @@
   }
   function luxe() { var l = q('#luxe'); if (l) l.scrollIntoView({ block: 'center' }); }
   var steps = [
-    [8, photo],
-    [20, function () { luxe(); window.FCPlan.refresh(); log('A launch counter'); }],
-    [35, function () { state.me = me('free', 0); window.FCPlan.refresh().then(function () { window.FCPlan.openPaywall('demo'); }); log('B paywall yearly'); }],
-    [50, function () { var b = q('[data-plan="monthly"]'); b && b.click(); log('C paywall monthly'); }],
-    [65, function () { var x = q('.fcpX'); x && x.click(); state.me = me('paid', 0); window.FCPlan.refresh().then(function () { window.FCPlan.openTopups('demo'); }); log('D top-ups'); }],
-    [80, function () { var x = q('.fcpX'); x && x.click(); state.me = me('paid', 12); luxe(); var c = q('#luxeConsent'); if (c && !c.checked) c.click();
+    [4, function () { window.scrollTo(0, 0); var w = q('.workspace.expanded .panel'); if (w) w.scrollTop = 0; log('0 studio with Rotate / Crop / Auto crop'); }],
+    [16, function () { luxe(); window.FCPlan.refresh(); log('A launch counter'); }],
+    [32, function () { state.me = me('free', 0); window.FCPlan.refresh().then(function () { window.FCPlan.openPaywall('demo'); }); log('B paywall yearly'); }],
+    [46, function () { var b = q('[data-plan="monthly"]'); b && b.click(); log('C paywall monthly'); }],
+    [60, function () { var x = q('.fcpX'); x && x.click(); state.me = me('paid', 0); window.FCPlan.refresh().then(function () { window.FCPlan.openTopups('demo'); }); log('D top-ups'); }],
+    [74, function () { var x = q('.fcpX'); x && x.click(); state.me = me('paid', 12); luxe(); var c = q('#luxeConsent'); if (c && !c.checked) c.click();
       var b = q('[data-luxe="soft"]'); b && b.click(); log('E busy'); }],
-    [100, function () { var b = q('#luxeDev'); b && b.click(); log('F on-device applied'); }],
-    [112, function () { state.aiOk = true; luxe(); var b = q('[data-luxe="soft"]'); b && b.click(); log('G AI result with before & after buttons'); }],
-    [150, function () { var b = q('#luxeBAPhoto'); b && b.click(); log('H before & after photo'); }]
+    [94, function () { var b = q('#luxeDev'); b && b.click(); log('F on-device applied'); }],
+    [106, function () { state.aiOk = true; luxe(); var b = q('[data-luxe="soft"]'); b && b.click(); log('G AI result with before & after buttons'); }],
+    [140, function () { var b = q('#luxeBAPhoto'); b && b.click(); log('H before & after photo'); }]
   ];
-  steps.forEach(function (s) { setTimeout(function () { try { s[1](); } catch (e) { log('step error ' + e.message); } }, s[0] * 1000); });
+  // slow simulators paint late: load the sample first, and start the clock only once the studio is on screen
+  function waitFor(test, cb) { var t = setInterval(function () { try { if (test()) { clearInterval(t); cb(); } } catch (e) {} }, 500); }
+  waitFor(function () { var h = q('#heroSample'); return h && h.offsetHeight > 0; }, function () {
+    setTimeout(function () {
+      photo();
+      waitFor(function () { var r = q('#quickRotate'); return r && r.offsetHeight > 0 && typeof originalPhoto !== 'undefined' && originalPhoto; }, function () {
+        log('studio ready');
+        steps.forEach(function (s) { setTimeout(function () { try { s[1](); } catch (e) { log('step error ' + e.message); } }, s[0] * 1000); });
+      });
+    }, 1500);
+  });
   window.addEventListener('error', function (e) { console.log('[plandemo] PAGE ERROR ' + e.message); });
 })();
