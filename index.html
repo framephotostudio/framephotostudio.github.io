@@ -3586,18 +3586,25 @@ function wrap(a){while(a>180)a-=360;while(a<-180)a+=360;return a}
 
 // put the person's real eyes (white, iris, pupil, gaze, natural shine) into the AI result; the AI's lashes, liner and shadow stay
 function realEyes(origC,Lo,resC,La){var ctx=resC.getContext('2d'),W=resC.width,H=resC.height,od=origC.getContext('2d').getImageData(0,0,origC.width,origC.height),OW=origC.width,OH=origC.height,fit=0;
+ /* v69: keep the AI eye (sharp, sits naturally with the new lashes and liner) and give it the person's TRUE iris colour.
+    Pasting the original eye in looked soft and hazy next to the AI detail. Eye shape is still checked (fit) so a changed eye is re-made. */
+ function irisRing(L,c0){var c=L[c0],r=0;for(var k=1;k<=4;k++)r+=dist(L[c0+k],c);return [c,r/4]}
+ function meanIris(data,w,h,L,idx,c0,k){var ir=irisRing(L,c0),c=ir[0],r=ir[1]*k,poly=idx.map(function(i){return L[i]}),px=[];
+  for(var y=Math.max(0,Math.floor(c[1]-r));y<=Math.min(h-1,Math.ceil(c[1]+r));y++)for(var x=Math.max(0,Math.floor(c[0]-r));x<=Math.min(w-1,Math.ceil(c[0]+r));x++){var p=[x+.5,y+.5];if(dist(p,c)>r||!inPoly(p,poly))continue;var o=(y*w+x)*4;px.push([data[o],data[o+1],data[o+2]])}
+  if(px.length<6)return null;px.sort(function(a,b){return (a[0]+a[1]+a[2])-(b[0]+b[1]+b[2])});px=px.slice(0,Math.ceil(px.length*.85));/* skip the catchlight */
+  var m=[0,0,0];px.forEach(function(q){m[0]+=q[0];m[1]+=q[1];m[2]+=q[2]});return m.map(function(v){return v/px.length})}
  [[EYE_A,468],[EYE_B,473]].forEach(function(e){var idx=e[0],src=idx.map(function(i){return Lo[i]}).concat([Lo[e[1]]]),dst=idx.map(function(i){return La[i]}).concat([La[e[1]]]);
-  var M=simil(src,dst),Mi=invert(M),Tp=idx.map(function(i){return apply(M,Lo[i])}),Ap=idx.map(function(i){return La[i]});
+  var M=simil(src,dst),Tp=idx.map(function(i){return apply(M,Lo[i])}),Ap=idx.map(function(i){return La[i]});
   var ew=dist(La[idx[0]],La[idx[8]]),err=0;for(var i=0;i<idx.length;i++)err+=dist(Tp[i],Ap[i]);err/=idx.length*ew;fit=Math.max(fit,err);
   if(err>.10)return;
-  var x0=W,y0=H,x1=0,y1=0;Ap.concat(Tp).forEach(function(p){x0=Math.min(x0,p[0]);y0=Math.min(y0,p[1]);x1=Math.max(x1,p[0]);y1=Math.max(y1,p[1])});
-  x0=Math.max(0,Math.floor(x0-2));y0=Math.max(0,Math.floor(y0-2));x1=Math.min(W-1,Math.ceil(x1+2));y1=Math.min(H-1,Math.ceil(y1+2));
-  var rw=x1-x0+1,rh=y1-y0+1,img=ctx.getImageData(x0,y0,rw,rh),d=img.data,inset=ew*.035,feather=Math.max(1,ew*.025);
-  for(var y=0;y<rh;y++)for(var x=0;x<rw;x++){var p=[x0+x+.5,y0+y+.5];if(!inPoly(p,Ap)||!inPoly(p,Tp))continue;
-   var de=Math.min(edgeDist(p,Ap),edgeDist(p,Tp)),al=Math.max(0,Math.min(1,(de-inset)/feather));if(al<=0)continue;
-   var q=apply(Mi,p),qx=q[0]-.5,qy=q[1]-.5,ix=Math.floor(qx),iy=Math.floor(qy),fx=qx-ix,fy=qy-iy;if(ix<0||iy<0||ix>=OW-1||iy>=OH-1)continue;
-   var o=(y*rw+x)*4;for(var c=0;c<3;c++){var a00=od.data[(iy*OW+ix)*4+c],a10=od.data[(iy*OW+ix+1)*4+c],a01=od.data[((iy+1)*OW+ix)*4+c],a11=od.data[((iy+1)*OW+ix+1)*4+c];
-    var v=(a00*(1-fx)+a10*fx)*(1-fy)+(a01*(1-fx)+a11*fx)*fy;d[o+c]=d[o+c]*(1-al)+v*al}}
+  var ir=irisRing(La,e[1]),c=ir[0],r=ir[1],x0=Math.max(0,Math.floor(c[0]-r-2)),y0=Math.max(0,Math.floor(c[1]-r-2)),x1=Math.min(W-1,Math.ceil(c[0]+r+2)),y1=Math.min(H-1,Math.ceil(c[1]+r+2)),rw=x1-x0+1,rh=y1-y0+1;
+  var img=ctx.getImageData(x0,y0,rw,rh),d=img.data;
+  var mo=meanIris(od.data,OW,OH,Lo,idx,e[1],.9);
+  var shifted=idx.map(function(i){return [La[i][0]-x0,La[i][1]-y0]}),loc=[];for(var k=0;k<5;k++)loc[e[1]+k]=[La[e[1]+k][0]-x0,La[e[1]+k][1]-y0];idx.forEach(function(i,j){loc[i]=shifted[j]});
+  var ma=meanIris(d,rw,rh,loc,idx,e[1],1);if(!mo||!ma)return;
+  var dv=[mo[0]-ma[0],mo[1]-ma[1],mo[2]-ma[2]],cl=[c[0]-x0,c[1]-y0],fe=Math.max(.8,r*.15);
+  for(var y=0;y<rh;y++)for(var x=0;x<rw;x++){var p=[x+.5,y+.5];if(!inPoly(p,shifted))continue;var al=Math.max(0,Math.min(1,(r-dist(p,cl))/fe+.5));if(al<=0)continue;
+   var o=(y*rw+x)*4;for(var ch=0;ch<3;ch++)d[o+ch]=Math.max(0,Math.min(255,d[o+ch]+dv[ch]*al))}
   ctx.putImageData(img,x0,y0)});
  return fit}
 
