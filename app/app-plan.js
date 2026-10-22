@@ -134,7 +134,7 @@
         '<li><span class="ic">' + ICON.ai + '</span><span><b>' + aiPaid + ' AI Luxe Looks</b> every month</span></li>' +
         '<li><span class="ic">' + ICON.looks + '</span><span>Every on-device look, <b>unlimited</b></span></li>' +
         '<li><span class="ic">' + ICON.reel + '</span><span>Before &amp; after photos and reels</span></li>' +
-        '<li><span class="ic">' + ICON.you + '</span><span>Your eyes, lips and features stay yours</span></li>' +
+        '<li><span class="ic">' + ICON.you + '</span><span>Full-resolution saves, made on your own photo</span></li>' +
       '</ul>' +
       '<div class="fcpPlans" role="radiogroup" aria-label="Choose your plan">' +
         '<button type="button" class="fcpPlan year' + (yr ? ' on' : '') + '" data-plan="yearly" role="radio" aria-checked="' + yr + '">' +
