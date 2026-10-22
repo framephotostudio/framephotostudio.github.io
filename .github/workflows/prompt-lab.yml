@@ -1,0 +1,43 @@
+name: Prompt lab (owner test, encrypted)
+# Tests new prompt wording on the owner's photos straight against Gemini. The live server is NOT changed.
+# Photos are encrypted end to end exactly like the Private AI test.
+on:
+  push:
+    branches: [prompt-lab]
+    paths: ['lab/inputs.enc']
+permissions: { contents: write }
+concurrency: { group: prompt-lab, cancel-in-progress: false }
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    env:
+      H: 'Authorization: Bearer ${{ secrets.CLOUDFLARE_API_TOKEN }}'
+      ACC: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Workflow key (private half stays in KV)
+        run: |
+          A=https://api.cloudflare.com/client/v4/accounts/$ACC/storage/kv/namespaces
+          KID=$(curl -s -H "$H" "$A?per_page=100" | jq -r '[.result[]|select(.title=="face-couture-kv" or .title=="face-couture-api-KV" or .title=="KV")][0].id')
+          curl -s -f -H "$H" "$A/$KID/values/ci:privkey" -o /tmp/ci.key
+          openssl pkey -in /tmp/ci.key -noout
+      - name: Decrypt, run, encrypt each result as soon as it is made
+        run: |
+          openssl pkeyutl -decrypt -inkey /tmp/ci.key -pkeyopt rsa_padding_mode:oaep -in lab/inputs.key.enc -out /tmp/k.bin
+          openssl enc -d -aes-256-cbc -pbkdf2 -pass file:/tmp/k.bin -in lab/inputs.enc -out /tmp/in.tgz
+          mkdir -p /tmp/in /tmp/res && tar -xzf /tmp/in.tgz -C /tmp/in
+          node lab/lab.mjs /tmp/in /tmp/in/jobs.json /tmp/res || echo "lab stopped early"
+          tar -czf /tmp/res.tgz -C /tmp/res . ; openssl rand -out /tmp/rk.bin 32
+          mkdir -p /tmp/pub; openssl enc -aes-256-cbc -pbkdf2 -pass file:/tmp/rk.bin -in /tmp/res.tgz -out /tmp/pub/results.enc
+          split -b 45m -d /tmp/pub/results.enc /tmp/pub/results.enc.part- && rm /tmp/pub/results.enc
+          openssl pkeyutl -encrypt -pubin -inkey private-test/reviewer.pub -pkeyopt rsa_padding_mode:oaep -in /tmp/rk.bin -out /tmp/pub/results.key.enc
+          rm -rf /tmp/in /tmp/in.tgz /tmp/res /tmp/res.tgz /tmp/rk.bin /tmp/k.bin
+      - name: Publish (encrypted only)
+        if: always()
+        run: |
+          git config user.name face-couture-ci; git config user.email hello@facecouture.app
+          git checkout --orphan lab-out; git rm -rfq --cached .; rm -rf out; mkdir out; cp /tmp/pub/* out/ 2>/dev/null || echo none > out/none.txt
+          git add -f out; git commit -qm "prompt lab results (encrypted)"; git push -qf origin HEAD:lab-out
