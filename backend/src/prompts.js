@@ -25,7 +25,7 @@ const EYES = 'Eyes: keep each eye\'s exact shape, size, color, spacing, gaze and
 const STANDARD = 'Quality standard: ' +
   'flawless realistic skin - remove visible blemishes, acne scars, wrinkles, under-eye creases and uneven patches while keeping subtle pore texture, sharp facial detail and natural dimension (never blurry, flat, waxy or plastic); ' +
   'soft natural contour shading on the nose only, never changing its shape or size; ' +
-  'a luxurious bronzed complexion - sun-kissed warmth suited to her natural skin tone, bronzer blended around the temples, under the cheekbones and along the jawline (never orange, muddy, too dark or hollow); ' +
+  'a clearly visible, luxurious bronzed finish in every look - warm sun-kissed bronze suited to her natural skin tone, bronzer blended around the temples, under the cheekbones and along the jawline (never orange, muddy, too dark or hollow); ' +
   'beautiful blush in a flattering rose, peach or warm pink coordinated with the lips, placed to softly lift the cheeks, melting seamlessly into the bronzer and highlight; ' +
   'an overall luminous satin glow with a restrained, refined champagne, rose-gold or golden highlight concentrated on the upper cheekbones only, very light elsewhere (no glitter, no white streaks, no oily shine, no bright nose highlight); ' +
   'softly defined brows with realistic hair detail; ' +
