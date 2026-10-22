@@ -42,15 +42,15 @@ await hook({ type: 'INITIAL_PURCHASE', period_type: 'TRIAL', app_user_id: t.devi
 let codes = []; for (let i = 0; i < 3; i++) { clearRL(); codes.push((await ai(t.token)).status); }
 me = (await call('/api/me', null, t.token, 'GET')).j;
 ok(me.tier === 'trial' && codes.join() === '200,200,402', 'trial: exactly 2 AI looks in total (' + codes + ')');
-// 5. trial converts to paid: 20 a month
+// 5. trial converts to paid: 15 a month
 await hook({ type: 'RENEWAL', period_type: 'NORMAL', app_user_id: t.device, product_id: 'fc_pro_yearly', expiration_at_ms: Date.now() + 365 * 86400e3 });
-me = (await call('/api/me', null, t.token, 'GET')).j; ok(me.tier === 'paid' && me.left.total === 20, 'paid subscriber: 20 AI looks this month (' + me.tier + ', ' + me.left.total + ')');
+me = (await call('/api/me', null, t.token, 'GET')).j; ok(me.tier === 'paid' && me.left.total === 15, 'paid subscriber: 15 AI looks this month (' + me.tier + ', ' + me.left.total + ')');
 // 6. top-up 50 adds on top, counted once even if reported twice, used after the plan runs out
 await hook({ type: 'NON_RENEWING_PURCHASE', app_user_id: t.device, product_id: 'fc_ai_50', transaction_id: 'tx1' });
 await hook({ type: 'NON_RENEWING_PURCHASE', app_user_id: t.device, product_id: 'fc_ai_50', transaction_id: 'tx1' });
-me = (await call('/api/me', null, t.token, 'GET')).j; ok(me.credits === 50 && me.left.total === 70 && me.tier === 'paid', 'top-up 50 added once, plan unchanged (' + me.credits + ' extra, ' + me.left.total + ' total)');
-for (let i = 0; i < 20; i++) { clearRL(); await ai(t.token); } clearRL(); r = await ai(t.token);
-me = (await call('/api/me', null, t.token, 'GET')).j; ok(r.status === 200 && me.credits === 49 && me.left.plan === 0, 'after 20 plan looks, the 21st uses a top-up (' + me.credits + ' extra left)');
+me = (await call('/api/me', null, t.token, 'GET')).j; ok(me.credits === 50 && me.left.total === 65 && me.tier === 'paid', 'top-up 50 added once, plan unchanged (' + me.credits + ' extra, ' + me.left.total + ' total)');
+for (let i = 0; i < 15; i++) { clearRL(); await ai(t.token); } clearRL(); r = await ai(t.token);
+me = (await call('/api/me', null, t.token, 'GET')).j; ok(r.status === 200 && me.credits === 49 && me.left.plan === 0, 'after 15 plan looks, the 16th uses a top-up (' + me.credits + ' extra left)');
 // 7. top-ups for a non-subscriber after launch also work
 let n = await newDevice(); await hook({ type: 'NON_RENEWING_PURCHASE', app_user_id: n.device, product_id: 'fc_ai_20', transaction_id: 'tx2' }); clearRL(); r = await ai(n.token);
 me = (await call('/api/me', null, n.token, 'GET')).j; ok(r.status === 200 && me.credits === 19, 'top-up pack works without a subscription (' + me.credits + ' left)');

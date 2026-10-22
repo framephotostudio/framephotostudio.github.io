@@ -208,7 +208,7 @@
 
   // ---------- walkthrough preview (facecouture.app/app-preview): shows every screen without any backend or store ----------
   function previewMode() {
-    applyConfig({ pro: { enabled: false, trialDays: 14, priceMonth: '$7.99', priceYear: '$49.99', entitlement: 'pro' }, looks: { hidden: [] }, seasons: {}, tools: { glam: true, enhance: true, background: true, headshot: true, tryon: true, vanish: true, blur: true, travel: true }, flags: { showQuiz: true } });
+    applyConfig({ pro: { enabled: false, trialDays: 7, priceMonth: '$8.99', priceYear: '$36.99', entitlement: 'pro' }, looks: { hidden: [] }, seasons: {}, tools: { glam: true, enhance: true, background: true, headshot: true, tryon: true, vanish: true, blur: true, travel: true }, flags: { showQuiz: true } });
     state.me = { tier: 'free', left: { today: 2, month: 10 }, allowance: { perDay: 2, perMonth: 10 } };
     extendAI(); decorateProSheet();
     document.querySelectorAll('[data-tab="ai"]').forEach(function (b) { b.hidden = false; });
