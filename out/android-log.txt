@@ -1,0 +1,68 @@
+10-22 05:53:21.524  3118  3118 D nativeloader: InitDefaultPublicLibraries for_preload=1: libandroid.so:libaaudio.so:libamidi.so:libbinder_ndk.so:libc.so:libcamera2ndk.so:libdl.so:libEGL.so:libGLESv1_CM.so:libGLESv2.so:libGLESv3.so:libicu.so:libicui18n.so:libicuuc.so:libjnigraphics.so:liblog.so:libmediandk.so:libm.so:libnativehelper.so:libnativewindow.so:libOpenMAXAL.so:libOpenSLES.so:libRS.so:libstdc++.so:libsync.so:libvulkan.so:libwebviewchromium_plat_support.so:libz.so
+10-22 05:53:24.667   523   554 I ActivityManager: Start proc 3439:com.google.android.webview:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:0/u0ai9000 for  {app.facecouture.studio/org.chromium.content.app.SandboxedProcessService0:0}
+10-22 05:53:25.080  3439  3439 I cr_WebViewApkApp: Launched version=113.0.5672.136 minSdkVersion=29 isBundle=false processName=com.google.android.webview:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:0
+10-22 05:53:25.785   523   554 I ActivityManager: Start proc 3565:com.google.android.webview:webview_apk/u0a134 for service {com.google.android.webview/org.chromium.android_webview.nonembedded.AwComponentUpdateService}
+10-22 05:53:26.865  3219  3219 E Capacitor/Console: File:  - Line 6 - Msg: Error injecting safe area CSS: TypeError: Cannot read properties of null (reading 'style')
+10-22 05:53:26.865  3219  3219 E Capacitor/Console: File:  - Line 6 - Msg: Error injecting safe area CSS: TypeError: Cannot read properties of null (reading 'style')
+10-22 05:53:27.109  3219  3219 I Capacitor/Console: File:  - Line 349 - Msg: [object Object]
+10-22 05:53:27.113  3219  3219 I Capacitor/Console: File:  - Line 349 - Msg: [object Object]
+10-22 05:53:27.172  3219  3219 I Capacitor/Console: File:  - Line 333 - Msg: undefined
+10-22 05:53:27.173  3219  3219 I Capacitor/Console: File:  - Line 333 - Msg: undefined
+10-22 05:53:27.303  3565  3654 W cr_AWNetworkFetcherTask: 	at org.chromium.android_webview.nonembedded.NetworkFetcherTask.download(chromium-TrichromeWebViewGoogle6432.apk-stable-567263637:48)
+10-22 05:53:30.384  3219  3219 I Capacitor/Console: File:  - Line 349 - Msg: [object Object]
+10-22 05:53:30.916  3219  3219 I Capacitor/Console: File:  - Line 333 - Msg: undefined
+10-22 05:53:49.391  3219  3219 I Capacitor/Console: File: https://localhost/plan-demo.js - Line 37 - Msg: [plandemo] step error Cannot read properties of undefined (reading 'refresh')
+10-22 05:53:51.189  3219  3219 I Capacitor/Console: File: https://localhost/plan-demo.js - Line 37 - Msg: [plandemo] photo loaded
+10-22 05:53:52.214  3219  3219 I Capacitor/Console: File:  - Line 349 - Msg: [object Object]
+10-22 05:53:52.242  3219  3219 I Capacitor/Console: File:  - Line 349 - Msg: [object Object]
+10-22 05:53:57.040  4396  4887 I cr_CronetUrlRequestContext: destroyNativeStreamLocked org.chromium.net.impl.CronetBidirectionalStream@2035e8
+10-22 05:53:57.907  3219  3219 W Capacitor/Console: File: https://localhost/vendor/mediapipe/wasm/vision_wasm_internal.js - Line 10 - Msg: W1022 05:53:57.904000 1922656 face_landmarker_graph.cc:180] Sets FaceBlendshapesGraph acceleration to xnnpack by default.
+10-22 05:53:58.243  3219  3219 I Capacitor/Console: File: https://localhost/vendor/mediapipe/wasm/vision_wasm_internal.js - Line 10 - Msg: I1022 05:53:58.241000 1922656 gl_context.cc:386] GL version: 3.0 (OpenGL ES 3.0 (WebGL 2.0 (OpenGL ES 3.0 Chromium))), renderer: WebKit WebGL
+10-22 05:53:58.244  3219  3219 W Capacitor/Console: File: https://localhost/vendor/mediapipe/wasm/vision_wasm_internal.js - Line 10 - Msg: W1022 05:53:58.243000 1922656 gl_context.cc:1072] OpenGL error checking is disabled
+10-22 05:53:58.253  3219  3219 I Capacitor/Console: File: https://localhost/vendor/mediapipe/wasm/vision_wasm_internal.js - Line 10 - Msg: Graph successfully started running.
+10-22 05:53:58.415  3219  3219 I Capacitor/Console: File: https://localhost/vendor/mediapipe/wasm/vision_wasm_internal.js - Line 10 - Msg: I1022 05:53:58.415000 1922656 gl_context.cc:386] GL version: 3.0 (OpenGL ES 3.0 (WebGL 2.0 (OpenGL ES 3.0 Chromium))), renderer: WebKit WebGL
+10-22 05:53:58.417  3219  3219 W Capacitor/Console: File: https://localhost/vendor/mediapipe/wasm/vision_wasm_internal.js - Line 10 - Msg: W1022 05:53:58.417000 1922656 gl_context.cc:1072] OpenGL error checking is disabled
+10-22 05:53:58.418  3219  3219 I Capacitor/Console: File: https://localhost/vendor/mediapipe/wasm/vision_wasm_internal.js - Line 10 - Msg: Graph successfully started running.
+10-22 05:53:58.537  3219  3219 E Capacitor/Console: File: https://localhost/vendor/mediapipe/wasm/vision_wasm_internal.js - Line 10 - Msg: INFO: Created TensorFlow Lite XNNPACK delegate for CPU.
+10-22 05:53:58.605  3219  3219 W Capacitor/Console: File: https://localhost/vendor/mediapipe/wasm/vision_wasm_internal.js - Line 10 - Msg: W1022 05:53:58.599000 1922656 inference_feedback_manager.cc:121] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+10-22 05:53:58.637  3219  3219 I Capacitor/Console: File: https://localhost/vendor/mediapipe/wasm/vision_wasm_internal.js - Line 10 - Msg: I1022 05:53:58.636000 1922656 segmentation_postprocessor_gl.cc:388] NONE activation function chosen on GPU
+10-22 05:54:04.594  3219  3219 I Capacitor/Console: File: https://localhost/plan-demo.js - Line 37 - Msg: [plandemo] B paywall yearly
+10-22 05:54:20.960  3219  3219 I Capacitor/Console: File:  - Line 349 - Msg: [object Object]
+10-22 05:54:21.093  3219  3219 I Capacitor/Console: File: https://localhost/plan-demo.js - Line 37 - Msg: [plandemo] C paywall monthly
+10-22 05:54:21.710  3219  3219 I Capacitor/Console: File:  - Line 333 - Msg: undefined
+10-22 05:54:33.215  3219  3219 I Capacitor/Console: File: https://localhost/plan-demo.js - Line 37 - Msg: [plandemo] D top-ups
+10-22 05:54:47.719  3219  3219 I Capacitor/Console: File: https://localhost/plan-demo.js - Line 37 - Msg: [plandemo] E busy
+10-22 05:54:47.878  3219  3219 E Capacitor/Console: File: https://localhost/vendor/mediapipe/wasm/vision_wasm_internal.js - Line 10 - Msg: INFO: Created TensorFlow Lite XNNPACK delegate for CPU.
+10-22 05:54:47.898  3219  3219 W Capacitor/Console: File: https://localhost/vendor/mediapipe/wasm/vision_wasm_internal.js - Line 10 - Msg: W1022 05:54:47.891000 1922656 inference_feedback_manager.cc:121] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+10-22 05:54:47.954  3219  3219 W Capacitor/Console: File: https://localhost/vendor/mediapipe/wasm/vision_wasm_internal.js - Line 10 - Msg: W1022 05:54:47.952000 1922656 inference_feedback_manager.cc:121] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+10-22 05:55:01.131   523   537 W ActivityManager: Scheduling restart of crashed service com.android.chrome/org.chromium.chrome.browser.customtabs.CustomTabsConnectionService in 1000ms for connection
+10-22 05:55:02.169   523   554 I ActivityManager: Start proc 5987:com.android.chrome/u0a150 for service {com.android.chrome/org.chromium.chrome.browser.customtabs.CustomTabsConnectionService}
+10-22 05:55:02.737   523  2185 W ActivityManager: Scheduling restart of crashed service com.android.chrome/org.chromium.chrome.browser.customtabs.CustomTabsConnectionService in 19394ms for connection
+10-22 05:55:09.830  3219  3219 I Capacitor/Console: File: https://localhost/plan-demo.js - Line 37 - Msg: [plandemo] F on-device applied
+10-22 05:55:09.860  3219  3219 W Capacitor/Console: File: https://localhost/ - Line 3051 - Msg: Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently
+10-22 05:55:22.138   523   554 I ActivityManager: Start proc 6390:com.android.chrome/u0a150 for service {com.android.chrome/org.chromium.chrome.browser.customtabs.CustomTabsConnectionService}
+10-22 05:55:31.936  6322  6352 D StrictMode: 	at org.chromium.net.CronetEngine$Builder.getEnabledCronetProviders(PG:5)
+10-22 05:55:31.936  6322  6352 D StrictMode: 	at org.chromium.net.CronetEngine$Builder.createBuilderDelegate(PG:2)
+10-22 05:55:31.936  6322  6352 D StrictMode: 	at org.chromium.net.CronetEngine$Builder.<init>(PG:1)
+10-22 05:55:31.936  6322  6352 D StrictMode: 	at org.chromium.net.ExperimentalCronetEngine$Builder.<init>(PG:1)
+10-22 05:55:31.939  6322  6352 D StrictMode: 	at org.chromium.net.CronetEngine$Builder.getEnabledCronetProviders(PG:5)
+10-22 05:55:31.939  6322  6352 D StrictMode: 	at org.chromium.net.CronetEngine$Builder.createBuilderDelegate(PG:2)
+10-22 05:55:31.939  6322  6352 D StrictMode: 	at org.chromium.net.CronetEngine$Builder.<init>(PG:1)
+10-22 05:55:31.939  6322  6352 D StrictMode: 	at org.chromium.net.ExperimentalCronetEngine$Builder.<init>(PG:1)
+10-22 05:55:31.939  6322  6352 D StrictMode: 	at org.chromium.net.CronetEngine$Builder.getEnabledCronetProviders(PG:5)
+10-22 05:55:31.939  6322  6352 D StrictMode: 	at org.chromium.net.CronetEngine$Builder.createBuilderDelegate(PG:2)
+10-22 05:55:31.939  6322  6352 D StrictMode: 	at org.chromium.net.CronetEngine$Builder.<init>(PG:1)
+10-22 05:55:31.939  6322  6352 D StrictMode: 	at org.chromium.net.ExperimentalCronetEngine$Builder.<init>(PG:1)
+10-22 05:55:31.941  6322  6352 D StrictMode: 	at org.chromium.net.CronetEngine$Builder.getEnabledCronetProviders(PG:5)
+10-22 05:55:31.941  6322  6352 D StrictMode: 	at org.chromium.net.CronetEngine$Builder.createBuilderDelegate(PG:2)
+10-22 05:55:31.941  6322  6352 D StrictMode: 	at org.chromium.net.CronetEngine$Builder.<init>(PG:1)
+10-22 05:55:31.941  6322  6352 D StrictMode: 	at org.chromium.net.ExperimentalCronetEngine$Builder.<init>(PG:1)
+10-22 05:55:31.941  6322  6352 D StrictMode: 	at org.chromium.net.CronetEngine$Builder.getEnabledCronetProviders(PG:5)
+10-22 05:55:31.941  6322  6352 D StrictMode: 	at org.chromium.net.CronetEngine$Builder.createBuilderDelegate(PG:2)
+10-22 05:55:31.941  6322  6352 D StrictMode: 	at org.chromium.net.CronetEngine$Builder.<init>(PG:1)
+10-22 05:55:31.941  6322  6352 D StrictMode: 	at org.chromium.net.ExperimentalCronetEngine$Builder.<init>(PG:1)
+10-22 05:55:31.941  6322  6352 D StrictMode: 	at org.chromium.net.CronetEngine$Builder.getEnabledCronetProviders(PG:5)
+10-22 05:55:31.941  6322  6352 D StrictMode: 	at org.chromium.net.CronetEngine$Builder.createBuilderDelegate(PG:2)
+10-22 05:55:31.941  6322  6352 D StrictMode: 	at org.chromium.net.CronetEngine$Builder.<init>(PG:1)
+10-22 05:55:31.941  6322  6352 D StrictMode: 	at org.chromium.net.ExperimentalCronetEngine$Builder.<init>(PG:1)
+10-22 05:55:32.354  6322  6462 I cr_CronetUrlRequestContext: destroyNativeStreamLocked org.chromium.net.impl.CronetBidirectionalStream@6112680
