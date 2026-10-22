@@ -4,17 +4,25 @@ export const DEFAULT_CONFIG = {
   updatedAt: 0,
   // Pro switch: while false everyone has the free-launch experience (no paywall). Turning it on never charges anyone;
   // it only makes the already-reviewed purchase flow visible.
-  pro: { enabled: false, freeLaunchUntil: '', trialDays: 14, priceMonth: '$7.99', priceYear: '$49.99', entitlement: 'pro' },
+  // ONE SWITCH: paywallFrom = the date the paywall turns on (YYYY-MM-DD, e.g. 30 days after launch).
+  // Before that date (or while it is empty) the app is completely free: no paywall, everything unlocked.
+  pro: { paywallFrom: '', trialDays: 7, priceMonth: '$6.99', priceYear: '$34.99', entitlement: 'pro',
+         products: { yearly: 'fc_pro_yearly', monthly: 'fc_pro_monthly' },
+         topups: { fc_ai_20: { looks: 20, price: '$3.99' }, fc_ai_50: { looks: 50, price: '$7.99', badge: 'Best value' } } },
   // AI allowances per user, counted only on SUCCESSFUL generations.
+  // launch = free launch month (everyone), trial = 7-day trial (total), paid = subscribers (per calendar month),
+  // free = app users without a plan after the launch month (on-device looks stay unlimited), web = the website.
+  // Top-up packs add AI looks on top of any plan and never expire.
   allowances: {
-    free:  { perDay: 2,  perMonth: 10 },
-    trial: { perDay: 5,  perMonth: 40 },
-    paid:  { perDay: 20, perMonth: 200 },
+    launch: { perDay: 2, perMonth: 10 },
+    trial: { total: 3 },
+    paid:  { perDay: 20, perMonth: 20 },
+    free:  { perDay: 0, perMonth: 0 },
     promo: { perDay: 10, perMonth: 60 },
     anonymousWeb: { perDay: 1, perMonth: 3 }
   },
   // Owner spending ceiling for the whole service. AI stops automatically at the limit.
-  spend: { monthlyCeilingUSD: 20, alertAtPercent: 80, blockedMessage: 'AI looks are resting for the moment. Everything else works - try again later.' },
+  spend: { monthlyCeilingUSD: 20, alertAtPercent: 80, blockedMessage: 'AI looks are busy right now, try the on-device version.' },
   // AI engine: 'fast' (about 4 cents, ~1.3K pixels) or 'pro' (about 13 cents, sharp 2K output)
   ai: { engine: 'nb21' },
   // Which AI tools are switched on.
@@ -64,8 +72,8 @@ export async function listConfigVersions(env) {
 
 // What the apps may see (no secrets, no admin-only notes)
 export function publicConfig(c) {
-  return { pro: c.pro, tools: c.tools, seasons: c.seasons, looks: { hidden: c.looks.hidden }, flags: c.flags,
-           allowances: { free: c.allowances.free, trial: c.allowances.trial, paid: c.allowances.paid } };
+  return { pro: Object.assign({}, c.pro, { enabled: paywallOn(c) }), tools: c.tools, seasons: c.seasons, looks: { hidden: c.looks.hidden }, flags: c.flags,
+           allowances: { launch: c.allowances.launch, free: c.allowances.free, trial: c.allowances.trial, paid: c.allowances.paid } };
 }
 
 export function deepMerge(a, b) {
@@ -76,4 +84,10 @@ export function deepMerge(a, b) {
     return out;
   }
   return b === undefined ? a : b;
+}
+
+// paywall is on from pro.paywallFrom (YYYY-MM-DD, inclusive). Empty = free launch (no paywall).
+export function paywallOn(c, now = new Date()) {
+  const f = (c.pro && c.pro.paywallFrom || '').trim();
+  return !!f && /^\d{4}-\d{2}-\d{2}$/.test(f) && now.toISOString().slice(0, 10) >= f;
 }

@@ -1,7 +1,7 @@
 // Face Couture API - one secure backend for the website, iPhone and Android apps.
 // Secret keys never leave this server. Photos are sent to the AI provider only for the edit the user asked for,
 // are never stored here, and are never used for training. No photos or face data are written to logs.
-import { getConfig, saveConfig, rollbackConfig, listConfigVersions, publicConfig } from './config.js';
+import { getConfig, saveConfig, rollbackConfig, listConfigVersions, publicConfig, paywallOn } from './config.js';
 import { buildPrompt, simplePrompt, TRAVEL_KEYS } from './prompts.js';
 import { ADMIN_HTML } from './admin-page.js';
 
@@ -38,6 +38,7 @@ async function route(req, env, ctx, url) {
   if (p === '/api/ai' && req.method === 'POST') return generate(req, env, ctx, null);
   if (p === '/api/promo/redeem' && req.method === 'POST') return redeemPromo(req, env);
   if (p === '/api/me') return me(req, env);
+  if (p === '/api/sync' && req.method === 'POST') return syncPurchases(req, env);
   if (p === '/api/event' && req.method === 'POST') return event(req, env, ctx);
   if (p === '/api/report' && req.method === 'POST') return report(req, env);
   if (p === '/api/delete-my-data' && req.method === 'POST') return deleteMyData(req, env);
@@ -100,25 +101,43 @@ async function rateLimit(env, key, max, windowSec) {
 async function spentThisMonth(env) { return +(await env.KV.get('spend:' + month())) || 0; }
 
 // ---------- tier & allowances ----------
+// Counted on this server only, so it can't be bypassed on the phone.
 function tierOf(dev, cfg) {
   const now = Date.now();
+  if (dev.trialUntil && dev.trialUntil > now && dev.proUntil && dev.proUntil <= dev.trialUntil) return 'trial';
   if (dev.proUntil && dev.proUntil > now) return 'paid';
   if (dev.trialUntil && dev.trialUntil > now) return 'trial';
   if (dev.promoUntil && dev.promoUntil > now) return 'promo';
-  if (!cfg.pro.enabled) return 'free';          // free launch month: everyone gets the free allowance
-  return dev.platform === 'web' ? 'anonymousWeb' : 'free';
+  if (dev.platform === 'web') return 'anonymousWeb';
+  if (!paywallOn(cfg)) return 'launch';          // free launch month: everything unlocked
+  return 'free';
 }
 async function allowanceCheck(env, dev, cfg) {
   const tier = tierOf(dev, cfg);
   const a = cfg.allowances[tier] || cfg.allowances.free;
-  const d = +(await env.KV.get(`use:${dev.id}:${day()}`)) || 0;
-  const m = +(await env.KV.get(`use:${dev.id}:${month()}`)) || 0;
-  return { tier, ok: d < a.perDay && m < a.perMonth, left: { today: Math.max(0, a.perDay - d), month: Math.max(0, a.perMonth - m) }, allowance: a };
+  let planLeft, today, monthLeft;
+  if (tier === 'trial') {
+    const used = +(await env.KV.get(`use:${dev.id}:trial`)) || 0;
+    planLeft = today = monthLeft = Math.max(0, (a.total || 0) - used);
+  } else {
+    const d = +(await env.KV.get(`use:${dev.id}:${day()}`)) || 0;
+    const m = +(await env.KV.get(`use:${dev.id}:${month()}`)) || 0;
+    today = Math.max(0, (a.perDay ?? 0) - d); monthLeft = Math.max(0, (a.perMonth ?? 0) - m);
+    planLeft = Math.min(today, monthLeft);
+  }
+  const credits = Math.max(0, +(dev.credits || 0));
+  return { tier, ok: planLeft > 0 || credits > 0, planLeft, credits,
+           left: { today: planLeft + credits, month: monthLeft + credits, plan: planLeft, credits, total: planLeft + credits }, allowance: a };
 }
+async function saveDev(env, dev) { const { id, ...rec } = dev; await env.KV.put('dev:' + id, JSON.stringify(rec), { expirationTtl: 60 * 86400 * 6 }); }
 async function me(req, env) {
   const dev = await auth(req, env); if (!dev) return err('Sign in to the app again (device token missing).', 401);
+  return meFor(env, dev);
+}
+async function meFor(env, dev) {
   const cfg = await getConfig(env); const a = await allowanceCheck(env, dev, cfg);
-  return json({ tier: a.tier, left: a.left, allowance: a.allowance, pro: cfg.pro, proUntil: dev.proUntil || 0, trialUntil: dev.trialUntil || 0, promoUntil: dev.promoUntil || 0 });
+  return json({ tier: a.tier, left: a.left, credits: a.credits, allowance: a.allowance, pro: publicConfig(cfg).pro, paywall: paywallOn(cfg),
+                proUntil: dev.proUntil || 0, trialUntil: dev.trialUntil || 0, promoUntil: dev.promoUntil || 0 });
 }
 
 // ---------- the AI call ----------
@@ -150,11 +169,17 @@ async function generate(req, env, ctx, forcedTask) {
   const quality = b.quality === 'high' || tierOf(dev, cfg) === 'paid' ? 'high' : 'medium';
   const cost = quality === 'high' ? costHigh : costMed;
   const spent = await spentThisMonth(env);
-  if (spent + cost > cfg.spend.monthlyCeilingUSD) { await bump(env, 'stat:blocked_ceiling:' + month()); return err(cfg.spend.blockedMessage, 503, { code: 'ceiling' }); }
+  if (spent + cost > cfg.spend.monthlyCeilingUSD) { await bump(env, 'stat:blocked_ceiling:' + month()); return err(cfg.spend.blockedMessage, 503, { code: 'ceiling', fallback: 'on_device' }); }
   const al = await allowanceCheck(env, dev, cfg);
   const retryKey = 'retry:' + dev.id; let isRetry = false;
   if (b.retry === true) { const left = +(await env.KV.get(retryKey)) || 0; if (left > 0) { isRetry = true; await env.KV.put(retryKey, String(left - 1), { expirationTtl: 600 }); } }
-  if (!ownerTest && !isRetry && !al.ok) return err(al.left.today === 0 && al.left.month > 0 ? `You've used today's ${al.allowance.perDay} AI looks. More tomorrow.` : `You've used this month's ${al.allowance.perMonth} AI looks.`, 402, { code: 'allowance', tier: al.tier, left: al.left });
+  if (!ownerTest && !isRetry && !al.ok) {
+    const msg = al.tier === 'free' ? 'AI looks are part of Face Couture Pro.'
+      : al.tier === 'trial' ? `You've used the ${al.allowance.total} AI looks in your free trial.`
+      : al.tier === 'paid' ? `You've used this month's ${al.allowance.perMonth} AI looks.`
+      : al.left.month > 0 ? 'You\'ve used today\'s AI looks. More tomorrow.' : 'You\'ve used this month\'s AI looks.';
+    return err(msg, 402, { code: al.tier === 'free' ? 'subscribe' : 'allowance', tier: al.tier, left: al.left });
+  }
 
   // build the provider request (Google Gemini image model; OpenAI kept as a fallback provider)
   const prompt = buildPrompt(task, { ...b, intensity: b.intensity, lip: b.lip, eyes: b.eyes, category: b.category });
@@ -218,12 +243,20 @@ async function generate(req, env, ctx, forcedTask) {
   // success: only now count usage and spend
   const actualCost = env.GEMINI_API_KEY ? engCost : estimateCost(usage, cost);
   if (!isRetry) await env.KV.put(retryKey, '2', { expirationTtl: 600 });
+  // count the look: the plan first, then top-up credits (owner test runs are never counted)
+  let usedCredit = false;
+  if (!isRetry && !ownerTest) {
+    if (al.planLeft > 0) {
+      if (al.tier === 'trial') await bump(env, `use:${dev.id}:trial`, 1, 60 * 86400);
+      else { await bump(env, `use:${dev.id}:${day()}`, 1, 2 * 86400); await bump(env, `use:${dev.id}:${month()}`, 1, 40 * 86400); }
+    } else if (al.credits > 0) { const fresh = await auth(req, env); fresh.credits = Math.max(0, (+fresh.credits || 0) - 1); await saveDev(env, fresh); usedCredit = true; }
+  }
   ctx.waitUntil(Promise.all([
-    isRetry ? Promise.resolve() : bump(env, `use:${dev.id}:${day()}`, 1, 2 * 86400), isRetry ? Promise.resolve() : bump(env, `use:${dev.id}:${month()}`, 1, 40 * 86400), isRetry ? bump(env, 'stat:retry:' + month()) : Promise.resolve(),
+    isRetry ? bump(env, 'stat:retry:' + month()) : Promise.resolve(), usedCredit ? bump(env, 'stat:credit_used:' + month()) : Promise.resolve(),
     bumpFloat(env, 'spend:' + month(), actualCost), bump(env, 'stat:gen:' + task + ':' + month()), bump(env, 'stat:gen_total:' + month()),
     bump(env, 'stat:gen_tier:' + al.tier + ':' + month()), bump(env, 'stat:latency_ms:' + month(), Date.now() - started), spendAlert(env)
   ]));
-  return json({ image: out, task, quality, engine: engKey, model: engModel, usage: meta, ms: Date.now() - started, left: isRetry ? al.left : { today: al.left.today - 1, month: al.left.month - 1 } });
+  return json({ image: out, task, quality, engine: engKey, model: engModel, usage: meta, ms: Date.now() - started, left: (isRetry || ownerTest) ? al.left : { today: Math.max(0, al.left.today - 1), month: Math.max(0, al.left.month - 1), plan: Math.max(0, al.planLeft - (usedCredit ? 0 : 1)), credits: al.credits - (usedCredit ? 1 : 0), total: Math.max(0, al.left.total - 1) } });
 }
 function inlinePart(u) { const i = u.indexOf(','); return { inline_data: { mime_type: u.slice(5, u.indexOf(';')), data: u.slice(i + 1) } }; }
 function pickAspect(w, h) { const r = (+w || 1) / (+h || 1); const opts = [['1:1', 1], ['4:5', .8], ['3:4', .75], ['2:3', 2 / 3], ['9:16', 9 / 16], ['5:4', 1.25], ['4:3', 4 / 3], ['3:2', 1.5], ['16:9', 16 / 9]]; return opts.reduce((a, o) => Math.abs(Math.log(o[1] / r)) < Math.abs(Math.log(a[1] / r)) ? o : a)[0]; }
@@ -269,27 +302,65 @@ async function redeemPromo(req, env) {
   return json({ ok: true, kind: pr.kind || 'ai', until });
 }
 
-// ---------- subscriptions (RevenueCat webhook keeps Pro in sync across iPhone, Android and web) ----------
+// ---------- subscriptions & top-ups (RevenueCat keeps iPhone, Android and this server in sync) ----------
+// The app logs in to RevenueCat with its device id, so app_user_id = our device id.
+async function addCredits(env, dev, productId, txId, cfg) {
+  const pack = (cfg.pro.topups || {})[productId]; if (!pack || !txId) return false;
+  if (await env.KV.get('tx:' + txId)) return false;               // each purchase is counted once
+  await env.KV.put('tx:' + txId, dev.id, { expirationTtl: 3 * 365 * 86400 });
+  dev.credits = (+dev.credits || 0) + pack.looks; await saveDev(env, dev);
+  await bump(env, 'stat:topups:' + month()); return true;
+}
 async function revenuecat(req, env) {
   if (env.REVENUECAT_WEBHOOK_SECRET && (req.headers.get('authorization') || '') !== 'Bearer ' + env.REVENUECAT_WEBHOOK_SECRET) return err('Unauthorized', 401);
   const { event: e } = await req.json().catch(() => ({}));
   if (!e) return err('Bad webhook');
-  const devId = e.app_user_id; const rec = await env.KV.get('dev:' + devId, 'json');
+  const cfg = await getConfig(env);
+  const ids = [e.app_user_id, ...(e.aliases || []), ...(e.transferred_to || [])].filter(Boolean);
+  const devId = ids.find(i => /^[0-9a-f-]{36}$/i.test(i)) || e.app_user_id;
+  const rec = await env.KV.get('dev:' + devId, 'json');
+  const isTopup = !!(cfg.pro.topups || {})[e.product_id];
   if (rec) {
-    const active = ['INITIAL_PURCHASE', 'RENEWAL', 'UNCANCELLATION', 'NON_RENEWING_PURCHASE', 'PRODUCT_CHANGE', 'SUBSCRIPTION_EXTENDED'].includes(e.type);
-    const gone = ['EXPIRATION', 'BILLING_ISSUE', 'REFUND'].includes(e.type) || (e.type === 'CANCELLATION' && !e.expiration_at_ms);
-    if (active) { rec.proUntil = e.expiration_at_ms || (Date.now() + 35 * 86400e3); if (e.period_type === 'TRIAL') rec.trialUntil = rec.proUntil; }
-    if (gone) { rec.proUntil = Math.min(rec.proUntil || 0, e.expiration_at_ms || Date.now()); }
-    rec.store = e.store; await env.KV.put('dev:' + devId, JSON.stringify(rec), { expirationTtl: 60 * 86400 * 6 });
+    const dev = { id: devId, ...rec };
+    if (isTopup && (e.type === 'NON_RENEWING_PURCHASE' || e.type === 'INITIAL_PURCHASE')) await addCredits(env, dev, e.product_id, e.transaction_id || e.id, cfg);
+    else if (!isTopup) {
+      const active = ['INITIAL_PURCHASE', 'RENEWAL', 'UNCANCELLATION', 'PRODUCT_CHANGE', 'SUBSCRIPTION_EXTENDED', 'TRANSFER'].includes(e.type);
+      const gone = ['EXPIRATION', 'REFUND'].includes(e.type);
+      if (active && e.expiration_at_ms) { dev.proUntil = e.expiration_at_ms; dev.trialUntil = e.period_type === 'TRIAL' ? e.expiration_at_ms : Math.min(dev.trialUntil || 0, Date.now()); }
+      if (gone) { dev.proUntil = Math.min(dev.proUntil || 0, e.expiration_at_ms || Date.now()); dev.trialUntil = Math.min(dev.trialUntil || 0, Date.now()); }
+      dev.store = e.store; await saveDev(env, dev);
+    }
   }
   const m = month();
   if (e.type === 'INITIAL_PURCHASE' && e.period_type === 'TRIAL') await bump(env, 'stat:trials:' + m);
-  if (e.type === 'INITIAL_PURCHASE' && e.period_type !== 'TRIAL') await bump(env, 'stat:purchases:' + m);
+  if (e.type === 'INITIAL_PURCHASE' && e.period_type !== 'TRIAL' && !isTopup) await bump(env, 'stat:purchases:' + m);
   if (e.type === 'RENEWAL') await bump(env, 'stat:renewals:' + m);
   if (e.type === 'CANCELLATION') await bump(env, 'stat:cancellations:' + m);
   if (e.type === 'REFUND') await bump(env, 'stat:refunds:' + m);
   if (e.price_in_purchased_currency) await bumpFloat(env, 'rev:gross:' + m, +e.price_in_purchased_currency * (e.type === 'REFUND' ? -1 : 1));
   return json({ ok: true });
+}
+// The app calls this right after a purchase or restore, so the plan and top-ups show up at once (no waiting for the webhook).
+async function syncPurchases(req, env) {
+  const dev = await auth(req, env); if (!dev) return err('Reopen the app and try again.', 401);
+  if (!(await rateLimit(env, 'sync:' + dev.id, 20, 3600))) return meFor(env, dev);
+  const cfg = await getConfig(env);
+  if (env.REVENUECAT_API_KEY) {
+    const r = await fetch('https://api.revenuecat.com/v1/subscribers/' + encodeURIComponent(dev.id), { headers: { authorization: 'Bearer ' + env.REVENUECAT_API_KEY } });
+    if (r.ok) {
+      const sub = (await r.json()).subscriber || {};
+      const ent = (sub.entitlements || {})[cfg.pro.entitlement || 'pro'];
+      const exp = ent && ent.expires_date ? Date.parse(ent.expires_date) : 0;
+      if (exp) {
+        dev.proUntil = exp;
+        const s = (sub.subscriptions || {})[ent.product_identifier] || {};
+        dev.trialUntil = s.period_type === 'trial' ? exp : Math.min(dev.trialUntil || 0, Date.now());
+      }
+      await saveDev(env, dev);
+      for (const [pid, list] of Object.entries(sub.non_subscriptions || {})) for (const t of list || []) await addCredits(env, dev, pid, t.store_transaction_id || t.id, cfg);
+    }
+  }
+  return meFor(env, dev);
 }
 
 // ---------- privacy-safe analytics events (counts only; no photos, no face data, no names) ----------
@@ -324,7 +395,7 @@ async function deleteMyData(req, env) {
 async function status(env) {
   const cfg = await getConfig(env); const spent = await spentThisMonth(env);
   const ai_ready = !!(env.GEMINI_API_KEY || env.OPENAI_API_KEY) && spent < cfg.spend.monthlyCeilingUSD;
-  return json({ ai_ready, ok: true, pro: cfg.pro.enabled, tools: cfg.tools });
+  return json({ ai_ready, ok: true, pro: paywallOn(cfg), tools: cfg.tools });
 }
 
 // ---------- owner admin ----------
@@ -370,7 +441,7 @@ async function overview(env, cfg, m) {
   const stats = {};
   for (const k of ['gen_total', 'fail_provider', 'fail_timeout', 'blocked_ceiling', 'trials', 'purchases', 'renewals', 'cancellations', 'refunds', 'latency_ms']) stats[k] = await g(`stat:${k}:${m}`);
   const gens = {}; for (const t of TASKS) gens[t] = await g(`stat:gen:${t}:${m}`);
-  const tiers = {}; for (const t of ['free', 'trial', 'paid', 'promo', 'anonymousWeb']) tiers[t] = await g(`stat:gen_tier:${t}:${m}`);
+  const tiers = {}; for (const t of ['launch', 'free', 'trial', 'paid', 'promo', 'anonymousWeb']) tiers[t] = await g(`stat:gen_tier:${t}:${m}`);
   const events = {}; for (const e of EVENTS) events[e] = await g(`ev:${e}:${m}`);
   const installs = {}; for (const p of ['ios', 'android', 'web']) installs[p] = await g(`stat:installs:${p}:${m}`);
   const looks = (await env.KV.list({ prefix: 'look:', limit: 1000 })).keys.filter(k => k.name.endsWith(':' + m)).map(k => k.name.split(':')[1]);
@@ -383,7 +454,7 @@ async function overview(env, cfg, m) {
     month: m, spend: { usd: +spend.toFixed(2), ceiling: cfg.spend.monthlyCeilingUSD, percent: cfg.spend.monthlyCeilingUSD ? +(spend / cfg.spend.monthlyCeilingUSD * 100).toFixed(1) : 0, perGenAvg: stats.gen_total ? +(spend / stats.gen_total).toFixed(3) : 0 },
     users: { registeredDevices: await countPrefix('dev:'), dau: await countPrefix('dau:' + day()), mau: await countPrefix('mau:' + m), installs },
     ai: { generations: stats.gen_total, byTool: gens, byTier: tiers, failures: { provider: stats.fail_provider, timeout: stats.fail_timeout }, blockedByCeiling: stats.blocked_ceiling, avgSeconds: stats.gen_total ? +(stats.latency_ms / stats.gen_total / 1000).toFixed(1) : 0 },
-    subscriptions: { trials: stats.trials, purchases: stats.purchases, renewals: stats.renewals, cancellations: stats.cancellations, refunds: stats.refunds },
+    subscriptions: { topups: await g('stat:topups:' + m), creditsUsed: await g('stat:credit_used:' + m), trials: stats.trials, purchases: stats.purchases, renewals: stats.renewals, cancellations: stats.cancellations, refunds: stats.refunds },
     revenue: { gross: +gross.toFixed(2), storeFeeEstimate: +(gross * 0.15).toFixed(2), netEstimate: +(gross * 0.85 - spend).toFixed(2), note: 'Store fee estimated at 15% (Small Business Program). Exact figures are in App Store Connect and Play Console.' },
     events, topLooks: topLooks.slice(0, 25), campaigns, countries, alerts: { provider: await env.KV.get('alert:provider') },
     costProjection: projection(cfg, spend, stats.gen_total)
