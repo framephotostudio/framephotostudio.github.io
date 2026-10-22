@@ -20,3 +20,4 @@ jobs:
           curl -s -H "$H" "$A/$ID/values/spend:$(date -u +%Y-%m)" > /tmp/out/spend-month.txt || true
           git config user.name face-couture-ci; git config user.email hello@facecouture.app
           git checkout --orphan ci-err; git rm -rfq --cached .; rm -rf out; mkdir out; cp /tmp/out/* out/; git add -f out; git commit -qm err; git push -qf origin HEAD:ci-err
+# check 0004
