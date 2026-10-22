@@ -40,7 +40,7 @@ jobs:
           xcrun simctl boot "$DEV" || true; xcrun simctl bootstatus "$DEV" -b
           xcrun simctl install "$DEV" ios/App/build/Build/Products/Debug-iphonesimulator/App.app
           xcrun simctl launch "$DEV" app.facecouture.studio
-          mkdir -p shots; for i in $(seq -w 1 26); do sleep 5; xcrun simctl io "$DEV" screenshot shots/ios-$i.png >/dev/null 2>&1; done
+          mkdir -p shots; for i in $(seq -w 1 36); do sleep 5; xcrun simctl io "$DEV" screenshot shots/ios-$i.png >/dev/null 2>&1; done
           xcrun simctl spawn "$DEV" log show --last 4m --style compact --predicate 'process == "App"' 2>/dev/null | grep -i 'plandemo\|error' | tail -80 > shots/ios-log.txt || true
       - name: Save screenshots to the ci-plan-ios branch (test pictures only)
         if: always()
@@ -50,6 +50,7 @@ jobs:
           git checkout --orphan ci-tmp; git rm -rfq --cached . ; rm -rf out; mkdir out; cp /tmp/out/* out/
           git add -f out; git commit -qm "plan test shots ios run ${{ github.run_number }}"; git push -qf origin HEAD:ci-plan-ios
   android:
+    if: false   # Android later
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:

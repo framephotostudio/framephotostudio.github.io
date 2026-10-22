@@ -31,7 +31,7 @@
     if (p === 'hello') return json(200, { token: 'demo.ios.1.s', device: 'demo-device' });
     if (p === 'config') return json(200, CFG);
     if (p === 'me' || p === 'sync') return json(200, state.me);
-    if (p === 'ai') return json(state.ai.status, state.ai.body);
+    if (p === 'ai') return state.aiOk ? realFetch('demo-face.jpg').then(function (r) { return r.blob(); }).then(function (bl) { return new Promise(function (res) { var fr = new FileReader(); fr.onload = function () { res(fr.result); }; fr.readAsDataURL(bl); }); }).then(function (d) { return json(200, { image: d }); }) : json(state.ai.status, state.ai.body);
     return json(200, { ok: true });
   };
   function log(t) { console.log('[plandemo] ' + t); var d = document.getElementById('planDemoTag'); if (d) d.textContent = t; }
@@ -51,7 +51,9 @@
     [65, function () { var x = q('.fcpX'); x && x.click(); state.me = me('paid', 0); window.FCPlan.refresh().then(function () { window.FCPlan.openTopups('demo'); }); log('D top-ups'); }],
     [80, function () { var x = q('.fcpX'); x && x.click(); state.me = me('paid', 12); luxe(); var c = q('#luxeConsent'); if (c && !c.checked) c.click();
       var b = q('[data-luxe="soft"]'); b && b.click(); log('E busy'); }],
-    [100, function () { var b = q('#luxeDev'); b && b.click(); log('F on-device applied'); }]
+    [100, function () { var b = q('#luxeDev'); b && b.click(); log('F on-device applied'); }],
+    [112, function () { state.aiOk = true; luxe(); var b = q('[data-luxe="soft"]'); b && b.click(); log('G AI result with before & after buttons'); }],
+    [150, function () { var b = q('#luxeBAPhoto'); b && b.click(); log('H before & after photo'); }]
   ];
   steps.forEach(function (s) { setTimeout(function () { try { s[1](); } catch (e) { log('step error ' + e.message); } }, s[0] * 1000); });
   window.addEventListener('error', function (e) { console.log('[plandemo] PAGE ERROR ' + e.message); });
