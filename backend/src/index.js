@@ -52,7 +52,7 @@ async function route(req, env, ctx, url) {
 function corsHeaders(req, env) {
   const o = req.headers.get('origin') || '';
   const allowed = (env.ALLOWED_ORIGINS || '').split(',').map(s => s.trim());
-  const ok = allowed.includes(o) || /^https:\/\/([a-z0-9-]+\.)?facecouture\.app$/.test(o);
+  const ok = allowed.includes(o) || /^https:\/\/([a-z0-9-]+\.)?facecouture\.app$/.test(o) || /^https?:\/\/localhost(:\d+)?$/.test(o);
   return { 'access-control-allow-origin': ok ? o : allowed[0] || '*', 'access-control-allow-methods': 'GET,POST,OPTIONS',
            'access-control-allow-headers': 'content-type,authorization,x-fc-device', 'access-control-max-age': '86400', 'vary': 'origin' };
 }
@@ -152,7 +152,9 @@ async function generate(req, env, ctx, forcedTask) {
   const spent = await spentThisMonth(env);
   if (spent + cost > cfg.spend.monthlyCeilingUSD) { await bump(env, 'stat:blocked_ceiling:' + month()); return err(cfg.spend.blockedMessage, 503, { code: 'ceiling' }); }
   const al = await allowanceCheck(env, dev, cfg);
-  if (!ownerTest && !al.ok) return err(al.left.today === 0 && al.left.month > 0 ? `You've used today's ${al.allowance.perDay} AI looks. More tomorrow.` : `You've used this month's ${al.allowance.perMonth} AI looks.`, 402, { code: 'allowance', tier: al.tier, left: al.left });
+  const retryKey = 'retry:' + dev.id; let isRetry = false;
+  if (b.retry === true) { const left = +(await env.KV.get(retryKey)) || 0; if (left > 0) { isRetry = true; await env.KV.put(retryKey, String(left - 1), { expirationTtl: 600 }); } }
+  if (!ownerTest && !isRetry && !al.ok) return err(al.left.today === 0 && al.left.month > 0 ? `You've used today's ${al.allowance.perDay} AI looks. More tomorrow.` : `You've used this month's ${al.allowance.perMonth} AI looks.`, 402, { code: 'allowance', tier: al.tier, left: al.left });
 
   // build the provider request (Google Gemini image model; OpenAI kept as a fallback provider)
   const prompt = buildPrompt(task, { ...b, intensity: b.intensity, lip: b.lip, eyes: b.eyes, category: b.category });
@@ -215,12 +217,13 @@ async function generate(req, env, ctx, forcedTask) {
   }
   // success: only now count usage and spend
   const actualCost = env.GEMINI_API_KEY ? engCost : estimateCost(usage, cost);
+  if (!isRetry) await env.KV.put(retryKey, '2', { expirationTtl: 600 });
   ctx.waitUntil(Promise.all([
-    bump(env, `use:${dev.id}:${day()}`, 1, 2 * 86400), bump(env, `use:${dev.id}:${month()}`, 1, 40 * 86400),
+    isRetry ? Promise.resolve() : bump(env, `use:${dev.id}:${day()}`, 1, 2 * 86400), isRetry ? Promise.resolve() : bump(env, `use:${dev.id}:${month()}`, 1, 40 * 86400), isRetry ? bump(env, 'stat:retry:' + month()) : Promise.resolve(),
     bumpFloat(env, 'spend:' + month(), actualCost), bump(env, 'stat:gen:' + task + ':' + month()), bump(env, 'stat:gen_total:' + month()),
     bump(env, 'stat:gen_tier:' + al.tier + ':' + month()), bump(env, 'stat:latency_ms:' + month(), Date.now() - started), spendAlert(env)
   ]));
-  return json({ image: out, task, quality, engine: engKey, model: engModel, usage: meta, ms: Date.now() - started, left: { today: al.left.today - 1, month: al.left.month - 1 } });
+  return json({ image: out, task, quality, engine: engKey, model: engModel, usage: meta, ms: Date.now() - started, left: isRetry ? al.left : { today: al.left.today - 1, month: al.left.month - 1 } });
 }
 function inlinePart(u) { const i = u.indexOf(','); return { inline_data: { mime_type: u.slice(5, u.indexOf(';')), data: u.slice(i + 1) } }; }
 function pickAspect(w, h) { const r = (+w || 1) / (+h || 1); const opts = [['1:1', 1], ['4:5', .8], ['3:4', .75], ['2:3', 2 / 3], ['9:16', 9 / 16], ['5:4', 1.25], ['4:3', 4 / 3], ['3:2', 1.5], ['16:9', 16 / 9]]; return opts.reduce((a, o) => Math.abs(Math.log(o[1] / r)) < Math.abs(Math.log(a[1] / r)) ? o : a)[0]; }

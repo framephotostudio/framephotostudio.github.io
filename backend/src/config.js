@@ -16,7 +16,7 @@ export const DEFAULT_CONFIG = {
   // Owner spending ceiling for the whole service. AI stops automatically at the limit.
   spend: { monthlyCeilingUSD: 20, alertAtPercent: 80, blockedMessage: 'AI looks are resting for the moment. Everything else works - try again later.' },
   // AI engine: 'fast' (about 4 cents, ~1.3K pixels) or 'pro' (about 13 cents, sharp 2K output)
-  ai: { engine: 'std' },
+  ai: { engine: 'nb21' },
   // Which AI tools are switched on.
   tools: { glam: true, enhance: true, background: true, headshot: true, tryon: true, vanish: true, blur: true, travel: true },
   // Seasonal looks: dates are inclusive, repeat every year, evaluated in the viewer's local date (the site does this already);
