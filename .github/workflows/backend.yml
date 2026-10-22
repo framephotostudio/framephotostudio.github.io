@@ -57,10 +57,15 @@ jobs:
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           ADMIN_PASSPHRASE: ${{ secrets.ADMIN_PASSPHRASE }}
+          REVENUECAT_API_KEY: ${{ secrets.REVENUECAT_API_KEY }}
+          REVENUECAT_WEBHOOK_SECRET: ${{ secrets.REVENUECAT_WEBHOOK_SECRET }}
         run: |
           printf '%s' "$GEMINI_API_KEY" | npx wrangler secret put GEMINI_API_KEY >/dev/null
           printf '%s' "$ADMIN_PASSPHRASE" | npx wrangler secret put ADMIN_PASSPHRASE >/dev/null
           printf '%s' "$(printf '%s' "$ADMIN_PASSPHRASE$CLOUDFLARE_ACCOUNT_ID fc-device-sign" | sha256sum | cut -c1-48)" | npx wrangler secret put APP_SIGNING_SECRET >/dev/null
+          # RevenueCat (subscriptions): only set once the owner has added them in GitHub
+          if [ -n "$REVENUECAT_API_KEY" ]; then printf '%s' "$REVENUECAT_API_KEY" | npx wrangler secret put REVENUECAT_API_KEY >/dev/null; fi
+          if [ -n "$REVENUECAT_WEBHOOK_SECRET" ]; then printf '%s' "$REVENUECAT_WEBHOOK_SECRET" | npx wrangler secret put REVENUECAT_WEBHOOK_SECRET >/dev/null; fi
           echo "secrets set"
       - name: Live test on the sample portrait
         env: { SUB: '${{ steps.sub.outputs.sub }}' }

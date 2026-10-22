@@ -312,7 +312,9 @@ async function addCredits(env, dev, productId, txId, cfg) {
   await bump(env, 'stat:topups:' + month()); return true;
 }
 async function revenuecat(req, env) {
-  if (env.REVENUECAT_WEBHOOK_SECRET && (req.headers.get('authorization') || '') !== 'Bearer ' + env.REVENUECAT_WEBHOOK_SECRET) return err('Unauthorized', 401);
+  // the webhook must always be locked: without the shared secret anyone could grant themselves looks
+  const auth = (req.headers.get('authorization') || '').trim(), sec = env.REVENUECAT_WEBHOOK_SECRET || '';
+  if (!sec || (auth !== sec && auth !== 'Bearer ' + sec)) return err('Unauthorized', 401);
   const { event: e } = await req.json().catch(() => ({}));
   if (!e) return err('Bad webhook');
   const cfg = await getConfig(env);
