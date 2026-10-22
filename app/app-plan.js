@@ -146,6 +146,8 @@
   function openTopups(source) {
     var p = pro(), me = st.me || {};
     if (me && me.paywall === false) { toast('Everything is free during our launch. More AI looks tomorrow.'); return; }
+    // look packs are an extra for members (free trial or paid); everyone else sees the membership first
+    if (me.tier !== 'paid' && me.tier !== 'trial' && me.tier !== 'promo') { openPaywall(source || 'packs'); return; }
     var render = function (t) {
       var ids = Object.keys(p.topups);
       mount('<div class="fcpCard"><button class="fcpX" aria-label="Close">×</button><div class="fcpHero small"><div class="fcpLogo">✦ AI LUXE LOOKS</div><h2>More AI looks</h2>' +
