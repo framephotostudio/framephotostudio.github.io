@@ -8,7 +8,7 @@
   var isNative = !!(Cap && Cap.isNativePlatform && Cap.isNativePlatform());
   var RC = P.Purchases, platform = (API && API.platform) || 'web';
   var rcKey = isNative ? (platform === 'ios' ? CFG.revenueCatIOS : CFG.revenueCatAndroid) : '';
-  var DEF = { priceYear: '$34.99', priceMonth: '$8.99', trialDays: 7, products: { yearly: 'fc_pro_yearly', monthly: 'fc_pro_monthly' },
+  var DEF = { priceYear: '$36.99', priceMonth: '$8.99', trialDays: 7, products: { yearly: 'fc_pro_yearly', monthly: 'fc_pro_monthly' },
               topups: { fc_ai_20: { looks: 20, price: '$4.99' }, fc_ai_50: { looks: 50, price: '$7.99', badge: 'Best value' } }, entitlement: 'pro' };
   var st = { cfg: null, me: null, ready: false, pkgs: null, tops: null, sel: 'yearly', busy: false };
   var store = window.FCPlanTestStore || null; // test hook (local tests only)

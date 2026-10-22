@@ -2,7 +2,7 @@
 // with a simulated server and store, so nothing is charged and no real AI look is made.
 (function () {
   'use strict';
-  var CFG = { pro: { paywallFrom: '2026-11-21', enabled: true, trialDays: 7, priceMonth: '$8.99', priceYear: '$34.99', entitlement: 'pro',
+  var CFG = { pro: { paywallFrom: '2026-11-21', enabled: true, trialDays: 7, priceMonth: '$8.99', priceYear: '$36.99', entitlement: 'pro',
     products: { yearly: 'fc_pro_yearly', monthly: 'fc_pro_monthly' },
     topups: { fc_ai_20: { looks: 20, price: '$4.99' }, fc_ai_50: { looks: 50, price: '$7.99', badge: 'Best value' } } },
     tools: { glam: true }, seasons: {}, looks: { hidden: [] }, flags: {},
@@ -15,7 +15,7 @@
   var state = { me: me('launch', 2), ai: { status: 503, body: { error: 'AI looks are busy right now, try the on-device version.', code: 'ceiling', fallback: 'on_device' } } };
   window.__planDemo = state;
   window.FCPlanTestStore = {
-    offerings: function () { return Promise.resolve({ yearly: { identifier: '$rc_annual', product: { identifier: 'fc_pro_yearly', priceString: '$34.99', price: 34.99, currencyCode: 'USD' } },
+    offerings: function () { return Promise.resolve({ yearly: { identifier: '$rc_annual', product: { identifier: 'fc_pro_yearly', priceString: '$36.99', price: 36.99, currencyCode: 'USD' } },
       monthly: { identifier: '$rc_monthly', product: { identifier: 'fc_pro_monthly', priceString: '$8.99', price: 8.99, currencyCode: 'USD' } } }); },
     topups: function () { return Promise.resolve({ fc_ai_20: { identifier: 'fc_ai_20', priceString: '$4.99' }, fc_ai_50: { identifier: 'fc_ai_50', priceString: '$7.99' } }); },
     buy: function () { return new Promise(function (r) { setTimeout(r, 400); }); },
