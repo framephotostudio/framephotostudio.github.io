@@ -109,23 +109,48 @@
   }
   function close() { if (sheet) { sheet.hidden = true; sheet.innerHTML = ''; } document.documentElement.classList.remove('fcPlanOpen'); }
   function setBusy(on) { if (!sheet) return; sheet.classList.toggle('busy', !!on); sheet.querySelectorAll('button.fcpCta,button.fcpPack').forEach(function (b) { b.disabled = !!on; }); }
+  // fixed paywall showcase (the site's sample portrait, before and after), bundled with the app
+  function heroImgs() { return ['paywall-before.jpg', 'paywall-after.jpg']; }
+  var ICON = {
+    ai: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l1.9 5.1 5.1 1.9-5.1 1.9L12 16.5l-1.9-5.1-5.1-1.9 5.1-1.9z" fill="currentColor"/><path d="M18.5 14.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z" fill="currentColor"/></svg>',
+    looks: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor"/></svg>',
+    reel: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="14" rx="3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M10 9.2v5.6l4.8-2.8z" fill="currentColor"/></svg>',
+    you: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5.5c0 4.3-3 7.9-7 9.5-4-1.6-7-5.2-7-9.5V6z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8.8 12.2l2.2 2.2 4.4-4.6" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+  };
   function paywallHTML(p, pk) {
     var y = pk && pk.yearly && pk.yearly.product, m = pk && pk.monthly && pk.monthly.product;
     var yPrice = (y && y.priceString) || p.priceYear, mPrice = (m && m.priceString) || p.priceMonth, pm = perMonth(pk && pk.yearly, p.priceYear);
     var trial = !(y && y.introPrice === null && y.introPrice !== undefined);
+    var yn = (y && y.price) || num(p.priceYear), mn = (m && m.price) || num(p.priceMonth), save = yn && mn ? Math.floor((1 - yn / (mn * 12)) * 100) : 0;
     var ai = (st.cfg && st.cfg.allowances) || {}, aiPaid = (ai.paid && ai.paid.perMonth) || 15, aiTrial = (ai.trial && ai.trial.total) || 2;
     var store_ = platform === 'ios' ? 'Apple ID' : 'Google Play account', where = platform === 'ios' ? 'App Store' : 'Google Play';
-    return '<div class="fcpCard"><button class="fcpX" aria-label="Close">×</button>' +
-      '<div class="fcpHero"><div class="fcpLogo">✦ FACE COUTURE PRO</div><h2>Your luxury glam,<br>every single day</h2><p>Professional AI makeup on your own face. Your eyes, lips and features stay yours.</p></div>' +
-      '<ul class="fcpPerks"><li><b>' + aiPaid + ' AI Luxe Looks</b> every month</li><li><b>' + aiTrial + ' AI looks</b> to try in your 7 days free</li><li>Every on-device look, <b>unlimited</b></li><li>Full-quality saves and before &amp; after</li></ul>' +
+    var yr = st.sel === 'yearly', hi = heroImgs();
+    return '<div class="fcpCard pw">' +
+      '<div class="fcpTopBar"><button class="fcpX" aria-label="Close">×</button><button type="button" class="fcpRestoreTop" id="fcpRestoreTop">Restore</button></div>' +
+      (hi ? '<div class="fcpShow" aria-hidden="true"><img src="' + hi[0] + '" alt=""><img class="aft" src="' + hi[1] + '" alt=""><span class="fcpTag l">BEFORE</span><span class="fcpTag r">AFTER</span><i class="fcpLine"></i></div>' : '<div class="fcpShow empty"></div>') +
+      '<div class="fcpBody">' +
+      '<div class="fcpLogo">✦ FACE COUTURE PRO</div><h2>Unlock your luxury glam</h2>' +
+      '<ul class="fcpFeat">' +
+        '<li><span class="ic">' + ICON.ai + '</span><span><b>' + aiPaid + ' AI Luxe Looks</b> every month</span></li>' +
+        '<li><span class="ic">' + ICON.looks + '</span><span>Every on-device look, <b>unlimited</b></span></li>' +
+        '<li><span class="ic">' + ICON.reel + '</span><span>Before &amp; after photos and reels</span></li>' +
+        '<li><span class="ic">' + ICON.you + '</span><span>Your eyes, lips and features stay yours</span></li>' +
+      '</ul>' +
       '<div class="fcpPlans" role="radiogroup" aria-label="Choose your plan">' +
-      '<button type="button" class="fcpPlan year' + (st.sel === 'yearly' ? ' on' : '') + '" data-plan="yearly" role="radio" aria-checked="' + (st.sel === 'yearly') + '">' + (trial ? '<span class="fcpBadge">7 DAYS FREE</span>' : '<span class="fcpBadge">BEST VALUE</span>') +
-      '<span class="fcpName">Yearly</span><span class="fcpPrice">' + esc(yPrice) + '<small>/year</small></span>' + (pm ? '<span class="fcpSub">about ' + esc(pm) + '/month</span>' : '') + '</button>' +
-      '<button type="button" class="fcpPlan month' + (st.sel === 'monthly' ? ' on' : '') + '" data-plan="monthly" role="radio" aria-checked="' + (st.sel === 'monthly') + '"><span class="fcpName">Monthly</span><span class="fcpPrice">' + esc(mPrice) + '<small>/month</small></span></button></div>' +
-      '<button type="button" class="fcpCta" id="fcpGo">' + (st.sel === 'yearly' ? (trial ? 'Start my 7 days free' : 'Continue with Yearly') : 'Continue with Monthly') + '</button>' +
-      '<p class="fcpFine">' + (st.sel === 'yearly' ? (trial ? '7 days free, then ' + esc(yPrice) + ' a year. ' : esc(yPrice) + ' a year. ') : esc(mPrice) + ' a month, no free trial. ') +
-      'Payment is charged to your ' + store_ + '. Your subscription renews automatically unless you cancel at least 24 hours before the end of the ' + (st.sel === 'yearly' && trial ? 'trial or ' : '') + 'current period. Cancel anytime in your ' + where + ' settings.</p>' +
-      '<div class="fcpLinks"><button type="button" id="fcpRestore">Restore Purchases</button><span>·</span><button type="button" id="fcpCode">Have a code?</button><span>·</span><button type="button" id="fcpPrivacy">Privacy Policy</button><span>·</span><button type="button" id="fcpTerms">Terms</button></div></div>';
+        '<button type="button" class="fcpPlan year' + (yr ? ' on' : '') + '" data-plan="yearly" role="radio" aria-checked="' + yr + '">' +
+          (save >= 10 ? '<span class="fcpBadge">SAVE ' + save + '%</span>' : '') +
+          '<span class="rd"></span><span class="nm"><span class="fcpName">Yearly</span><span class="fcpSub">' + (trial ? '7-day free trial' : 'Best value') + '</span></span>' +
+          '<span class="pr"><span class="fcpPrice">' + esc(yPrice) + '<small>/year</small></span>' + (pm ? '<span class="fcpPer">' + esc(pm) + '/month</span>' : '') + '</span></button>' +
+        '<button type="button" class="fcpPlan month' + (!yr ? ' on' : '') + '" data-plan="monthly" role="radio" aria-checked="' + !yr + '">' +
+          '<span class="rd"></span><span class="nm"><span class="fcpName">Monthly</span><span class="fcpSub">Cancel anytime</span></span>' +
+          '<span class="pr"><span class="fcpPrice">' + esc(mPrice) + '<small>/month</small></span></span></button>' +
+      '</div>' +
+      '<button type="button" class="fcpCta" id="fcpGo">' + (yr ? (trial ? 'Start 7-Day Free Trial' : 'Continue') : 'Continue') + '</button>' +
+      '<p class="fcpSure">' + (yr && trial ? '<span>✓ No payment due today</span><span>✓ Cancel anytime</span>' : '<span>✓ Cancel anytime</span>') + '</p>' +
+      '<p class="fcpFine">' + (yr ? (trial ? '' + aiTrial + ' AI looks included in your 7 days free, then ' + esc(yPrice) + ' a year. ' : esc(yPrice) + ' a year. ') : esc(mPrice) + ' a month. ') +
+      'Payment is charged to your ' + store_ + (yr && trial ? ' when the free trial ends' : ' when you confirm') + '. Your subscription renews automatically unless you cancel at least 24 hours before the end of the ' + (yr && trial ? 'trial or ' : '') + 'current period. Manage or cancel anytime in your ' + where + ' settings.</p>' +
+      '<div class="fcpLinks"><button type="button" id="fcpTerms">Terms of Use</button><span>·</span><button type="button" id="fcpPrivacy">Privacy Policy</button><span>·</span><button type="button" id="fcpRestore">Restore Purchases</button><span>·</span><button type="button" id="fcpCode">Have a code?</button></div>' +
+      '</div></div>';
   }
   function openPaywall(source) {
     var p = pro();
@@ -136,6 +161,7 @@
       sheet.querySelectorAll('[data-plan]').forEach(function (b) { b.onclick = function () { st.sel = b.dataset.plan; tap('LIGHT'); render(pk); }; });
       sheet.querySelector('#fcpGo').onclick = function () { buyPlan(st.sel); };
       sheet.querySelector('#fcpRestore').onclick = restore;
+      var rt = sheet.querySelector('#fcpRestoreTop'); if (rt) rt.onclick = restore;
       sheet.querySelector('#fcpCode').onclick = codePrompt;
       sheet.querySelector('#fcpPrivacy').onclick = function () { legal('privacy'); };
       sheet.querySelector('#fcpTerms').onclick = function () { legal('terms'); };

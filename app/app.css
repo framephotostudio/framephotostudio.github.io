@@ -129,3 +129,43 @@ html.fc-noaitab [data-tab="ai"]{display:none!important}
 
 /* studio view: Rotate / Crop / Auto crop under the photo; Save stays in the header */
 html.fc-app.fc-studio body .workspace.expanded .stagefoot #quickSave{display:none!important}
+
+/* ---------- v2 paywall: full-screen, App Store style (hero before/after, icon features, plan radios, trial reassurance) ---------- */
+.fcPlan.pay{align-items:stretch;background:rgba(24,10,34,.6)}
+.fcPlan .fcpCard.pw{max-width:none;max-height:none;height:100%;border-radius:0;padding:0;background:#fffafd;display:flex;flex-direction:column;overflow-y:auto}
+@media(min-width:700px){.fcPlan.pay{align-items:center}.fcPlan .fcpCard.pw{max-width:460px;height:auto;max-height:92vh;border-radius:30px}}
+.fcpTopBar{position:absolute;top:0;left:0;right:0;z-index:3;display:flex;justify-content:space-between;align-items:center;padding:calc(env(safe-area-inset-top,0px) + 10px) 14px 0}
+.fcpCard.pw .fcpX{position:static;width:34px;height:34px;background:rgba(20,8,28,.42);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);font-size:21px}
+.fcpRestoreTop{border:0;background:rgba(20,8,28,.42);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:#fff;font:600 13px -apple-system,system-ui,sans-serif;padding:8px 13px;border-radius:999px}
+.fcpShow{position:relative;flex:0 0 auto;height:min(38vh,330px);overflow:hidden;background:#2b1636}
+.fcpShow img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 50%}
+.fcpShow img.aft{clip-path:inset(0 0 0 50%)}
+.fcpShow:after{content:'';position:absolute;left:0;right:0;bottom:0;height:30%;background:linear-gradient(180deg,rgba(255,250,253,0) 0%,rgba(255,250,253,.75) 70%,#fffafd 100%)}
+.fcpShow.empty{height:calc(env(safe-area-inset-top,0px) + 60px);background:radial-gradient(120% 90% at 50% 0%,#5a2a6a 0%,#3a1a48 55%,#2b1636 100%)}
+.fcpShow.empty:after{display:none}
+.fcpLine{position:absolute;top:0;bottom:42%;left:50%;width:2px;margin-left:-1px;background:linear-gradient(180deg,#f3dc96,#c9a24a);box-shadow:0 0 12px rgba(243,220,150,.8);z-index:1}
+.fcpTag{position:absolute;top:calc(env(safe-area-inset-top,0px) + 58px);z-index:2;font:700 10px -apple-system,system-ui,sans-serif;letter-spacing:1.4px;color:#fff;background:rgba(20,8,28,.45);padding:4px 9px;border-radius:999px}
+.fcpTag.l{left:14px}.fcpTag.r{right:14px;background:linear-gradient(135deg,#c9a24a,#a77d2c)}
+.fcpBody{position:relative;z-index:1;margin-top:-54px;padding:0 20px calc(env(safe-area-inset-bottom,0px) + 16px);text-align:center}
+.fcpBody .fcpLogo{color:#a77d2c}
+.fcPlan .fcpBody h2{margin:6px 0 14px;font:700 28px/1.1 Georgia,'Times New Roman',serif;letter-spacing:-.5px;color:#2a1838;background:none;border:0;padding:0}
+.fcpFeat{list-style:none;margin:0 auto 16px;padding:0;max-width:340px;text-align:left;display:grid;gap:10px}
+.fcpFeat li{display:flex;align-items:center;gap:12px;font-size:14.5px;color:#4a3757}
+.fcpFeat li b{color:#2a1838}
+.fcpFeat .ic{flex:0 0 30px;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;color:#a77d2c;background:linear-gradient(135deg,#fdf3df,#f6e4c0);box-shadow:inset 0 0 0 1px rgba(201,161,74,.35)}
+.fcpFeat .ic svg{width:17px;height:17px}
+.fcpCard.pw .fcpPlans{gap:10px;margin-top:2px}
+.fcpCard.pw .fcpPlan{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:16px;opacity:1}
+.fcpCard.pw .fcpPlan .rd{flex:0 0 22px;width:22px;height:22px;border-radius:50%;border:2px solid #d9c6e2;background:#fff;position:relative}
+.fcpCard.pw .fcpPlan.on .rd{border-color:#7a4cc2;background:#7a4cc2;box-shadow:inset 0 0 0 4px #fff}
+.fcpCard.pw .fcpPlan .nm{flex:1;display:flex;flex-direction:column;align-items:flex-start;gap:2px}
+.fcpCard.pw .fcpPlan .fcpName{font-size:16px;font-weight:700;color:#2a1838}
+.fcpCard.pw .fcpPlan .fcpSub{grid-column:auto;font-size:12.5px;font-weight:600;color:#7a4cc2}
+.fcpCard.pw .fcpPlan .pr{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+.fcpCard.pw .fcpPlan .fcpPrice{font-size:17px;font-weight:800;color:#2a1838;text-align:right}
+.fcpCard.pw .fcpPlan .fcpPer{font-size:12px;color:#8a7894;font-weight:600}
+.fcpCard.pw .fcpPlan.on{border-color:#7a4cc2;box-shadow:0 0 0 3px rgba(122,76,194,.16),0 10px 24px rgba(74,47,122,.12);background:#fff}
+.fcpCard.pw .fcpPlan .fcpBadge{left:auto;right:14px;top:-10px}
+.fcpCard.pw .fcpCta{margin:16px 0 8px}
+.fcpSure{display:flex;justify-content:center;gap:16px;margin:0 0 8px;font-size:12.5px;font-weight:600;color:#3e8a5a}
+.fcpCard.pw .fcpLinks{margin-top:2px}

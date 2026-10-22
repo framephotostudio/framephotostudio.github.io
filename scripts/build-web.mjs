@@ -34,7 +34,7 @@ fs.writeFileSync(path.join(OUT, 'app-config.js'), 'window.FC_CONFIG=' + JSON.str
 { const i = html.indexOf('</head>'); html = html.slice(0, i) + '<link rel="stylesheet" href="app.css">' + html.slice(i); }
 { const i = html.lastIndexOf('</body>'); html = html.slice(0, i) + '<script src="app.js"></script><script src="app-pro.js"></script><script src="app-plan.js"></script>' + html.slice(i); }
 fs.writeFileSync(path.join(OUT, 'index.html'), html);
-for (const f of ['app.css', 'app.js', 'app-early.js', 'app-api.js', 'app-pro.js', 'app-plan.js']) fs.copyFileSync(path.join('app', f), path.join(OUT, f));
+for (const f of ['app.css', 'app.js', 'app-early.js', 'app-api.js', 'app-pro.js', 'app-plan.js', 'paywall-before.jpg', 'paywall-after.jpg']) fs.copyFileSync(path.join('app', f), path.join(OUT, f));
 // test builds only: scripted walk-through of the subscription screens (never set for store builds)
 if (process.env.FC_PLAN_DEMO === '1') { fs.copyFileSync('scripts/plan-demo.js', path.join(OUT, 'plan-demo.js')); if (process.env.DEMO_PHOTO && fs.existsSync(process.env.DEMO_PHOTO)) fs.copyFileSync(process.env.DEMO_PHOTO, path.join(OUT, 'demo-face.jpg')); console.log('PLAN DEMO build'); }
 const left = (html.match(/https:\/\/(cdn\.jsdelivr|storage\.googleapis)[^"'`\s)]*/g) || []); if (left.length) console.warn('Still online:', [...new Set(left)]);
