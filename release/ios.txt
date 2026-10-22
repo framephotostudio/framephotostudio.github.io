@@ -1,1 +1,1 @@
-iPhone build request: 1.0.0 (AI Luxe Looks)
+iPhone build request: 1.0.0 (subscriptions + new membership screen)
