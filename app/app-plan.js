@@ -115,7 +115,7 @@
     ai: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l1.9 5.1 5.1 1.9-5.1 1.9L12 16.5l-1.9-5.1-5.1-1.9 5.1-1.9z" fill="currentColor"/><path d="M18.5 14.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z" fill="currentColor"/></svg>',
     looks: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor"/></svg>',
     reel: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="14" rx="3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M10 9.2v5.6l4.8-2.8z" fill="currentColor"/></svg>',
-    you: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5.5c0 4.3-3 7.9-7 9.5-4-1.6-7-5.2-7-9.5V6z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8.8 12.2l2.2 2.2 4.4-4.6" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+    you: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V5a1 1 0 0 1 1-1h4M15 4h4a1 1 0 0 1 1 1v4M20 15v4a1 1 0 0 1-1 1h-4M9 20H5a1 1 0 0 1-1-1v-4" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><rect x="8.5" y="7.5" width="7" height="9" rx="1.2" fill="currentColor" opacity=".85"/></svg>'
   };
   function paywallHTML(p, pk) {
     var y = pk && pk.yearly && pk.yearly.product, m = pk && pk.monthly && pk.monthly.product;
@@ -134,7 +134,7 @@
         '<li><span class="ic">' + ICON.ai + '</span><span><b>' + aiPaid + ' AI Luxe Looks</b> every month</span></li>' +
         '<li><span class="ic">' + ICON.looks + '</span><span>Every on-device look, <b>unlimited</b></span></li>' +
         '<li><span class="ic">' + ICON.reel + '</span><span>Before &amp; after photos and reels</span></li>' +
-        '<li><span class="ic">' + ICON.you + '</span><span>Full-resolution saves</span></li>' +
+        '<li><span class="ic">' + ICON.you + '</span><span>Perfect size for <b>every platform</b></span></li>' +
       '</ul>' +
       '<div class="fcpPlans" role="radiogroup" aria-label="Choose your plan">' +
         '<button type="button" class="fcpPlan year' + (yr ? ' on' : '') + '" data-plan="yearly" role="radio" aria-checked="' + yr + '">' +
