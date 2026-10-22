@@ -35,13 +35,13 @@ await setCfg({ pro: { paywallFrom: '2020-01-01' } }); clearRL();
 let d3 = await newDevice(); me = (await call('/api/me', null, d3.token, 'GET')).j; let r = await ai(d3.token);
 ok(me.paywall === true && me.tier === 'free' && r.status === 402 && r.j.code === 'subscribe', 'after launch: no plan = paywall for AI (' + r.j.code + ': ' + r.j.error + ')');
 let w = await newDevice('web'); me = (await call('/api/me', null, w.token, 'GET')).j; ok(me.tier === 'anonymousWeb' && me.left.total === 1, 'website visitors keep 1 free AI look a day, no paywall');
-// 4. trial: 3 total
+// 4. trial: 2 total
 const hook = (ev) => call('/api/webhooks/revenuecat', { event: ev }, null, 'POST', { authorization: 'Bearer wh' });
 let t = await newDevice(); const in7 = Date.now() + 7 * 86400e3;
 await hook({ type: 'INITIAL_PURCHASE', period_type: 'TRIAL', app_user_id: t.device, product_id: 'fc_pro_yearly', expiration_at_ms: in7, store: 'APP_STORE' });
-let codes = []; for (let i = 0; i < 4; i++) { clearRL(); codes.push((await ai(t.token)).status); }
+let codes = []; for (let i = 0; i < 3; i++) { clearRL(); codes.push((await ai(t.token)).status); }
 me = (await call('/api/me', null, t.token, 'GET')).j;
-ok(me.tier === 'trial' && codes.join() === '200,200,200,402', 'trial: exactly 3 AI looks in total (' + codes + ')');
+ok(me.tier === 'trial' && codes.join() === '200,200,402', 'trial: exactly 2 AI looks in total (' + codes + ')');
 // 5. trial converts to paid: 20 a month
 await hook({ type: 'RENEWAL', period_type: 'NORMAL', app_user_id: t.device, product_id: 'fc_pro_yearly', expiration_at_ms: Date.now() + 365 * 86400e3 });
 me = (await call('/api/me', null, t.token, 'GET')).j; ok(me.tier === 'paid' && me.left.total === 20, 'paid subscriber: 20 AI looks this month (' + me.tier + ', ' + me.left.total + ')');
@@ -56,7 +56,7 @@ let n = await newDevice(); await hook({ type: 'NON_RENEWING_PURCHASE', app_user_
 me = (await call('/api/me', null, n.token, 'GET')).j; ok(r.status === 200 && me.credits === 19, 'top-up pack works without a subscription (' + me.credits + ' left)');
 // 8. instant sync after purchase (no waiting for the webhook)
 let s = await newDevice(); clearRL(); rcSub = { entitlements: { pro: { expires_date: new Date(in7).toISOString(), product_identifier: 'fc_pro_yearly' } }, subscriptions: { fc_pro_yearly: { period_type: 'trial' } }, non_subscriptions: { fc_ai_20: [{ id: 'tx3', store_transaction_id: 'st3' }] } };
-me = (await call('/api/sync', {}, s.token)).j; if(!me.left) console.log('sync said', JSON.stringify(me)); ok(me.tier === 'trial' && me.credits === 20 && me.left.total === 23, 'sync after purchase: trial + 20 extra right away (' + me.tier + ', ' + me.left.total + ')');
+me = (await call('/api/sync', {}, s.token)).j; if(!me.left) console.log('sync said', JSON.stringify(me)); ok(me.tier === 'trial' && me.credits === 20 && me.left.total === 22, 'sync after purchase: trial + 20 extra right away (' + me.tier + ', ' + me.left.total + ')');
 me = (await call('/api/sync', {}, s.token)).j; ok(me.credits === 20, 'syncing again does not add the pack twice');
 // 9. cancellation keeps access until the end, expiration removes it
 await hook({ type: 'CANCELLATION', app_user_id: s.device, product_id: 'fc_pro_yearly', expiration_at_ms: in7 }); me = (await call('/api/me', null, s.token, 'GET')).j; ok(me.tier === 'trial', 'cancelling keeps access until the trial ends');

@@ -8,14 +8,14 @@ export const DEFAULT_CONFIG = {
   // Before that date (or while it is empty) the app is completely free: no paywall, everything unlocked.
   pro: { paywallFrom: '', trialDays: 7, priceMonth: '$6.99', priceYear: '$34.99', entitlement: 'pro',
          products: { yearly: 'fc_pro_yearly', monthly: 'fc_pro_monthly' },
-         topups: { fc_ai_20: { looks: 20, price: '$3.99' }, fc_ai_50: { looks: 50, price: '$7.99', badge: 'Best value' } } },
+         topups: { fc_ai_20: { looks: 20, price: '$4.99' }, fc_ai_50: { looks: 50, price: '$7.99', badge: 'Best value' } } },
   // AI allowances per user, counted only on SUCCESSFUL generations.
   // launch = free launch period, 2 weeks (everyone), trial = 7-day trial (total), paid = subscribers (per calendar month),
   // free = app users without a plan after the free launch (on-device looks stay unlimited), web = the website.
   // Top-up packs add AI looks on top of any plan and never expire.
   allowances: {
     launch: { perDay: 2, perMonth: 10 },
-    trial: { total: 3 },
+    trial: { total: 2 },
     paid:  { perDay: 20, perMonth: 20 },
     free:  { perDay: 0, perMonth: 0 },
     promo: { perDay: 10, perMonth: 60 },
