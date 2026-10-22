@@ -3720,4 +3720,42 @@ window.__luxe={run:run,LOOKS:LOOKS,_realEyes:realEyes,_measures:measures,_score:
 }catch(e){console.warn('v68 luxe',e)}})();
 </script>
 
+<script>
+/* v70: Undo and Redo sit in the row under the photo with Rotate / Crop / Auto crop. The "Save project" button is gone:
+   edits are already kept on this device automatically about a second after every change. */
+;(function(){try{
+function go(){var f=document.querySelector('.stagefoot'),u=document.getElementById('quickUndo'),r=document.getElementById('quickRedo'),sp=document.getElementById('saveChanges');
+ if(!f||!u||!r)return false;
+ if(u.parentNode!==f){u.className='small fcMv';r.className='small fcMv';u.innerHTML='↶ Undo';r.innerHTML='↷ Redo';f.insertBefore(r,f.firstChild);f.insertBefore(u,f.firstChild)}
+ if(sp)sp.hidden=true;var h=document.querySelector('.saveHint');if(h)h.hidden=true;var ea=document.querySelector('.editorActions');if(ea)ea.classList.add('fcEmpty');return true}
+var st=document.createElement('style');st.textContent='#saveChanges[hidden],.saveHint[hidden]{display:none!important}.editorActions.fcEmpty{display:none!important}'+
+ '.stagefoot{flex-wrap:wrap}.stagefoot .fcMv[disabled]{opacity:.45}'+
+ '.workspace.expanded .stagefoot{flex-wrap:nowrap!important;gap:5px!important}'+
+ '.workspace.expanded .stagefoot .small{flex:1 1 0!important;min-width:0!important;max-width:none!important;padding:0 4px!important;font-size:12.5px!important;white-space:nowrap!important}';
+document.head.appendChild(st);
+if(!go()){var n=0,t=setInterval(function(){if(go()||++n>40)clearInterval(t)},150)}
+setTimeout(function(){var ac=document.getElementById('quickAutoCrop');if(ac&&document.documentElement.classList.contains('fc-app')){var tn=ac.lastChild;if(tn&&tn.nodeType===3)tn.textContent='Auto'}},2500);
+
+/* the draft was written by this device, so newer beauty settings it holds are trusted when it is opened again
+   (the strict checks are for project files that come from elsewhere) */
+try{if(typeof validBeauty==='function'){var _vb=validBeauty;validBeauty=function(b){if(window.__fcTrustDraft)return !!b&&typeof b==='object';return _vb(b)}}
+ var rd=document.getElementById('recoverDraft');if(rd)rd.addEventListener('click',function(){window.__fcTrustDraft=true;setTimeout(function(){window.__fcTrustDraft=false},8000)},true)}catch(e){}
+/* "Continue your last edit": every edit is kept on this device automatically; on the next visit the last project is offered back */
+function offer(){try{var p=JSON.parse(localStorage.getItem('frame-draft')||'null');if(!p||!p.image||p.demoMode)return;
+ if(typeof demoMode!=='undefined'&&!demoMode)return; if(document.getElementById('fcResume'))return;
+ var d=document.createElement('div');d.id='fcResume';d.setAttribute('role','dialog');d.setAttribute('aria-label','Continue your last edit');
+ d.innerHTML='<img alt="" src="'+p.image+'"><div class="t"><b>Continue your last edit?</b><span>Your project was saved on this device.</span></div><div class="b"><button type="button" class="go">Continue</button><button type="button" class="no">Start new</button></div>';
+ document.body.appendChild(d);
+ d.querySelector('.go').onclick=function(){d.remove();var r=document.getElementById('recoverDraft');if(!r)return;window.__fcTrustDraft=true;r.click();setTimeout(function(){window.__fcTrustDraft=false},8000)};
+ d.querySelector('.no').onclick=function(){d.remove()};
+ document.getElementById('file')&&document.getElementById('file').addEventListener('change',function(){var x=document.getElementById('fcResume');if(x)x.remove()},{once:true});
+}catch(e){}}
+var st2=document.createElement('style');st2.textContent='#fcResume{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 86px);z-index:2147482000;width:min(440px,calc(100% - 24px));display:flex;align-items:center;gap:12px;padding:12px;border-radius:20px;background:#fffafd;border:1.5px solid #c9a24a;box-shadow:0 16px 40px rgba(43,23,74,.28);font-family:-apple-system,system-ui,sans-serif;animation:fcpUp .3s ease}'+
+ '#fcResume img{width:54px;height:54px;object-fit:cover;border-radius:12px;flex:0 0 54px}#fcResume .t{flex:1;display:grid;gap:2px;min-width:0}#fcResume .t b{font-size:14.5px;color:#2a1838}#fcResume .t span{font-size:12px;color:#7a6b88}'+
+ '#fcResume .b{display:grid;gap:6px}#fcResume button{border:0;border-radius:999px;padding:8px 14px;font:700 13px -apple-system,system-ui,sans-serif;white-space:nowrap}#fcResume .go{background:linear-gradient(135deg,#7a4cc2,#c25aa8);color:#fff}#fcResume .no{background:#f3ecf7;color:#4a2a63}'+
+ '@keyframes fcpUp{from{transform:translate(-50%,30px);opacity:0}to{transform:translateX(-50%);opacity:1}}';
+document.head.appendChild(st2);
+setTimeout(offer,1800);
+}catch(e){console.warn('v70 undo row',e)}})();
+</script>
 </body></html>
