@@ -4,7 +4,7 @@
   'use strict';
   var CFG = { pro: { paywallFrom: '2026-11-21', enabled: true, trialDays: 7, priceMonth: '$8.99', priceYear: '$36.99', entitlement: 'pro',
     products: { yearly: 'fc_pro_yearly', monthly: 'fc_pro_monthly' },
-    topups: { fc_ai_20: { looks: 20, price: '$4.99' }, fc_ai_50: { looks: 50, price: '$8.99', badge: 'Best value' } } },
+    topups: { fc_ai_20: { looks: 20, price: '$4.99' }, fc_ai_40: { looks: 40, price: '$8.99', badge: 'Best value' } } },
     tools: { glam: true }, seasons: {}, looks: { hidden: [] }, flags: {},
     allowances: { launch: { perDay: 2, perMonth: 10 }, free: { perDay: 0, perMonth: 0 }, trial: { total: 2 }, paid: { perDay: 15, perMonth: 15 } } };
   function me(tier, total, credits) {
@@ -17,7 +17,7 @@
   window.FCPlanTestStore = {
     offerings: function () { return Promise.resolve({ yearly: { identifier: '$rc_annual', product: { identifier: 'fc_pro_yearly', priceString: '$36.99', price: 36.99, currencyCode: 'USD' } },
       monthly: { identifier: '$rc_monthly', product: { identifier: 'fc_pro_monthly', priceString: '$8.99', price: 8.99, currencyCode: 'USD' } } }); },
-    topups: function () { return Promise.resolve({ fc_ai_20: { identifier: 'fc_ai_20', priceString: '$4.99' }, fc_ai_50: { identifier: 'fc_ai_50', priceString: '$8.99' } }); },
+    topups: function () { return Promise.resolve({ fc_ai_20: { identifier: 'fc_ai_20', priceString: '$4.99' }, fc_ai_40: { identifier: 'fc_ai_40', priceString: '$8.99' } }); },
     buy: function () { return new Promise(function (r) { setTimeout(r, 400); }); },
     buyProduct: function () { return new Promise(function (r) { setTimeout(r, 400); }); },
     restore: function () { return Promise.resolve(); }

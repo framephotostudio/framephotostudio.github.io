@@ -45,12 +45,12 @@ ok(me.tier === 'trial' && codes.join() === '200,200,402', 'trial: exactly 2 AI l
 // 5. trial converts to paid: 15 a month
 await hook({ type: 'RENEWAL', period_type: 'NORMAL', app_user_id: t.device, product_id: 'fc_pro_yearly', expiration_at_ms: Date.now() + 365 * 86400e3 });
 me = (await call('/api/me', null, t.token, 'GET')).j; ok(me.tier === 'paid' && me.left.total === 15, 'paid subscriber: 15 AI looks this month (' + me.tier + ', ' + me.left.total + ')');
-// 6. top-up 50 adds on top, counted once even if reported twice, used after the plan runs out
-await hook({ type: 'NON_RENEWING_PURCHASE', app_user_id: t.device, product_id: 'fc_ai_50', transaction_id: 'tx1' });
-await hook({ type: 'NON_RENEWING_PURCHASE', app_user_id: t.device, product_id: 'fc_ai_50', transaction_id: 'tx1' });
-me = (await call('/api/me', null, t.token, 'GET')).j; ok(me.credits === 50 && me.left.total === 65 && me.tier === 'paid', 'top-up 50 added once, plan unchanged (' + me.credits + ' extra, ' + me.left.total + ' total)');
+// 6. top-up 40 adds on top, counted once even if reported twice, used after the plan runs out
+await hook({ type: 'NON_RENEWING_PURCHASE', app_user_id: t.device, product_id: 'fc_ai_40', transaction_id: 'tx1' });
+await hook({ type: 'NON_RENEWING_PURCHASE', app_user_id: t.device, product_id: 'fc_ai_40', transaction_id: 'tx1' });
+me = (await call('/api/me', null, t.token, 'GET')).j; ok(me.credits === 40 && me.left.total === 55 && me.tier === 'paid', 'top-up 40 added once, plan unchanged (' + me.credits + ' extra, ' + me.left.total + ' total)');
 for (let i = 0; i < 15; i++) { clearRL(); await ai(t.token); } clearRL(); r = await ai(t.token);
-me = (await call('/api/me', null, t.token, 'GET')).j; ok(r.status === 200 && me.credits === 49 && me.left.plan === 0, 'after 15 plan looks, the 16th uses a top-up (' + me.credits + ' extra left)');
+me = (await call('/api/me', null, t.token, 'GET')).j; ok(r.status === 200 && me.credits === 39 && me.left.plan === 0, 'after 15 plan looks, the 16th uses a top-up (' + me.credits + ' extra left)');
 // 7. top-ups for a non-subscriber after launch also work
 let n = await newDevice(); await hook({ type: 'NON_RENEWING_PURCHASE', app_user_id: n.device, product_id: 'fc_ai_20', transaction_id: 'tx2' }); clearRL(); r = await ai(n.token);
 me = (await call('/api/me', null, n.token, 'GET')).j; ok(r.status === 200 && me.credits === 19, 'top-up pack works without a subscription (' + me.credits + ' left)');
@@ -77,7 +77,7 @@ ok(r.status === 503 && r.j.code === 'ceiling' && r.j.fallback === 'on_device' &&
   clearRL(); let rk = await ai(pk.token); ok(rk.status === 200, 'look pack buyer goes past the budget (' + rk.status + ')'); }
 kv.set('spend:' + new Date().toISOString().slice(0, 7), '0');
 // 12. webhook needs the secret
-r = await call('/api/webhooks/revenuecat', { event: { type: 'NON_RENEWING_PURCHASE', app_user_id: n.device, product_id: 'fc_ai_50', transaction_id: 'evil' } }, null, 'POST', { authorization: 'Bearer wrong' });
+r = await call('/api/webhooks/revenuecat', { event: { type: 'NON_RENEWING_PURCHASE', app_user_id: n.device, product_id: 'fc_ai_40', transaction_id: 'evil' } }, null, 'POST', { authorization: 'Bearer wrong' });
 ok(r.status === 401, 'fake purchase messages without the secret are rejected');
 // 13. paywall date in the future = still free launch
 await setCfg({ pro: { paywallFrom: '2099-01-01' } }); let f = await newDevice(); me = (await call('/api/me', null, f.token, 'GET')).j; ok(me.tier === 'launch' && me.paywall === false, 'paywall date in the future: still the free launch');
