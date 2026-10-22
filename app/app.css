@@ -147,7 +147,7 @@ html.fc-app.fc-studio body .workspace.expanded .stagefoot #quickSave{display:non
 .fcpTag{position:absolute;top:calc(env(safe-area-inset-top,0px) + 58px);z-index:2;font:700 10px -apple-system,system-ui,sans-serif;letter-spacing:1.4px;color:#fff;background:rgba(20,8,28,.45);padding:4px 9px;border-radius:999px}
 .fcpTag.l{left:14px}.fcpTag.r{right:14px;background:linear-gradient(135deg,#c9a24a,#a77d2c)}
 .fcpBody{position:relative;z-index:1;margin-top:-54px;padding:0 20px calc(env(safe-area-inset-bottom,0px) + 16px);text-align:center}
-.fcpBody .fcpLogo{color:#a77d2c}
+.fcpBody .fcpLogo{color:#8a6420;font-size:13.5px;font-weight:800;letter-spacing:2.6px;text-shadow:0 1px 0 rgba(255,250,253,.9),0 0 10px rgba(255,250,253,.9)}
 .fcPlan .fcpBody h2{margin:6px 0 14px;font:700 28px/1.1 Georgia,'Times New Roman',serif;letter-spacing:-.5px;color:#2a1838;background:none;border:0;padding:0}
 .fcpFeat{list-style:none;margin:0 auto 16px;padding:0;max-width:340px;text-align:left;display:grid;gap:10px}
 .fcpFeat li{display:flex;align-items:center;gap:12px;font-size:14.5px;color:#4a3757}
