@@ -126,3 +126,6 @@ html.fcPlanOpen{overflow:hidden}
 .fcpPack .fcpName{font-size:13px;color:#7a6b88;font-weight:600}
 .fcpPack .fcpPrice{margin-top:8px;font-size:16px;font-weight:800;color:#2a1838;background:#f6eef9;border-radius:999px;padding:6px 14px}
 html.fc-noaitab [data-tab="ai"]{display:none!important}
+
+/* studio view: Rotate / Crop / Auto crop under the photo; Save stays in the header */
+html.fc-app.fc-studio body .workspace.expanded .stagefoot #quickSave{display:none!important}
