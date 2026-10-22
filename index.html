@@ -3487,11 +3487,13 @@ var seenFace=false;setInterval(function(){try{if(!seenFace&&typeof beauty!=='und
 .luxeSplit:after{content:'⇆';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:34px;height:34px;border-radius:50%;background:#fff;color:#2a1838;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 2px 10px #0006}
 .luxeTag{position:absolute;top:10px;font-size:11px;letter-spacing:1px;text-transform:uppercase;background:#0007;padding:4px 8px;border-radius:20px;pointer-events:none}
 .luxeActs{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.luxeLeft{margin:10px 2px 0;font-size:12.5px;color:#7a4cc2;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap}.luxeLeft[hidden]{display:none}.luxeLeft button{border:1px solid #e3cfe9;background:#fff;color:#7a4cc2;border-radius:999px;padding:4px 10px;font-size:12px;font-weight:600}
 </style>
 <section class="luxe" id="luxe" aria-labelledby="luxeTitle">
 <h3 id="luxeTitle">AI Luxe Looks <i>New</i></h3>
 <p class="lx">Professional glam on your own face: your eyes, lips and features stay yours. Works on solo photos.</p>
 <div class="luxeGrid" id="luxeGrid" role="group" aria-label="AI Luxe Looks"></div>
+<p class="luxeLeft" id="luxeLeft" hidden><span id="luxeLeftTxt"></span></p>
 <label class="luxeConsent" id="luxeConsentRow"><input type="checkbox" id="luxeConsent"><span>I have permission to edit this photo and agree to it being sent securely to our AI provider (Google) to create the look. It isn't stored. <a href="privacy.html" target="_blank" rel="noopener">Privacy</a></span></label>
 </section>
 <div class="luxeOv" id="luxeOv" hidden role="dialog" aria-modal="true" aria-label="AI Luxe Look"></div>
@@ -3510,6 +3512,8 @@ var LOOKS=[
  {k:'golden',n:'Golden Hour',t:'Bronze and copper, sun-kissed',g:'#f6c27c,#b0582c'},
  {k:'datenight',n:'Date Night',t:'Mauve smoke, berry lip',g:'#cfa0bd,#6c2f52'},
  {k:'executive',n:'Executive',t:'Polished and headshot-ready',g:'#dcc3b5,#7b5a4c'}];
+// matching on-device look, offered when AI is busy (budget limit)
+var ONDEVICE={soft:'softglam',max:'glam',glam:'hollywood',clean:'cleangirl',bridal:'bridal',golden:'golden',datenight:'datenight',executive:'cover'};
 var $=function(id){return document.getElementById(id)};
 var T=function(n,p){try{window.fcTrack&&window.fcTrack(n,p)}catch(e){}};
 var store={get:function(k){try{return localStorage.getItem(k)}catch(e){return null}},set:function(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
@@ -3529,7 +3533,17 @@ function hello(force){var t=store.get('fc-token');if(t&&!force)return Promise.re
  return fetch(API+'/api/hello',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({platform:platform})}).then(function(r){return r.json()}).then(function(j){store.set('fc-token',j.token);store.set('fc-device',j.device);return j.token})}
 function callAI(body,retried){return hello(retried).then(function(t){return fetch(API+'/api/ai',{method:'POST',headers:{'content-type':'application/json',authorization:'Bearer '+t},body:JSON.stringify(body)})}).then(function(r){return r.json().then(function(j){
  if(r.status===401&&!retried)return callAI(body,true);
- if(!r.ok||!j.image){var e=new Error(j.error||'The AI could not finish this look. Please try again.');e.code=j.code;throw e}return j})})}
+ if(!r.ok||!j.image){var e=new Error(j.error||'The AI could not finish this look. Please try again.');e.code=j.code;e.tier=j.tier;throw e}return j})})}
+// AI looks left (counted on the server)
+var isApp=!!window.__FC_APP;
+function showLeft(m){var el=$('luxeLeft'),tx=$('luxeLeftTxt');if(!el||!m||!m.left)return;window.__luxeMe=m;var n=m.left.total,t=m.tier;
+ var s=t==='trial'?n+' of '+(m.allowance&&m.allowance.total||3)+' AI looks left in your free trial':t==='paid'?n+' AI looks left this month':t==='free'?(m.credits?n+' AI looks left':''):n+' AI look'+(n===1?'':'s')+' left today';
+ if(m.credits&&t!=='free')s+=' (includes '+m.credits+' extra)';tx.textContent=s;el.hidden=!s;
+ var b=el.querySelector('button');if(b)b.remove();
+ if(isApp&&window.FCPlan&&m.paywall&&(t==='paid'||t==='trial'||t==='free')){b=document.createElement('button');b.type='button';b.textContent=t==='free'?'Get Face Couture Pro':'Get more AI looks';b.onclick=function(){t==='free'?window.FCPlan.openPaywall('counter'):window.FCPlan.openTopups('counter')};el.appendChild(b)}}
+function refreshLeft(){return hello().then(function(t){return fetch(API+'/api/me',{headers:{authorization:'Bearer '+t}})}).then(function(r){return r.ok?r.json():null}).then(function(m){if(m)showLeft(m);return m}).catch(function(){})}
+window.addEventListener('fc:plan',function(e){if(e.detail)showLeft(e.detail);else refreshLeft()});
+setTimeout(refreshLeft,1200);
 
 // ---------- helpers ----------
 function loadImg(src){return new Promise(function(res,rej){var i=new Image();i.onload=function(){res(i)};i.onerror=function(){rej(new Error('Could not open the image.'))};i.src=src})}
@@ -3627,10 +3641,21 @@ async function run(L){
   }
   if(cancelled)return;
   if(!best)throw new Error('The AI could not finish this look. Please try again.');
-  T('ai_look_done',{look:L.k,attempts:attempt+1,passed:best.sc.worst<=1?1:0});
+  T('ai_look_done',{look:L.k,attempts:attempt+1,passed:best.sc.worst<=1?1:0});refreshLeft();
   busy=false;showResult(L,origC,best.c);
  }catch(err){if(cancelled)return;closeOv();T('ai_look_error',{look:L.k,code:err.code||'client'});
-  message(err.code==='allowance'?'Daily limit reached':err.code==='ceiling'?'AI looks are resting':'Something went wrong',String(err.message||err))}
+  if(err.code==='ceiling'){busyFallback(L);return}
+  if(err.code==='subscribe'||err.code==='allowance'){refreshLeft();
+   if(isApp&&window.FCPlan){var me=window.__luxeMe||{};if(err.code==='subscribe'){window.FCPlan.openPaywall('ai_'+L.k);return}
+    if(me.paywall&&(err.tier==='paid'||err.tier==='trial')){window.FCPlan.openTopups('ai_'+L.k);return}}
+   message(err.code==='subscribe'?'AI Luxe Looks':'You\'re out of AI looks for now',isApp?String(err.message):'You\'ve used your AI looks for today. Come back tomorrow, or enjoy the on-device Looks below, unlimited.');return}
+  message('Something went wrong',String(err.message||err))}
+}
+// budget reached: no error, offer the matching on-device look instead
+function busyFallback(L){var k=ONDEVICE[L.k],v=k&&typeof VIBES!=='undefined'&&VIBES[k];
+ overlay('<div class="luxeRes" style="flex:0;align-items:center;text-align:center"><h4>AI looks are busy right now</h4><p class="sub">Try the on-device version. It\'s instant and works offline.</p><div class="luxeActs" style="margin-top:14px"><button class="luxeBtn gold" id="luxeDev"></button><button class="luxeBtn ghost" id="luxeOk">Not now</button></div></div>');
+ var b=$('luxeDev');b.textContent=v?'Use '+v.n+' on-device':'Use an on-device look';$('luxeOk').onclick=closeOv;T('ai_look_busy_fallback',{look:L.k});
+ b.onclick=function(){closeOv();try{if(v&&typeof applyVibe==='function')applyVibe(k);var e=document.getElementById('vibes');e&&e.scrollIntoView({behavior:'smooth',block:'center'})}catch(e){}}
 }
 window.__luxe={run:run,LOOKS:LOOKS,_realEyes:realEyes,_measures:measures,_score:score};
 }catch(e){console.warn('v68 luxe',e)}})();
