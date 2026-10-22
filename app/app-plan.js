@@ -198,7 +198,16 @@
     }).catch(function (e) { toast(e.message || 'That code did not work.'); });
   }
 
-  window.FCPlan = { openPaywall: openPaywall, openTopups: openTopups, restore: restore, manage: manage, refresh: refresh, sync: sync, code: codePrompt, state: st };
+  // ---------- owner mode (the owner's own phone) ----------
+  function ownerClaim(pass) { return API.api('/api/owner/claim', { passphrase: pass }).then(function (m) { publish(m); return m; }); }
+  function ownerView(as) { return API.api('/api/owner/view', as === 'leave' ? { leave: true } : { as: as }).then(function (m) { publish(m); return m; }); }
+  // show the membership screen or the look packs exactly as a customer sees them, whatever this device's own plan is
+  function preview(kind) {
+    var save = st.me; st.me = Object.assign({}, save || {}, { paywall: true, tier: kind === 'packs' ? 'paid' : 'free' });
+    try { kind === 'packs' ? openTopups('owner_preview') : openPaywall('owner_preview'); } finally { st.me = save; }
+  }
+  window.FCPlan = { openPaywall: openPaywall, openTopups: openTopups, restore: restore, manage: manage, refresh: refresh, sync: sync, code: codePrompt, state: st,
+    ownerClaim: ownerClaim, ownerView: ownerView, preview: preview };
   function init() {
     if (!API || !API.url) return;
     // on-device looks are unlimited for everyone: the studio's own Pro gate stays open, Pro is about AI looks

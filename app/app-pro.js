@@ -169,17 +169,19 @@
     var s = $('#fcSettings'); if (!s) { s = document.createElement('div'); s.id = 'fcSettings'; s.className = 'proSheet'; s.setAttribute('role', 'dialog'); document.body.appendChild(s); }
     var dev = API.device() || '—';
     s.innerHTML = '<section class="proCard"><button class="toolbtn proClose" id="fcSetClose" aria-label="Close">✕</button><div class="prolabel">✦ FACE COUTURE</div><h2>Settings</h2>' +
-      '<p class="note" id="fcSetTier">' + (state.me ? ('Plan: ' + ({ paid: 'Face Couture Pro', trial: 'Pro · free trial', promo: 'Promo', free: 'Free', launch: 'Free launch' }[state.me.tier] || state.me.tier) + ' · AI looks left: ' + state.me.left.total) : 'Beauty tools work offline. AI looks need a connection.') + '</p>' +
+      '<p class="note" id="fcSetTier">' + ((window.FCPlan && window.FCPlan.state.me && (state.me = window.FCPlan.state.me)) || state.me ? ('Plan: ' + ({ paid: 'Face Couture Pro', trial: 'Pro · free trial', promo: 'Promo', free: 'Free', launch: 'Free launch', owner: 'Owner' }[state.me.tier] || state.me.tier) + (state.me.owner ? (state.me.viewAs && state.me.viewAs !== 'owner' ? ' · previewing a customer view' : ' · unlimited AI looks') : ' · AI looks left: ' + state.me.left.total)) : 'Beauty tools work offline. AI looks need a connection.') + '</p>' +
+      ownerPanel() +
       '<div class="fcSetList">' +
       (window.FCPlan && window.FCPlan.state.me && window.FCPlan.state.me.paywall ? '<button class="btn full" id="fcSetPro">' + (/paid|trial/.test(window.FCPlan.state.me.tier) ? 'Manage subscription' : 'Face Couture Pro') + '</button>' : '') +
       '<button class="toolbtn full" id="fcSetPromo">Enter a promo code</button><button class="toolbtn full" id="fcSetRestore">Restore purchases</button>' +
       '<button class="toolbtn full" id="fcSetPrivacy">Privacy policy</button><button class="toolbtn full" id="fcSetTerms">Terms of use</button>' +
       '<button class="toolbtn full" id="fcSetSupport">Contact support</button><button class="toolbtn full" id="fcSetDelete">Delete my data</button></div>' +
       '<p class="note">Your photos never leave your phone unless you choose an AI look, and then they are sent only for that edit and never stored or used for training. Device ID: <code>' + dev + '</code></p>' +
-      '<p class="note">Face Couture by Always Luxe · version ' + (CFG.version || '1.0.0') + '</p></section>';
+      '<p class="note" id="fcSetVersion">Face Couture by Always Luxe · version ' + (CFG.version || '1.0.0') + '</p></section>';
     s.hidden = false;
     $('#fcSetClose').onclick = closeSheet;
     var pro = $('#fcSetPro'), plan = window.FCPlan, pm = plan && plan.state.me;
+    wireOwner(plan);
     if (pro) pro.onclick = function () { closeSheet(); if (pm && (pm.tier === 'paid' || pm.tier === 'trial')) plan.manage(); else if (plan) plan.openPaywall('settings'); };
     $('#fcSetPromo').onclick = function () { closeSheet(); plan ? plan.code() : promoPrompt(); }; $('#fcSetRestore').onclick = function () { plan ? plan.restore() : restore(); };
     $('#fcSetPrivacy').onclick = function () { closeSheet(); openLegal('privacy'); }; $('#fcSetTerms').onclick = function () { closeSheet(); openLegal('terms'); };
@@ -188,6 +190,36 @@
       if (!confirm('Delete everything linked to this device on our servers (AI allowance history and promo use)? Photos are never stored by us. Subscriptions are managed in your store account.')) return;
       API.api('/api/delete-my-data', {}).then(function (r) { toast(r.message || 'Deleted.'); try { localStorage.removeItem('fc-token'); localStorage.removeItem('fc-device'); } catch (e) {} closeSheet(); }).catch(function (e) { toast(e.message || 'Could not delete right now.'); });
     };
+  }
+  // ---------- owner mode: tap the version line 5 times, enter the owner passphrase ----------
+  var OWNER_VIEWS = [['owner', 'Owner (unlimited)'], ['launch', 'Free launch'], ['free', 'No plan'], ['trial', 'Free trial'], ['trial_out', 'Trial used up'], ['paid', 'Member'], ['paid_out', 'Member, out of looks'], ['busy', 'AI budget reached']];
+  function ownerPanel() {
+    var pm = window.FCPlan && window.FCPlan.state.me; if (!pm || !pm.owner) return '';
+    var v = pm.viewAs || 'owner';
+    return '<div class="fcOwner"><div class="fcOwnerHead"><b>Owner mode</b><span>Only on this device. Your own use is not counted as a customer.</span></div>' +
+      '<div class="fcOwnerLabel">See the app as</div><div class="fcOwnerViews">' +
+      OWNER_VIEWS.map(function (o) { return '<button type="button" data-view="' + o[0] + '" class="' + (o[0] === v ? 'on' : '') + '">' + o[1] + '</button>'; }).join('') + '</div>' +
+      '<div class="fcOwnerBtns"><button type="button" class="toolbtn full" id="fcOwnPay">Preview membership screen</button><button type="button" class="toolbtn full" id="fcOwnPacks">Preview look packs</button>' +
+      '<button type="button" class="btn full" id="fcOwnDash">Open owner dashboard</button><button type="button" class="linklike" id="fcOwnLeave">Leave owner mode</button></div></div>';
+  }
+  function wireOwner(plan) {
+    var ver = $('#fcSetVersion'), taps = 0, tm = 0;
+    if (ver) ver.onclick = function () {
+      taps++; clearTimeout(tm); tm = setTimeout(function () { taps = 0; }, 1500);
+      if (taps < 5 || !plan) return; taps = 0;
+      if (plan.state.me && plan.state.me.owner) { toast('Owner mode is already on.'); return; }
+      var pass = prompt('Owner passphrase'); if (!pass) return;
+      plan.ownerClaim(pass).then(function () { toast('Owner mode is on for this device.'); openSettings(); }).catch(function (e) { toast(e.message || 'That did not work.'); });
+    };
+    var box = document.querySelector('#fcSettings .fcOwner'); if (!box || !plan) return;
+    box.querySelectorAll('[data-view]').forEach(function (b) { b.onclick = function () {
+      plan.ownerView(b.dataset.view).then(function () { toast('Now seeing the app as: ' + b.textContent); openSettings(); }).catch(function (e) { toast(e.message || 'Could not switch.'); }); }; });
+    $('#fcOwnPay').onclick = function () { closeSheet(); plan.preview('paywall'); };
+    $('#fcOwnPacks').onclick = function () { closeSheet(); plan.preview('packs'); };
+    $('#fcOwnDash').onclick = function () { var u = (API.url || 'https://face-couture-api.facecouture.workers.dev') + '/admin';
+      try { if (window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.Browser) { Capacitor.Plugins.Browser.open({ url: u }); return; } } catch (e) {} window.open(u, '_blank'); };
+    $('#fcOwnLeave').onclick = function () { if (!confirm('Leave owner mode on this device?')) return;
+      plan.ownerView('leave').then(function () { toast('Owner mode is off.'); openSettings(); }).catch(function (e) { toast(e.message || 'Could not leave.'); }); };
   }
   function openLegal(kind) { var l = document.querySelector('.legalLink[data-legal="' + kind + '"]'); if (l) l.click(); }
   function closeSheet() { var s = $('#fcSettings'); if (s) s.hidden = true; }

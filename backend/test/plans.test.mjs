@@ -81,3 +81,22 @@ r = await call('/api/webhooks/revenuecat', { event: { type: 'NON_RENEWING_PURCHA
 ok(r.status === 401, 'fake purchase messages without the secret are rejected');
 // 13. paywall date in the future = still free launch
 await setCfg({ pro: { paywallFrom: '2099-01-01' } }); let f = await newDevice(); me = (await call('/api/me', null, f.token, 'GET')).j; ok(me.tier === 'launch' && me.paywall === false, 'paywall date in the future: still the free launch');
+// 14. owner mode: passphrase, unlimited, view-as previews, not counted as a user
+await setCfg({ pro: { paywallFrom: '2020-01-01' } });
+{ const o = await newDevice();
+  let bad = await call('/api/owner/claim', { passphrase: 'nope' }, o.token); ok(bad.status === 403, 'owner: wrong passphrase refused');
+  let good = await call('/api/owner/claim', { passphrase: 'pw' }, o.token); ok(good.status === 200 && good.j.owner && good.j.tier === 'owner' && good.j.paywall === false, 'owner: passphrase turns on owner mode (' + good.j.tier + ')');
+  let codes = []; for (let i = 0; i < 25; i++) { clearRL(); codes.push((await ai(o.token)).status); }
+  ok(codes.every(c => c === 200), 'owner: unlimited AI looks (25 in a row)');
+  const views = { free: [402, 'subscribe'], trial_out: [402, 'allowance'], paid_out: [402, 'allowance'], busy: [503, 'ceiling'] };
+  for (const [v, [st, code]] of Object.entries(views)) {
+    const mv = await call('/api/owner/view', { as: v }, o.token); clearRL(); const rr = await ai(o.token);
+    ok(mv.status === 200 && mv.j.viewAs === v && rr.status === st && rr.j.code === code, 'owner: view as ' + v + ' shows what customers see (' + rr.status + ' ' + rr.j.code + ')');
+  }
+  let tv = await call('/api/owner/view', { as: 'trial' }, o.token); clearRL(); let tr = await ai(o.token);
+  ok(tv.j.tier === 'trial' && tv.j.left.total === 2 && tr.status === 200, 'owner: view as trial member works');
+  const before = kv.get('dau:' + new Date().toISOString().slice(0, 10) + ':' + o.device);
+  await call('/api/event', { name: 'open' }, o.token);
+  ok(!kv.get('dau:' + new Date().toISOString().slice(0, 10) + ':' + o.device), 'owner: not counted as a daily user');
+  let lv = await call('/api/owner/view', { leave: true }, o.token); ok(lv.j.tier === 'free' && !lv.j.owner, 'owner: leaving owner mode makes it a normal device again');
+  let other = await newDevice(); let nv = await call('/api/owner/view', { as: 'paid' }, other.token); ok(nv.status === 403, 'owner: other devices cannot use owner controls'); }

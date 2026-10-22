@@ -38,6 +38,8 @@ async function route(req, env, ctx, url) {
   if (p === '/api/ai' && req.method === 'POST') return generate(req, env, ctx, null);
   if (p === '/api/promo/redeem' && req.method === 'POST') return redeemPromo(req, env);
   if (p === '/api/me') return me(req, env);
+  if (p === '/api/owner/claim' && req.method === 'POST') return ownerClaim(req, env);
+  if (p === '/api/owner/view' && req.method === 'POST') return ownerView(req, env);
   if (p === '/api/sync' && req.method === 'POST') return syncPurchases(req, env);
   if (p === '/api/event' && req.method === 'POST') return event(req, env, ctx);
   if (p === '/api/report' && req.method === 'POST') return report(req, env);
@@ -129,13 +131,60 @@ async function allowanceCheck(env, dev, cfg) {
   return { tier, ok: planLeft > 0 || credits > 0, planLeft, credits,
            left: { today: planLeft + credits, month: monthLeft + credits, plan: planLeft, credits, total: planLeft + credits }, allowance: a };
 }
+// ---------- owner mode ----------
+// The owner's own phone: unlimited AI looks, never paywalled, kept out of user statistics, and able to
+// "view the app as" any kind of customer (launch, no plan, trial, member, out of looks, budget reached).
+const OWNER_VIEWS = ['owner', 'launch', 'free', 'trial', 'trial_out', 'paid', 'paid_out', 'busy'];
+function ownerMe(dev, cfg) {
+  const v = OWNER_VIEWS.includes(dev.viewAs) ? dev.viewAs : 'owner', A = cfg.allowances;
+  const base = { owner: true, viewAs: v, pro: publicConfig(cfg).pro, paywall: v !== 'owner' && v !== 'launch', credits: 0, proUntil: 0, trialUntil: 0, promoUntil: 0 };
+  const L = (n) => ({ today: n, month: n, plan: n, credits: 0, total: n });
+  const m = {
+    owner: { tier: 'owner', left: L(999), allowance: {} },
+    launch: { tier: 'launch', left: L(A.launch.perDay || 2), allowance: A.launch },
+    free: { tier: 'free', left: L(0), allowance: A.free },
+    trial: { tier: 'trial', left: L(A.trial.total || 2), allowance: A.trial },
+    trial_out: { tier: 'trial', left: L(0), allowance: A.trial },
+    paid: { tier: 'paid', left: L(A.paid.perMonth || 15), allowance: A.paid },
+    paid_out: { tier: 'paid', left: L(0), allowance: A.paid },
+    busy: { tier: 'paid', left: L(A.paid.perMonth || 15), allowance: A.paid }
+  }[v];
+  return Object.assign(base, m);
+}
+// what an AI look request does for the owner in each view (null = make it, unlimited and not counted)
+function ownerGate(dev, cfg) {
+  const v = dev.viewAs || 'owner';
+  if (v === 'free') return err('AI looks are part of Face Couture Pro.', 402, { code: 'subscribe', tier: 'free', preview: true });
+  if (v === 'trial_out') return err(`You've used the ${cfg.allowances.trial.total} AI looks in your free trial.`, 402, { code: 'allowance', tier: 'trial', preview: true });
+  if (v === 'paid_out') return err(`You've used this month's ${cfg.allowances.paid.perMonth} AI looks.`, 402, { code: 'allowance', tier: 'paid', preview: true });
+  if (v === 'busy') return err(cfg.spend.blockedMessage, 503, { code: 'ceiling', fallback: 'on_device', preview: true });
+  return null;
+}
+async function ownerClaim(req, env) {
+  const dev = await auth(req, env); if (!dev) return err('Please reopen the app and try again.', 401);
+  if (!(await rateLimit(env, 'ownerclaim:' + dev.id, 5, 3600))) return err('Too many tries. Please wait an hour.', 429);
+  const b = await req.json().catch(() => ({}));
+  if (!env.ADMIN_PASSPHRASE || String(b.passphrase || '') !== env.ADMIN_PASSPHRASE) return err('That passphrase is not right.', 403);
+  dev.owner = true; dev.viewAs = 'owner'; dev.ownerSince = Date.now(); await saveDev(env, dev);
+  await env.KV.put('owner:' + dev.id, JSON.stringify({ since: dev.ownerSince, platform: dev.platform || '' }));
+  return meFor(env, dev);
+}
+async function ownerView(req, env) {
+  const dev = await auth(req, env); if (!dev || !dev.owner) return err('Owner mode is not on for this device.', 403);
+  const b = await req.json().catch(() => ({}));
+  if (b.leave) { dev.owner = false; delete dev.viewAs; await saveDev(env, dev); await env.KV.delete('owner:' + dev.id); return meFor(env, dev); }
+  if (!OWNER_VIEWS.includes(b.as)) return err('Unknown view.');
+  dev.viewAs = b.as; await saveDev(env, dev); return meFor(env, dev);
+}
 async function saveDev(env, dev) { const { id, ...rec } = dev; await env.KV.put('dev:' + id, JSON.stringify(rec), { expirationTtl: 60 * 86400 * 6 }); }
 async function me(req, env) {
   const dev = await auth(req, env); if (!dev) return err('Sign in to the app again (device token missing).', 401);
   return meFor(env, dev);
 }
 async function meFor(env, dev) {
-  const cfg = await getConfig(env); const a = await allowanceCheck(env, dev, cfg);
+  const cfg = await getConfig(env);
+  if (dev.owner) return json(ownerMe(dev, cfg));
+  const a = await allowanceCheck(env, dev, cfg);
   return json({ tier: a.tier, left: a.left, credits: a.credits, allowance: a.allowance, pro: publicConfig(cfg).pro, paywall: paywallOn(cfg),
                 proUntil: dev.proUntil || 0, trialUntil: dev.trialUntil || 0, promoUntil: dev.promoUntil || 0 });
 }
@@ -149,7 +198,8 @@ async function generate(req, env, ctx, forcedTask) {
   if (!dev) return err('Please reopen the app so it can reconnect, then try again.', 401, { code: 'auth' });
   const ip = req.headers.get('cf-connecting-ip') || '0';
   // owner test runs (signed with the private engine key) are not limited by the per-device allowance or rate limits
-  const ownerTest = !!(env.APP_SIGNING_SECRET && req.headers.get('x-fc-engine-key') === env.APP_SIGNING_SECRET);
+  const ownerTest = !!(env.APP_SIGNING_SECRET && req.headers.get('x-fc-engine-key') === env.APP_SIGNING_SECRET) || !!dev.owner;
+  if (dev.owner) { const g = ownerGate(dev, cfg); if (g) return g; }
   if (!ownerTest && !(await rateLimit(env, 'gen:' + dev.id, 6, 60)) || !(await rateLimit(env, 'genip:' + ip, 30, 60))) return err('Please wait a moment before the next generation.', 429, { code: 'rate' });
 
   let b; try { b = await req.json(); } catch { return err('Bad request'); }
@@ -173,7 +223,7 @@ async function generate(req, env, ctx, forcedTask) {
   // paying customers (members, or anyone who bought a look pack) are never stopped by the monthly spending limit:
   // their looks are already paid for and still capped by their own allowance (20 a month + packs).
   // Free trials and free membership codes do not count as paying. Everyone else gets the on-device look instead.
-  const payer = (al.tier === 'paid' && (dev.paidUntil || 0) > Date.now()) || (al.credits || 0) > 0;
+  const payer = !!dev.owner || (al.tier === 'paid' && (dev.paidUntil || 0) > Date.now()) || (al.credits || 0) > 0;
   if (!payer && spent + cost > cfg.spend.monthlyCeilingUSD) { await bump(env, 'stat:blocked_ceiling:' + month()); return err(cfg.spend.blockedMessage, 503, { code: 'ceiling', fallback: 'on_device' }); }
   if (payer && spent + cost > cfg.spend.monthlyCeilingUSD) await bump(env, 'stat:over_ceiling_paid:' + month());
   const retryKey = 'retry:' + dev.id; let isRetry = false;
@@ -258,8 +308,9 @@ async function generate(req, env, ctx, forcedTask) {
   }
   ctx.waitUntil(Promise.all([
     isRetry ? bump(env, 'stat:retry:' + month()) : Promise.resolve(), usedCredit ? bump(env, 'stat:credit_used:' + month()) : Promise.resolve(),
-    bumpFloat(env, 'spend:' + month(), actualCost), bump(env, 'stat:gen:' + task + ':' + month()), bump(env, 'stat:gen_total:' + month()),
-    bump(env, 'stat:gen_tier:' + al.tier + ':' + month()), bump(env, 'stat:latency_ms:' + month(), Date.now() - started), spendAlert(env)
+    // the owner's own looks still cost real money (spend), but are kept out of customer statistics
+    bumpFloat(env, 'spend:' + month(), actualCost), dev.owner ? bump(env, 'stat:gen_owner:' + month()) : bump(env, 'stat:gen:' + task + ':' + month()), dev.owner ? Promise.resolve() : bump(env, 'stat:gen_total:' + month()),
+    dev.owner ? Promise.resolve() : bump(env, 'stat:gen_tier:' + al.tier + ':' + month()), bump(env, 'stat:latency_ms:' + month(), Date.now() - started), spendAlert(env)
   ]));
   return json({ image: out, task, quality, engine: engKey, model: engModel, usage: meta, ms: Date.now() - started, left: (isRetry || ownerTest) ? al.left : { today: Math.max(0, al.left.today - 1), month: Math.max(0, al.left.month - 1), plan: Math.max(0, al.planLeft - (usedCredit ? 0 : 1)), credits: al.credits - (usedCredit ? 1 : 0), total: Math.max(0, al.left.total - 1) } });
 }
@@ -378,6 +429,7 @@ async function event(req, env, ctx) {
   const b = await req.json().catch(() => ({}));
   if (!EVENTS.has(b.name)) return json({ ok: true });
   const dev = await auth(req, env); const plat = dev ? dev.platform : 'web';
+  if (dev && dev.owner) return json({ ok: true, owner: true }); // the owner's own use is not counted as a user
   const m = month(), d = day();
   const jobs = [bump(env, `ev:${b.name}:${m}`), bump(env, `ev:${b.name}:${plat}:${m}`)];
   if (b.name === 'look_applied' && /^[a-z0-9_]{1,40}$/i.test(b.look || '')) jobs.push(bump(env, `look:${b.look}:${m}`));
@@ -448,7 +500,7 @@ async function overview(env, cfg, m) {
   const g = async k => +(await env.KV.get(k)) || 0;
   const countPrefix = async p => (await env.KV.list({ prefix: p, limit: 1000 })).keys.length;
   const stats = {};
-  for (const k of ['gen_total', 'fail_provider', 'fail_timeout', 'blocked_ceiling', 'over_ceiling_paid', 'trials', 'purchases', 'renewals', 'cancellations', 'refunds', 'latency_ms']) stats[k] = await g(`stat:${k}:${m}`);
+  for (const k of ['gen_total', 'gen_owner', 'fail_provider', 'fail_timeout', 'blocked_ceiling', 'over_ceiling_paid', 'trials', 'purchases', 'renewals', 'cancellations', 'refunds', 'latency_ms']) stats[k] = await g(`stat:${k}:${m}`);
   const gens = {}; for (const t of TASKS) gens[t] = await g(`stat:gen:${t}:${m}`);
   const tiers = {}; for (const t of ['launch', 'free', 'trial', 'paid', 'promo', 'anonymousWeb']) tiers[t] = await g(`stat:gen_tier:${t}:${m}`);
   const events = {}; for (const e of EVENTS) events[e] = await g(`ev:${e}:${m}`);
@@ -461,6 +513,7 @@ async function overview(env, cfg, m) {
   const spend = +(await env.KV.get('spend:' + m)) || 0;
   return {
     month: m, spend: { usd: +spend.toFixed(2), ceiling: cfg.spend.monthlyCeilingUSD, percent: cfg.spend.monthlyCeilingUSD ? +(spend / cfg.spend.monthlyCeilingUSD * 100).toFixed(1) : 0, perGenAvg: stats.gen_total ? +(spend / stats.gen_total).toFixed(3) : 0 },
+    owners: await countPrefix('owner:'),
     users: { registeredDevices: await countPrefix('dev:'), dau: await countPrefix('dau:' + day()), mau: await countPrefix('mau:' + m), installs },
     ai: { generations: stats.gen_total, byTool: gens, byTier: tiers, failures: { provider: stats.fail_provider, timeout: stats.fail_timeout }, blockedByCeiling: stats.blocked_ceiling, avgSeconds: stats.gen_total ? +(stats.latency_ms / stats.gen_total / 1000).toFixed(1) : 0 },
     subscriptions: { topups: await g('stat:topups:' + m), creditsUsed: await g('stat:credit_used:' + m), trials: stats.trials, purchases: stats.purchases, renewals: stats.renewals, cancellations: stats.cancellations, refunds: stats.refunds },

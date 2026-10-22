@@ -169,3 +169,13 @@ html.fc-app.fc-studio body .workspace.expanded .stagefoot #quickSave{display:non
 .fcpCard.pw .fcpCta{margin:16px 0 8px}
 .fcpSure{display:flex;justify-content:center;gap:16px;margin:0 0 8px;font-size:12.5px;font-weight:600;color:#3e8a5a}
 .fcpCard.pw .fcpLinks{margin-top:2px}
+
+/* owner mode panel (settings) */
+.fcOwner{margin:14px 0 6px;padding:14px;border-radius:18px;border:1.5px solid #c9a24a;background:linear-gradient(160deg,#fffaf2,#fdf1df)}
+.fcOwnerHead{display:grid;gap:2px;margin-bottom:10px}.fcOwnerHead b{font-size:16px;color:#2a1838}.fcOwnerHead span{font-size:12.5px;color:#7a6b88}
+.fcOwnerLabel{font-size:11px;letter-spacing:1.4px;font-weight:800;color:#8a6420;text-transform:uppercase;margin-bottom:6px}
+.fcOwnerViews{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.fcOwnerViews button{border:1px solid #e3cf9e;background:#fff;color:#4a2a63;border-radius:999px;padding:7px 11px;font:600 12.5px -apple-system,system-ui,sans-serif}
+.fcOwnerViews button.on{background:#7a4cc2;border-color:#7a4cc2;color:#fff}
+.fcOwnerBtns{display:grid;gap:8px}.fcOwnerBtns .linklike{border:0;background:none;color:#7a4cc2;font-weight:600;padding:6px}
+#fcSetVersion{user-select:none;-webkit-user-select:none}
