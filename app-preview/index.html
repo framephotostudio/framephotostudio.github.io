@@ -3548,7 +3548,7 @@ function callAI(body,retried){return hello(retried).then(function(t){return fetc
 var isApp=!!window.__FC_APP;
 function showLeft(m){var el=$('luxeLeft'),tx=$('luxeLeftTxt');if(!el||!m||!m.left)return;window.__luxeMe=m;var n=m.left.total,t=m.tier;
  var pl=m.left.plan!=null?m.left.plan:n,ex=m.credits||0;
- var s=t==='trial'?(ex?(pl>0?pl+' free trial AI look'+(pl===1?'':'s')+' + '+ex+' extra left':n+' AI looks left'):n+' of '+(m.allowance&&m.allowance.total||2)+' AI looks left in your free trial'):t==='paid'?n+' AI looks left this month':t==='free'?(m.credits?n+' AI looks left':''):n+' AI look'+(n===1?'':'s')+' left today';
+ var s=t==='owner'?'Owner mode: unlimited AI looks':t==='trial'?(ex?(pl>0?pl+' free trial AI look'+(pl===1?'':'s')+' + '+ex+' extra left':n+' AI looks left'):n+' of '+(m.allowance&&m.allowance.total||2)+' AI looks left in your free trial'):t==='paid'?n+' AI looks left this month':t==='free'?(m.credits?n+' AI looks left':''):n+' AI look'+(n===1?'':'s')+' left today';
  if(m.credits&&t!=='free'&&t!=='trial')s+=' (includes '+m.credits+' extra)';tx.textContent=s;el.hidden=!s;
  var b=el.querySelector('button');if(b)b.remove();
  if(isApp&&window.FCPlan&&m.paywall&&(t==='paid'||t==='trial'||t==='free')){b=document.createElement('button');b.type='button';b.textContent=t==='free'?'Get Face Couture Pro':'Get more AI looks';b.onclick=function(){t==='free'?window.FCPlan.openPaywall('counter'):window.FCPlan.openTopups('counter')};el.appendChild(b)}}
