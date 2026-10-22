@@ -129,7 +129,7 @@
   }
   function openPaywall(source) {
     var p = pro();
-    if (st.me && !st.me.paywall) { toast('Everything is free during our launch month. Enjoy!'); return; }
+    if (st.me && !st.me.paywall) { toast('Everything is free during our launch. Enjoy!'); return; }
     if (st.me && (st.me.tier === 'paid' || st.me.tier === 'trial')) { openTopups(source); return; }
     var render = function (pk) {
       mount(paywallHTML(p, pk), 'pay');
@@ -145,7 +145,7 @@
   }
   function openTopups(source) {
     var p = pro(), me = st.me || {};
-    if (me && me.paywall === false) { toast('Everything is free during our launch month. More AI looks tomorrow.'); return; }
+    if (me && me.paywall === false) { toast('Everything is free during our launch. More AI looks tomorrow.'); return; }
     var render = function (t) {
       var ids = Object.keys(p.topups);
       mount('<div class="fcpCard"><button class="fcpX" aria-label="Close">×</button><div class="fcpHero small"><div class="fcpLogo">✦ AI LUXE LOOKS</div><h2>More AI looks</h2>' +

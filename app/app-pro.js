@@ -169,7 +169,7 @@
     var s = $('#fcSettings'); if (!s) { s = document.createElement('div'); s.id = 'fcSettings'; s.className = 'proSheet'; s.setAttribute('role', 'dialog'); document.body.appendChild(s); }
     var dev = API.device() || '—';
     s.innerHTML = '<section class="proCard"><button class="toolbtn proClose" id="fcSetClose" aria-label="Close">✕</button><div class="prolabel">✦ FACE COUTURE</div><h2>Settings</h2>' +
-      '<p class="note" id="fcSetTier">' + (state.me ? ('Plan: ' + ({ paid: 'Face Couture Pro', trial: 'Pro · free trial', promo: 'Promo', free: 'Free', launch: 'Launch month (free)' }[state.me.tier] || state.me.tier) + ' · AI looks left: ' + state.me.left.total) : 'Beauty tools work offline. AI looks need a connection.') + '</p>' +
+      '<p class="note" id="fcSetTier">' + (state.me ? ('Plan: ' + ({ paid: 'Face Couture Pro', trial: 'Pro · free trial', promo: 'Promo', free: 'Free', launch: 'Free launch' }[state.me.tier] || state.me.tier) + ' · AI looks left: ' + state.me.left.total) : 'Beauty tools work offline. AI looks need a connection.') + '</p>' +
       '<div class="fcSetList">' +
       (window.FCPlan && window.FCPlan.state.me && window.FCPlan.state.me.paywall ? '<button class="btn full" id="fcSetPro">' + (/paid|trial/.test(window.FCPlan.state.me.tier) ? 'Manage subscription' : 'Face Couture Pro') + '</button>' : '') +
       '<button class="toolbtn full" id="fcSetPromo">Enter a promo code</button><button class="toolbtn full" id="fcSetRestore">Restore purchases</button>' +

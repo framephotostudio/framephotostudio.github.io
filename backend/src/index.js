@@ -109,7 +109,7 @@ function tierOf(dev, cfg) {
   if (dev.trialUntil && dev.trialUntil > now) return 'trial';
   if (dev.promoUntil && dev.promoUntil > now) return 'promo';
   if (dev.platform === 'web') return 'anonymousWeb';
-  if (!paywallOn(cfg)) return 'launch';          // free launch month: everything unlocked
+  if (!paywallOn(cfg)) return 'launch';          // free launch (2 weeks): everything unlocked
   return 'free';
 }
 async function allowanceCheck(env, dev, cfg) {
