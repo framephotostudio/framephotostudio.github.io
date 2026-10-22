@@ -2515,12 +2515,12 @@ function panel(x,img,hb,X,Y,W,H,label){var b=cropBox(img,hb,W,H);x.save();rr(x,X
 x.lineWidth=3;x.strokeStyle=GOLD;rr(x,X+1.5,Y+1.5,W-3,H-3,21);x.stroke();
 x.font='700 26px "Helvetica Neue",Arial,system-ui,sans-serif';var t=label.split('').join(String.fromCharCode(8202)),tw=x.measureText(t).width,pw=tw+44,phh=50,px=X+(W-pw)/2,py=Y+H-phh-22;
 x.fillStyle='rgba(248,241,234,.94)';rr(x,px,py,pw,phh,25);x.fill();x.lineWidth=1.5;x.strokeStyle=GOLD;x.stroke();x.fillStyle=PLUM;x.textBaseline='middle';x.textAlign='center';x.fillText(t,X+W/2,py+phh/2+1)}
-async function makeCard(){
+async function makeCard(bIn,aIn){
 var W=1080,H=1350,c=document.createElement('canvas');c.width=W;c.height=H;var x=c.getContext('2d');
-var after=process(2000,false,originalPhoto),before=process(2000,true,originalPhoto),hb=null;try{hb=headBox()}catch(e){hb=null}
+var ai=!!(bIn&&aIn),after=ai?aIn:process(2000,false,originalPhoto),before=ai?bIn:process(2000,true,originalPhoto),hb=null;try{hb=headBox()}catch(e){hb=null}
 var g=x.createLinearGradient(0,0,0,H);g.addColorStop(0,'#fbf6f0');g.addColorStop(1,'#f3e7dc');x.fillStyle=g;x.fillRect(0,0,W,H);
 var M=36,G=18,FOOT=200,pw=(W-2*M-G)/2,ph=H-M-FOOT;
-var bare=window.__bareImg;if(bare)panel(x,bare,null,M,M,pw,ph,'NO MAKEUP');else panel(x,before,hb,M,M,pw,ph,'BEFORE');panel(x,after,hb,M+pw+G,M,pw,ph,bare?'FINISHED LOOK':'AFTER');
+var bare=ai?null:window.__bareImg;if(bare)panel(x,bare,null,M,M,pw,ph,'NO MAKEUP');else panel(x,before,hb,M,M,pw,ph,'BEFORE');panel(x,after,hb,M+pw+G,M,pw,ph,bare?'FINISHED LOOK':'AFTER');
 var logo=document.querySelector('img.logoSvg');if(logo&&logo.complete&&logo.naturalWidth){var lw=470,lh=lw*logo.naturalHeight/logo.naturalWidth;x.drawImage(logo,(W-lw)/2,H-FOOT+30,lw,lh)}
 x.fillStyle=PLUM;x.font='500 28px "Helvetica Neue",Arial,system-ui,sans-serif';x.textAlign='center';x.textBaseline='alphabetic';x.fillText(SITE,W/2,H-30);
 return await new Promise(function(r){c.toBlob(r,'image/jpeg',.93)})}
@@ -2883,6 +2883,14 @@ ctx.textAlign='center';ctx.textBaseline='middle';if(cr){ctx.fillStyle='#8a6a2c';
 ctx.fillStyle='#4a2a63';ctx.font='600 '+Math.round(W*.034)+'px -apple-system,"Segoe UI",sans-serif';ctx.fillText('Edited with Face Couture',W/2,H*.76);ctx.fillStyle='#6b5a72';ctx.font='500 '+Math.round(W*.032)+'px -apple-system,"Segoe UI",sans-serif';ctx.fillText('facecouture.app',W/2,H*.81);ctx.restore()}
 return t<T4}
 window.__reelFrame=frame;
+/* records the same reveal reel for any before/after pair (used by AI Luxe Looks); resolves to a video File */
+window.__reelFile=async function(b,a){if(!window.MediaRecorder)throw Error('Video saving is not supported in this browser.');var mimes=['video/mp4;codecs=avc1.42E01E','video/mp4','video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'],mime=mimes.find(function(m){return MediaRecorder.isTypeSupported(m)});if(!mime)throw Error('Video saving is not supported in this browser.');
+ var W=1080,H=1920,c=document.createElement('canvas');c.width=W;c.height=H;var ctx=c.getContext('2d'),cr=handle(),logo=document.querySelector('header .logoSvg'),bg=backdrop(a,W,H),nb=window.__bareImg;window.__bareImg=null;
+ try{var stream=c.captureStream(30),rec=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:6000000}),chunks=[];rec.ondataavailable=function(e){if(e.data&&e.data.size)chunks.push(e.data)};var done=new Promise(function(res){rec.onstop=res});
+ frame(ctx,W,H,b,a,0,cr,logo,bg);rec.start();var t0=performance.now();
+ await new Promise(function(res){function tick(now){var more=frame(ctx,W,H,b,a,now-t0,cr,logo,bg);if(more)requestAnimationFrame(tick);else res()}requestAnimationFrame(tick)});
+ rec.stop();await done}finally{window.__bareImg=nb}
+ var type=mime.split(';')[0],blob=new Blob(chunks,{type:type});if(!blob.size)throw Error('The reel came out empty. Please try again.');return new File([blob],'face-couture-ai-reveal.'+(type==='video/mp4'?'mp4':'webm'),{type:type})};
 async function makeReel(){if(typeof needPhoto==='function'&&!needPhoto())return;if(!window.MediaRecorder){toast('Video saving is not supported in this browser.');return}
 var btn=document.getElementById('reelVideo'),label=btn.innerHTML,stEl=document.getElementById('reelStatus'),note=stEl?stEl.textContent:'';btn.disabled=true;btn.textContent='Making your reel…';window.__recording=true;var osb=document.getElementById('reelShare');if(osb)osb.hidden=true;if(stEl)stEl.textContent='Recording your reel. Keep this page open for about 8 seconds.';
 try{var mimes=['video/mp4;codecs=avc1.42E01E','video/mp4','video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'],mime=mimes.find(function(m){return MediaRecorder.isTypeSupported(m)});if(!mime)throw Error('Video saving is not supported in this browser.');
@@ -3481,12 +3489,14 @@ var seenFace=false;setInterval(function(){try{if(!seenFace&&typeof beauty!=='und
 .luxeRes{width:100%;max-width:960px;flex:1;display:flex;flex-direction:column;gap:12px;min-height:0;justify-content:center}
 .luxeTop{display:flex;justify-content:space-between;align-items:center;gap:10px}
 .luxeTop b{font-size:18px}.luxeTop button{background:none;border:0;color:#fff;font-size:28px;line-height:1;padding:4px 8px}
-.luxeStage{position:relative;flex:0 1 auto;align-self:center;width:100%;max-height:calc(100vh - 190px);max-height:calc(100dvh - 190px);border-radius:18px;overflow:hidden;background:#000;touch-action:none;user-select:none;-webkit-user-select:none}
+.luxeStage{position:relative;flex:0 1 auto;align-self:center;width:100%;max-height:calc(100vh - 250px);max-height:calc(100dvh - 250px);border-radius:18px;overflow:hidden;background:#000;touch-action:none;user-select:none;-webkit-user-select:none}
 .luxeStage canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
 .luxeSplit{position:absolute;top:0;bottom:0;width:2px;background:#fff;box-shadow:0 0 8px #0008;pointer-events:none}
 .luxeSplit:after{content:'⇆';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:34px;height:34px;border-radius:50%;background:#fff;color:#2a1838;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 2px 10px #0006}
 .luxeTag{position:absolute;top:10px;font-size:11px;letter-spacing:1px;text-transform:uppercase;background:#0007;padding:4px 8px;border-radius:20px;pointer-events:none}
 .luxeActs{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.luxeActs.luxeBA{gap:8px}.luxeBtn.ba{background:linear-gradient(135deg,#fffaf3,#f6e9da);color:#4a2a52;border:1.5px solid #c9a24a;padding:10px 16px;font-size:14px}.luxeBtn.ba[disabled]{opacity:.7}
+.luxeBANote{margin:0;text-align:center;font-size:12.5px;opacity:.8}
 .luxeLeft{margin:10px 2px 0;font-size:12.5px;color:#7a4cc2;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap}.luxeLeft[hidden]{display:none}.luxeLeft button{border:1px solid #e3cfe9;background:#fff;color:#7a4cc2;border-radius:999px;padding:4px 10px;font-size:12px;font-weight:600}
 </style>
 <section class="luxe" id="luxe" aria-labelledby="luxeTitle">
@@ -3597,10 +3607,10 @@ function closeOv(){ov.hidden=true;ov.innerHTML='';document.documentElement.style
 function message(title,text){overlay('<div class="luxeRes" style="flex:0;align-items:center;text-align:center"><h4></h4><p class="sub"></p><div class="luxeActs" style="margin-top:14px"><button class="luxeBtn gold" id="luxeOk">OK</button></div></div>');
  ov.querySelector('h4').textContent=title;ov.querySelector('.sub').textContent=text;$('luxeOk').onclick=closeOv}
 function showResult(L,before,after){
- overlay('<div class="luxeRes"><div class="luxeTop"><b></b><button type="button" id="luxeClose" aria-label="Close">×</button></div><div class="luxeStage" id="luxeStage"><canvas id="luxeA"></canvas><canvas id="luxeB"></canvas><div class="luxeSplit" id="luxeSplit"></div><span class="luxeTag" style="left:10px">Before</span><span class="luxeTag" style="right:10px">After</span></div><div class="luxeActs"><button class="luxeBtn gold" id="luxeSave">Save photo</button><button class="luxeBtn ghost" id="luxeMore">Try another look</button></div></div>');
+ overlay('<div class="luxeRes"><div class="luxeTop"><b></b><button type="button" id="luxeClose" aria-label="Close">×</button></div><div class="luxeStage" id="luxeStage"><canvas id="luxeA"></canvas><canvas id="luxeB"></canvas><div class="luxeSplit" id="luxeSplit"></div><span class="luxeTag" style="left:10px">Before</span><span class="luxeTag" style="right:10px">After</span></div><div class="luxeActs"><button class="luxeBtn gold" id="luxeSave">Save photo</button><button class="luxeBtn ghost" id="luxeMore">Try another look</button></div><div class="luxeActs luxeBA"><button class="luxeBtn ba" id="luxeBAPhoto">Save before &amp; after photo</button><button class="luxeBtn ba" id="luxeBAReel">Save before &rarr; after reel</button></div><p class="luxeBANote" id="luxeBANote" hidden></p></div>');
  ov.querySelector('.luxeTop b').textContent=L.n;
  var A=$('luxeA'),B=$('luxeB'),stage=$('luxeStage'),split=$('luxeSplit');
- A.width=B.width=after.width;A.height=B.height=after.height;var ratio=after.width/after.height;stage.style.aspectRatio=String(ratio);stage.style.width='min(100%, calc((100dvh - 190px) * '+ratio.toFixed(4)+'))';(function(){var bw=before.width,bh=before.height,k=Math.max(after.width/bw,after.height/bh),dw=bw*k,dh=bh*k;B.getContext('2d').drawImage(before,(after.width-dw)/2,(after.height-dh)/2,dw,dh)})();A.getContext('2d').drawImage(after,0,0);
+ A.width=B.width=after.width;A.height=B.height=after.height;var ratio=after.width/after.height;stage.style.aspectRatio=String(ratio);stage.style.width='min(100%, calc((100dvh - 250px) * '+ratio.toFixed(4)+'))';(function(){var bw=before.width,bh=before.height,k=Math.max(after.width/bw,after.height/bh),dw=bw*k,dh=bh*k;B.getContext('2d').drawImage(before,(after.width-dw)/2,(after.height-dh)/2,dw,dh)})();A.getContext('2d').drawImage(after,0,0);
  var pos=.5;function lay(){var r=stage.getBoundingClientRect(),k=Math.min(r.width/after.width,r.height/after.height),w=after.width*k,ox=(r.width-w)/2;
   var px=ox+w*pos;B.style.clipPath='inset(0 '+(r.width-px)+'px 0 0)';split.style.left=(px-1)+'px'}
  function move(e){var r=stage.getBoundingClientRect(),k=Math.min(r.width/after.width,r.height/after.height),w=after.width*k,ox=(r.width-w)/2,x=(e.touches?e.touches[0].clientX:e.clientX)-r.left;pos=Math.max(0,Math.min(1,(x-ox)/w));lay()}
@@ -3608,7 +3618,25 @@ function showResult(L,before,after){
  setTimeout(lay,30);window.addEventListener('resize',lay);
  $('luxeClose').onclick=closeOv;$('luxeMore').onclick=function(){closeOv();try{luxe.scrollIntoView({behavior:'smooth',block:'center'})}catch(e){}};
  $('luxeSave').onclick=function(){after.toBlob(function(blob){var u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download='FaceCouture-'+L.n.replace(/\s+/g,'')+'.jpg';document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u)},4000);
-  if(!(window.FCNative&&window.FCNative.isNative))T('save_image',{via:'ai_luxe',look:L.k});try{toast('Saved. Your '+L.n+' photo is ready to share.')}catch(e){}},'image/jpeg',.95)}}
+  if(!(window.FCNative&&window.FCNative.isNative))T('save_image',{via:'ai_luxe',look:L.k});try{toast('Saved. Your '+L.n+' photo is ready to share.')}catch(e){}},'image/jpeg',.95)}
+ baButtons(L,B,after)}
+/* before & after: the same post (1080x1350) and reveal reel (9:16) as the Makeup Artist ones, with the original photo as BEFORE */
+function baButtons(L,before,after){var bp=$('luxeBAPhoto'),br=$('luxeBAReel'),note=$('luxeBANote');
+ if(!window.__baPromo)bp.hidden=true;if(!window.__reelFile||!window.MediaRecorder)br.hidden=true;
+ function say(t){note.textContent=t||'';note.hidden=!t}
+ async function give(file,label,kind){var r=typeof deliverFiles==='function'?await deliverFiles([file],label):'none';
+  if(r==='none'){var u=URL.createObjectURL(file),a=document.createElement('a');a.href=u;a.download=file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u)},4000);r='downloaded'}
+  if(r==='pending'){var bt=kind==='reel'?br:bp;bt.disabled=false;bt.textContent=kind==='reel'?'Tap to save your reel':'Tap to save your photo';
+   bt.onclick=async function(){try{await navigator.share({files:[file],title:label});say('Saved. Ready to post.')}catch(e){if(!(e&&e.name==='AbortError'))say('Could not save. Please try again.')}bt.textContent=kind==='reel'?'Save before \u2192 after reel':'Save before & after photo';wire()};return}
+  say(r==='cancelled'?'':kind==='reel'?'Your reel is ready. Add your music in Instagram or TikTok.':'Your before & after is ready to post.');T('save_image',{via:kind==='reel'?'ai_luxe_reel':'ai_luxe_ba',look:L.k})}
+ function wire(){
+ bp.onclick=async function(){if(bp.disabled)return;var t=bp.textContent;bp.disabled=true;bp.textContent='Making your before & after\u2026';say('');
+  try{var blob=await window.__baPromo(before,after);if(!blob)throw Error('Could not make the image.');bp.disabled=false;bp.textContent=t;await give(new File([blob],'FaceCouture-'+L.n.replace(/\s+/g,'')+'-before-after.jpg',{type:'image/jpeg'}),'Before & After','photo')}
+  catch(e){say(e.message||'Could not make the before & after.')}finally{if(bp.textContent.indexOf('Making')===0){bp.disabled=false;bp.textContent=t}}};
+ br.onclick=async function(){if(br.disabled)return;var t=br.textContent;br.disabled=true;bp.disabled=true;br.textContent='Making your reel\u2026';say('Recording your reel. Keep this screen open for about 8 seconds.');window.__recording=true;
+  try{var f=await window.__reelFile(before,after);br.disabled=false;br.textContent=t;await give(f,'Before \u2192 after reel','reel')}
+  catch(e){say(e.message||'Could not make the reel.')}finally{window.__recording=false;bp.disabled=false;if(br.textContent.indexOf('Making')===0){br.disabled=false;br.textContent=t}}}}
+ wire()}
 
 // ---------- the look ----------
 var busy=false;
