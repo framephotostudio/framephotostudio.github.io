@@ -145,7 +145,7 @@ html.fc-app.fc-studio body .workspace.expanded .stagefoot #quickSave{display:non
 .fcpShow.empty:after{display:none}
 .fcpLine{position:absolute;top:0;bottom:42%;left:50%;width:2px;margin-left:-1px;background:linear-gradient(180deg,#f3dc96,#c9a24a);box-shadow:0 0 12px rgba(243,220,150,.8);z-index:1}
 .fcpTag{position:absolute;top:calc(env(safe-area-inset-top,0px) + 58px);z-index:2;font:700 10px -apple-system,system-ui,sans-serif;letter-spacing:1.4px;color:#fff;background:rgba(20,8,28,.45);padding:4px 9px;border-radius:999px}
-.fcpTag.l{left:14px}.fcpTag.r{right:14px;background:linear-gradient(135deg,#c9a24a,#a77d2c)}
+.fcpTag.l{right:calc(50% + 10px)}.fcpTag.r{left:calc(50% + 10px);background:linear-gradient(135deg,#c9a24a,#a77d2c)}
 .fcpBody{position:relative;z-index:1;margin-top:-54px;padding:0 20px calc(env(safe-area-inset-bottom,0px) + 16px);text-align:center}
 .fcpBody .fcpLogo{color:#8a6420;font-size:13.5px;font-weight:800;letter-spacing:2.6px;text-shadow:0 1px 0 rgba(255,250,253,.9),0 0 10px rgba(255,250,253,.9)}
 .fcPlan .fcpBody h2{margin:6px 0 14px;font:700 28px/1.1 Georgia,'Times New Roman',serif;letter-spacing:-.5px;color:#2a1838;background:none;border:0;padding:0}
