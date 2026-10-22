@@ -169,8 +169,13 @@ async function generate(req, env, ctx, forcedTask) {
   const quality = b.quality === 'high' || tierOf(dev, cfg) === 'paid' ? 'high' : 'medium';
   const cost = quality === 'high' ? costHigh : costMed;
   const spent = await spentThisMonth(env);
-  if (spent + cost > cfg.spend.monthlyCeilingUSD) { await bump(env, 'stat:blocked_ceiling:' + month()); return err(cfg.spend.blockedMessage, 503, { code: 'ceiling', fallback: 'on_device' }); }
   const al = await allowanceCheck(env, dev, cfg);
+  // paying customers (members, or anyone who bought a look pack) are never stopped by the monthly spending limit:
+  // their looks are already paid for and still capped by their own allowance (20 a month + packs).
+  // Free trials and free membership codes do not count as paying. Everyone else gets the on-device look instead.
+  const payer = (al.tier === 'paid' && (dev.paidUntil || 0) > Date.now()) || (al.credits || 0) > 0;
+  if (!payer && spent + cost > cfg.spend.monthlyCeilingUSD) { await bump(env, 'stat:blocked_ceiling:' + month()); return err(cfg.spend.blockedMessage, 503, { code: 'ceiling', fallback: 'on_device' }); }
+  if (payer && spent + cost > cfg.spend.monthlyCeilingUSD) await bump(env, 'stat:over_ceiling_paid:' + month());
   const retryKey = 'retry:' + dev.id; let isRetry = false;
   if (b.retry === true) { const left = +(await env.KV.get(retryKey)) || 0; if (left > 0) { isRetry = true; await env.KV.put(retryKey, String(left - 1), { expirationTtl: 600 }); } }
   if (!ownerTest && !isRetry && !al.ok) {
@@ -328,8 +333,9 @@ async function revenuecat(req, env) {
     else if (!isTopup) {
       const active = ['INITIAL_PURCHASE', 'RENEWAL', 'UNCANCELLATION', 'PRODUCT_CHANGE', 'SUBSCRIPTION_EXTENDED', 'TRANSFER'].includes(e.type);
       const gone = ['EXPIRATION', 'REFUND'].includes(e.type);
-      if (active && e.expiration_at_ms) { dev.proUntil = e.expiration_at_ms; dev.trialUntil = e.period_type === 'TRIAL' ? e.expiration_at_ms : Math.min(dev.trialUntil || 0, Date.now()); }
-      if (gone) { dev.proUntil = Math.min(dev.proUntil || 0, e.expiration_at_ms || Date.now()); dev.trialUntil = Math.min(dev.trialUntil || 0, Date.now()); }
+      if (active && e.expiration_at_ms) { dev.proUntil = e.expiration_at_ms; dev.trialUntil = e.period_type === 'TRIAL' ? e.expiration_at_ms : Math.min(dev.trialUntil || 0, Date.now());
+        const paidPeriod = e.period_type === 'NORMAL' && !(e.price_in_purchased_currency === 0 || e.price === 0); dev.paidUntil = paidPeriod ? e.expiration_at_ms : Math.min(dev.paidUntil || 0, Date.now()); }
+      if (gone) { dev.proUntil = Math.min(dev.proUntil || 0, e.expiration_at_ms || Date.now()); dev.trialUntil = Math.min(dev.trialUntil || 0, Date.now()); dev.paidUntil = Math.min(dev.paidUntil || 0, Date.now()); }
       dev.store = e.store; await saveDev(env, dev);
     }
   }
@@ -357,6 +363,7 @@ async function syncPurchases(req, env) {
         dev.proUntil = exp;
         const s = (sub.subscriptions || {})[ent.product_identifier] || {};
         dev.trialUntil = s.period_type === 'trial' ? exp : Math.min(dev.trialUntil || 0, Date.now());
+        dev.paidUntil = s.period_type === 'normal' ? exp : Math.min(dev.paidUntil || 0, Date.now());
       }
       await saveDev(env, dev);
       for (const [pid, list] of Object.entries(sub.non_subscriptions || {})) for (const t of list || []) await addCredits(env, dev, pid, t.store_transaction_id || t.id, cfg);
@@ -441,7 +448,7 @@ async function overview(env, cfg, m) {
   const g = async k => +(await env.KV.get(k)) || 0;
   const countPrefix = async p => (await env.KV.list({ prefix: p, limit: 1000 })).keys.length;
   const stats = {};
-  for (const k of ['gen_total', 'fail_provider', 'fail_timeout', 'blocked_ceiling', 'trials', 'purchases', 'renewals', 'cancellations', 'refunds', 'latency_ms']) stats[k] = await g(`stat:${k}:${m}`);
+  for (const k of ['gen_total', 'fail_provider', 'fail_timeout', 'blocked_ceiling', 'over_ceiling_paid', 'trials', 'purchases', 'renewals', 'cancellations', 'refunds', 'latency_ms']) stats[k] = await g(`stat:${k}:${m}`);
   const gens = {}; for (const t of TASKS) gens[t] = await g(`stat:gen:${t}:${m}`);
   const tiers = {}; for (const t of ['launch', 'free', 'trial', 'paid', 'promo', 'anonymousWeb']) tiers[t] = await g(`stat:gen_tier:${t}:${m}`);
   const events = {}; for (const e of EVENTS) events[e] = await g(`ev:${e}:${m}`);

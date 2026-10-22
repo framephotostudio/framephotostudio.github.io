@@ -66,8 +66,15 @@ await setCfg({ promos: { TESTPRO30: { kind: 'pro', days: 30, maxUses: 5, uses: 0
 let pr = await call('/api/promo/redeem', { code: 'testpro30' }, p.token); me = (await call('/api/me', null, p.token, 'GET')).j;
 ok(pr.status === 200 && me.tier === 'paid' && Math.round((me.proUntil - Date.now()) / 86400e3) === 30, '30-day membership code gives Pro for 30 days');
 // 11. budget limit: friendly message and on-device fallback
-kv.set('spend:' + new Date().toISOString().slice(0, 7), '19.99'); clearRL(); r = await ai(t.token);
+kv.set('spend:' + new Date().toISOString().slice(0, 7), '19.99'); { const tr = await newDevice(); await hook({ type: 'INITIAL_PURCHASE', period_type: 'TRIAL', app_user_id: tr.device, product_id: 'fc_pro_yearly', expiration_at_ms: in7 }); clearRL(); r = await ai(tr.token); }
 ok(r.status === 503 && r.j.code === 'ceiling' && r.j.fallback === 'on_device' && /busy right now, try the on-device version/.test(r.j.error), 'budget reached: "' + r.j.error + '"');
+// 11b. paying member past the budget still gets the look (up to their own allowance); free code member does not
+{ const pm = await newDevice(); const exp = Date.now() + 30 * 86400e3;
+  await hook({ type: 'INITIAL_PURCHASE', app_user_id: pm.device, product_id: 'fc_pro_monthly', period_type: 'NORMAL', price: 6.99, expiration_at_ms: exp });
+  clearRL(); let rp = await ai(pm.token); ok(rp.status === 200, 'paying member goes past the budget (' + rp.status + ')');
+  clearRL(); let rc = await ai(p.token); ok(rc.status === 503 && rc.j.code === 'ceiling', 'free 30-day code member still sees "busy" at the budget (' + rc.status + ')');
+  const pk = await newDevice(); await hook({ type: 'NON_RENEWING_PURCHASE', app_user_id: pk.device, product_id: 'fc_ai_20', transaction_id: 'pk1' });
+  clearRL(); let rk = await ai(pk.token); ok(rk.status === 200, 'look pack buyer goes past the budget (' + rk.status + ')'); }
 kv.set('spend:' + new Date().toISOString().slice(0, 7), '0');
 // 12. webhook needs the secret
 r = await call('/api/webhooks/revenuecat', { event: { type: 'NON_RENEWING_PURCHASE', app_user_id: n.device, product_id: 'fc_ai_50', transaction_id: 'evil' } }, null, 'POST', { authorization: 'Bearer wrong' });
