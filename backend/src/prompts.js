@@ -47,7 +47,7 @@ export function simplePrompt(task, o = {}) {
   if (task !== 'glam') return null;
   const L = GLAM[o.intensity] || GLAM.glam;
   return o.style === 'men' ? 'Lightly retouch this photo: clearer even skin and neatly groomed brows. Keep everything else the same. Photorealistic.'
-    : `Give ${o.who ? String(o.who).slice(0, 120) : 'this woman'} luxurious ${L.name} makeup and beauty retouching: ${L.short}, with flawless real skin, realistic separated lashes and a softly slimmer-looking nose from contour. Keep her eye shape and color, face, skin tone and everything else in the photo the same. Photorealistic.`;
+    : `Give ${o.target ? 'only ' + String(o.target).slice(0, 120) : o.who ? String(o.who).slice(0, 120) : 'this woman'} luxurious ${L.name} makeup and beauty retouching: ${L.short}, with flawless real skin and realistic separated lashes. Keep her face, nose, natural lip size, eye shape and eye color, expression, skin tone and everything else in the photo the same${o.target ? ', and leave everyone else in the photo completely unchanged' : ''}. Photorealistic.`;
 }
 const GROOM = {
   soft: 'clearer, more even skin with less redness and shine, softened under-eye darkness, tidy brows',
@@ -67,7 +67,7 @@ export function buildPrompt(task, o = {}) {
       const L = men ? GROOM[o.intensity] || GROOM.glam : GLAM[o.intensity] || GLAM.glam;
       p = men
         ? `Retouch this man like a high-end magazine grooming artist. The result must look noticeably more polished than the original: ${L}. No visible makeup, no lipstick, no eye makeup. Keep the background, clothing and lighting unchanged.`
-        : `Exceptional professional makeup and beauty retouching for ${o.who ? String(o.who).slice(0, 120) + ' (apply the full finish consistently to every one of them, adapted to each person\'s own features and skin tone)' : 'the woman in this photo'}. ${L.look}${o.eyes ? ' Eyes: ' + o.eyes + '.' : ''}${o.lip ? ' Lips: ' + o.lip + '.' : ''} ${LASHES} ${EYES} ${STANDARD}`;
+        : `Exceptional professional makeup and beauty retouching for ${o.target ? 'only ' + String(o.target).slice(0, 120) + ' (edit her face only; leave every other person in the photo exactly as they are, completely untouched)' : o.who ? String(o.who).slice(0, 120) + ' (apply the full finish consistently to every one of them, adapted to each person\'s own features and skin tone)' : 'the woman in this photo'}. ${L.look}${o.eyes ? ' Eyes: ' + o.eyes + '.' : ''}${o.lip ? ' Lips: ' + o.lip + '.' : ''} ${LASHES} ${EYES} ${STANDARD}`;
       return p + ' ' + (men ? 'Keep the same person with the same face, features, eyes, skin tone, hair, expression, pose, clothing and background. Photorealistic with natural skin texture.' : PRESERVE);
     }
     case 'enhance':
