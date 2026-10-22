@@ -3454,4 +3454,186 @@ window.addEventListener('fc:saved',function(){T('save_image',{via:'app'})});
 var seenFace=false;setInterval(function(){try{if(!seenFace&&typeof beauty!=='undefined'&&beauty&&beauty.faceOutline&&beauty.faceOutline.length&&typeof demoMode!=='undefined'&&!demoMode){seenFace=true;T('face_detected',{people:(typeof detectedFaces!=='undefined'?detectedFaces.length:1)})}}catch(e){}},1500);
 }catch(e){console.warn('v67 analytics',e)}})();
 </script>
+<style>
+/* v68: AI Luxe Looks */
+.luxe{margin:18px 0 6px;border-radius:22px;padding:16px 14px 14px;background:linear-gradient(160deg,#fff 0%,#fbf4f6 55%,#f5ecf9 100%);border:1px solid #eedde8;box-shadow:0 10px 30px #4a2f7a14}
+.luxe h3{margin:0;font-size:18px;letter-spacing:-.3px;color:#2a1838;display:flex;align-items:center;gap:8px}
+.luxe h3 i{font-style:normal;font-size:10px;letter-spacing:1.4px;text-transform:uppercase;color:#9a6b2f;background:#fbf0dc;border:1px solid #efd9ad;border-radius:20px;padding:3px 8px}
+.luxe p.lx{margin:4px 0 12px;font-size:13px;color:#6f6478;line-height:1.4}
+.luxeGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+@media(max-width:700px){.luxeGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.luxeCard{position:relative;border:0;border-radius:16px;padding:12px 11px;min-height:86px;text-align:left;color:#fff;display:flex;flex-direction:column;justify-content:flex-end;gap:3px;box-shadow:0 6px 16px #4a2f7a22;overflow:hidden;transition:transform .15s}
+.luxeCard:active{transform:scale(.97)}
+.luxeCard b{font-size:14.5px;line-height:1.1;text-shadow:0 1px 6px #0003}.luxeCard span{font-size:11px;opacity:.95;line-height:1.25;text-shadow:0 1px 6px #0003}
+.luxeCard:after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,transparent 35%,#0000002a)}
+.luxeCard b,.luxeCard span{position:relative;z-index:1}
+.luxeConsent{display:flex;gap:8px;align-items:flex-start;font-size:12px;color:#6f6478;margin:12px 2px 0;line-height:1.4}
+.luxeConsent input{margin-top:2px;accent-color:#7a4cc2}
+.luxeOv{position:fixed;inset:0;z-index:2147483000;background:#140c1cfa;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;padding:calc(env(safe-area-inset-top,0px) + 12px) 14px calc(env(safe-area-inset-bottom,0px) + 14px)}
+.luxeOv[hidden]{display:none}
+.luxeRing{width:74px;height:74px;border-radius:50%;border:3px solid #ffffff22;border-top-color:#e9c77b;animation:lxspin 1s linear infinite}
+@keyframes lxspin{to{transform:rotate(360deg)}}
+.luxeOv h4{margin:18px 0 6px;font-size:20px;font-weight:600;letter-spacing:-.3px;text-align:center}
+.luxeOv .sub{font-size:13px;opacity:.75;text-align:center;max-width:320px;line-height:1.45}
+.luxeBtn{border:0;border-radius:999px;padding:12px 20px;font-weight:600;font-size:15px}
+.luxeBtn.gold{background:linear-gradient(135deg,#f1d590,#c9a24a);color:#2a1838}
+.luxeBtn.ghost{background:#ffffff14;color:#fff;border:1px solid #ffffff33}
+.luxeRes{width:100%;max-width:960px;flex:1;display:flex;flex-direction:column;gap:12px;min-height:0;justify-content:center}
+.luxeTop{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.luxeTop b{font-size:18px}.luxeTop button{background:none;border:0;color:#fff;font-size:28px;line-height:1;padding:4px 8px}
+.luxeStage{position:relative;flex:0 1 auto;align-self:center;width:100%;max-height:calc(100vh - 190px);max-height:calc(100dvh - 190px);border-radius:18px;overflow:hidden;background:#000;touch-action:none;user-select:none;-webkit-user-select:none}
+.luxeStage canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.luxeSplit{position:absolute;top:0;bottom:0;width:2px;background:#fff;box-shadow:0 0 8px #0008;pointer-events:none}
+.luxeSplit:after{content:'⇆';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:34px;height:34px;border-radius:50%;background:#fff;color:#2a1838;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 2px 10px #0006}
+.luxeTag{position:absolute;top:10px;font-size:11px;letter-spacing:1px;text-transform:uppercase;background:#0007;padding:4px 8px;border-radius:20px;pointer-events:none}
+.luxeActs{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+</style>
+<section class="luxe" id="luxe" aria-labelledby="luxeTitle">
+<h3 id="luxeTitle">AI Luxe Looks <i>New</i></h3>
+<p class="lx">Professional glam on your own face: your eyes, lips and features stay yours. Works on solo photos.</p>
+<div class="luxeGrid" id="luxeGrid" role="group" aria-label="AI Luxe Looks"></div>
+<label class="luxeConsent" id="luxeConsentRow"><input type="checkbox" id="luxeConsent"><span>I have permission to edit this photo and agree to it being sent securely to our AI provider (Google) to create the look. It isn't stored. <a href="privacy.html" target="_blank" rel="noopener">Privacy</a></span></label>
+</section>
+<div class="luxeOv" id="luxeOv" hidden role="dialog" aria-modal="true" aria-label="AI Luxe Look"></div>
+<script>
+/* v68: AI Luxe Looks - Nano Banana makeup on the person's own face.
+   Flow: solo-photo check -> AI look -> the person's real eyes are put back -> automatic quality check (eyes, lips, nose,
+   face) with up to 2 quiet re-makes -> before/after viewer -> save at full quality. Nothing touches the studio pipeline. */
+;(function(){try{
+var API='https://face-couture-api.facecouture.workers.dev';
+var LOOKS=[
+ {k:'soft',n:'Soft Glam',t:'Rosy smoky eyes, glossy pink lip',g:'#efb7c2,#9c5468'},
+ {k:'max',n:'Full Glam',t:'Deep smoky eye, rose-berry lip',g:'#c48a7a,#5e2a3d'},
+ {k:'glam',n:'Red Carpet',t:'Gold shimmer, sleek wing, red lip',g:'#e3bd62,#8f1726'},
+ {k:'clean',n:'Clean Girl',t:'Dewy glow, peach-pink gloss',g:'#f8cdb4,#d98b74'},
+ {k:'bridal',n:'Bridal Glow',t:'Rose-gold shimmer, glossy rose',g:'#f3c9d0,#c47487'},
+ {k:'golden',n:'Golden Hour',t:'Bronze and copper, sun-kissed',g:'#f6c27c,#b0582c'},
+ {k:'datenight',n:'Date Night',t:'Mauve smoke, berry lip',g:'#cfa0bd,#6c2f52'},
+ {k:'executive',n:'Executive',t:'Polished and headshot-ready',g:'#dcc3b5,#7b5a4c'}];
+var $=function(id){return document.getElementById(id)};
+var T=function(n,p){try{window.fcTrack&&window.fcTrack(n,p)}catch(e){}};
+var store={get:function(k){try{return localStorage.getItem(k)}catch(e){return null}},set:function(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+var luxe=$('luxe');
+// place the section right above the studio's Looks
+try{var anchor=document.querySelector('h3.vibesTitle');if(anchor&&anchor.parentNode)anchor.parentNode.insertBefore(luxe,anchor)}catch(e){}
+var grid=$('luxeGrid');
+LOOKS.forEach(function(L){var b=document.createElement('button');b.type='button';b.className='luxeCard';b.dataset.luxe=L.k;
+ b.style.background='linear-gradient(140deg,'+L.g+')';b.innerHTML='<b></b><span></span>';b.querySelector('b').textContent=L.n;b.querySelector('span').textContent=L.t;grid.appendChild(b)});
+var consent=$('luxeConsent');consent.checked=store.get('fc-ai-consent')==='1';
+consent.onchange=function(){store.set('fc-ai-consent',consent.checked?'1':'')};
+var ov=$('luxeOv');
+
+// ---------- device token ----------
+var platform=(window.Capacitor&&window.Capacitor.getPlatform)?window.Capacitor.getPlatform():'web';
+function hello(force){var t=store.get('fc-token');if(t&&!force)return Promise.resolve(t);
+ return fetch(API+'/api/hello',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({platform:platform})}).then(function(r){return r.json()}).then(function(j){store.set('fc-token',j.token);store.set('fc-device',j.device);return j.token})}
+function callAI(body,retried){return hello(retried).then(function(t){return fetch(API+'/api/ai',{method:'POST',headers:{'content-type':'application/json',authorization:'Bearer '+t},body:JSON.stringify(body)})}).then(function(r){return r.json().then(function(j){
+ if(r.status===401&&!retried)return callAI(body,true);
+ if(!r.ok||!j.image){var e=new Error(j.error||'The AI could not finish this look. Please try again.');e.code=j.code;throw e}return j})})}
+
+// ---------- helpers ----------
+function loadImg(src){return new Promise(function(res,rej){var i=new Image();i.onload=function(){res(i)};i.onerror=function(){rej(new Error('Could not open the image.'))};i.src=src})}
+function canvasOf(img,w,h){var c=document.createElement('canvas');c.width=w||img.naturalWidth||img.width;c.height=h||img.naturalHeight||img.height;c.getContext('2d').drawImage(img,0,0,c.width,c.height);return c}
+function photoCanvas(max){try{if(typeof originalPhoto!=='undefined'&&originalPhoto&&typeof baseCanvas==='function')return baseCanvas(max,originalPhoto)}catch(e){}return null}
+async function landmarks(canvas){var det=await loadFaceDetector();var r=det.detect(canvas);var W=canvas.width,H=canvas.height;
+ return (r.faceLandmarks||[]).map(function(f){return f.map(function(p){return [p.x*W,p.y*H]})})}
+function biggest(F){return F.slice().sort(function(a,b){return span(b)-span(a)})[0]}
+function span(L){var a=1e9,b=-1e9;for(var i=0;i<468;i++){a=Math.min(a,L[i][0]);b=Math.max(b,L[i][0])}return b-a}
+function dist(a,b){return Math.hypot(a[0]-b[0],a[1]-b[1])}
+function ang(a,b){return Math.atan2(b[1]-a[1],b[0]-a[0])*180/Math.PI}
+// least-squares similarity transform src->dst: returns {a,b,tx,ty} with x'=a*x-b*y+tx, y'=b*x+a*y+ty
+function simil(src,dst){var n=src.length,sx=0,sy=0,dx=0,dy=0;for(var i=0;i<n;i++){sx+=src[i][0];sy+=src[i][1];dx+=dst[i][0];dy+=dst[i][1]}sx/=n;sy/=n;dx/=n;dy/=n;
+ var num1=0,num2=0,den=0;for(i=0;i<n;i++){var x=src[i][0]-sx,y=src[i][1]-sy,u=dst[i][0]-dx,v=dst[i][1]-dy;num1+=x*u+y*v;num2+=x*v-y*u;den+=x*x+y*y}
+ var a=num1/den,b=num2/den;return {a:a,b:b,tx:dx-(a*sx-b*sy),ty:dy-(b*sx+a*sy)}}
+function apply(M,p){return [M.a*p[0]-M.b*p[1]+M.tx,M.b*p[0]+M.a*p[1]+M.ty]}
+function invert(M){var d=M.a*M.a+M.b*M.b,a=M.a/d,b=-M.b/d;return {a:a,b:b,tx:-(a*M.tx-b*M.ty),ty:-(b*M.tx+a*M.ty)}}
+function inPoly(p,P){var c=false;for(var i=0,j=P.length-1;i<P.length;j=i++){if(((P[i][1]>p[1])!==(P[j][1]>p[1]))&&(p[0]<(P[j][0]-P[i][0])*(p[1]-P[i][1])/(P[j][1]-P[i][1])+P[i][0]))c=!c}return c}
+function edgeDist(p,P){var m=1e9;for(var i=0,j=P.length-1;i<P.length;j=i++){var ax=P[j][0],ay=P[j][1],bx=P[i][0],by=P[i][1],vx=bx-ax,vy=by-ay,t=((p[0]-ax)*vx+(p[1]-ay)*vy)/(vx*vx+vy*vy||1);t=Math.max(0,Math.min(1,t));m=Math.min(m,Math.hypot(p[0]-ax-t*vx,p[1]-ay-t*vy))}return m}
+var EYE_A=[33,7,163,144,145,153,154,155,133,173,157,158,159,160,161,246],EYE_B=[263,249,390,373,374,380,381,382,362,398,384,385,386,387,388,466];
+function measures(L){var ref=dist(L[33],L[263]);return {eyeWA:dist(L[33],L[133])/ref,eyeWB:dist(L[263],L[362])/ref,eyeOA:dist(L[159],L[145])/ref,eyeOB:dist(L[386],L[374])/ref,
+ nose:dist(L[98],L[327])/ref,lipW:dist(L[61],L[291])/ref,up:dist(L[0],L[13])/ref,low:dist(L[14],L[17])/ref,face:dist(L[234],L[454])/ref,
+ mouth:ang(L[61],L[291])-ang(L[33],L[263]),tA:ang(L[133],L[33])-ang(L[33],L[263]),tB:ang(L[362],L[263])-ang(L[33],L[263])}}
+// how far a result is from the original (0 = perfect); anything over 1 is outside the owner's limits
+var LIM={up:.10,low:.10,lipW:.06,nose:.06,face:.06,eyeWA:.06,eyeWB:.06,eyeOA:.12,eyeOB:.12};
+function score(mo,mr){var s=0,worst=0;for(var k in LIM){var d=Math.abs(mr[k]/mo[k]-1)/LIM[k];s+=d;worst=Math.max(worst,d)}
+ var dm=Math.abs(mr.mouth-mo.mouth)/2.5;worst=Math.max(worst,dm);s+=dm;
+ var dt=Math.max(Math.abs(wrap(mr.tA-mo.tA)),Math.abs(wrap(mr.tB-mo.tB)))/4;worst=Math.max(worst,dt);s+=dt;return {sum:s,worst:worst}}
+function wrap(a){while(a>180)a-=360;while(a<-180)a+=360;return a}
+
+// put the person's real eyes (white, iris, pupil, gaze, natural shine) into the AI result; the AI's lashes, liner and shadow stay
+function realEyes(origC,Lo,resC,La){var ctx=resC.getContext('2d'),W=resC.width,H=resC.height,od=origC.getContext('2d').getImageData(0,0,origC.width,origC.height),OW=origC.width,OH=origC.height,fit=0;
+ [[EYE_A,468],[EYE_B,473]].forEach(function(e){var idx=e[0],src=idx.map(function(i){return Lo[i]}).concat([Lo[e[1]]]),dst=idx.map(function(i){return La[i]}).concat([La[e[1]]]);
+  var M=simil(src,dst),Mi=invert(M),Tp=idx.map(function(i){return apply(M,Lo[i])}),Ap=idx.map(function(i){return La[i]});
+  var ew=dist(La[idx[0]],La[idx[8]]),err=0;for(var i=0;i<idx.length;i++)err+=dist(Tp[i],Ap[i]);err/=idx.length*ew;fit=Math.max(fit,err);
+  if(err>.10)return;
+  var x0=W,y0=H,x1=0,y1=0;Ap.concat(Tp).forEach(function(p){x0=Math.min(x0,p[0]);y0=Math.min(y0,p[1]);x1=Math.max(x1,p[0]);y1=Math.max(y1,p[1])});
+  x0=Math.max(0,Math.floor(x0-2));y0=Math.max(0,Math.floor(y0-2));x1=Math.min(W-1,Math.ceil(x1+2));y1=Math.min(H-1,Math.ceil(y1+2));
+  var rw=x1-x0+1,rh=y1-y0+1,img=ctx.getImageData(x0,y0,rw,rh),d=img.data,inset=ew*.035,feather=Math.max(1,ew*.025);
+  for(var y=0;y<rh;y++)for(var x=0;x<rw;x++){var p=[x0+x+.5,y0+y+.5];if(!inPoly(p,Ap)||!inPoly(p,Tp))continue;
+   var de=Math.min(edgeDist(p,Ap),edgeDist(p,Tp)),al=Math.max(0,Math.min(1,(de-inset)/feather));if(al<=0)continue;
+   var q=apply(Mi,p),qx=q[0]-.5,qy=q[1]-.5,ix=Math.floor(qx),iy=Math.floor(qy),fx=qx-ix,fy=qy-iy;if(ix<0||iy<0||ix>=OW-1||iy>=OH-1)continue;
+   var o=(y*rw+x)*4;for(var c=0;c<3;c++){var a00=od.data[(iy*OW+ix)*4+c],a10=od.data[(iy*OW+ix+1)*4+c],a01=od.data[((iy+1)*OW+ix)*4+c],a11=od.data[((iy+1)*OW+ix+1)*4+c];
+    var v=(a00*(1-fx)+a10*fx)*(1-fy)+(a01*(1-fx)+a11*fx)*fy;d[o+c]=d[o+c]*(1-al)+v*al}}
+  ctx.putImageData(img,x0,y0)});
+ return fit}
+
+// ---------- viewer ----------
+function overlay(html){ov.innerHTML=html;ov.hidden=false;document.documentElement.style.overflow='hidden'}
+function closeOv(){ov.hidden=true;ov.innerHTML='';document.documentElement.style.overflow='';busy=false}
+function message(title,text){overlay('<div class="luxeRes" style="flex:0;align-items:center;text-align:center"><h4></h4><p class="sub"></p><div class="luxeActs" style="margin-top:14px"><button class="luxeBtn gold" id="luxeOk">OK</button></div></div>');
+ ov.querySelector('h4').textContent=title;ov.querySelector('.sub').textContent=text;$('luxeOk').onclick=closeOv}
+function showResult(L,before,after){
+ overlay('<div class="luxeRes"><div class="luxeTop"><b></b><button type="button" id="luxeClose" aria-label="Close">×</button></div><div class="luxeStage" id="luxeStage"><canvas id="luxeA"></canvas><canvas id="luxeB"></canvas><div class="luxeSplit" id="luxeSplit"></div><span class="luxeTag" style="left:10px">Before</span><span class="luxeTag" style="right:10px">After</span></div><div class="luxeActs"><button class="luxeBtn gold" id="luxeSave">Save photo</button><button class="luxeBtn ghost" id="luxeMore">Try another look</button></div></div>');
+ ov.querySelector('.luxeTop b').textContent=L.n;
+ var A=$('luxeA'),B=$('luxeB'),stage=$('luxeStage'),split=$('luxeSplit');
+ A.width=B.width=after.width;A.height=B.height=after.height;var ratio=after.width/after.height;stage.style.aspectRatio=String(ratio);stage.style.width='min(100%, calc((100dvh - 190px) * '+ratio.toFixed(4)+'))';(function(){var bw=before.width,bh=before.height,k=Math.max(after.width/bw,after.height/bh),dw=bw*k,dh=bh*k;B.getContext('2d').drawImage(before,(after.width-dw)/2,(after.height-dh)/2,dw,dh)})();A.getContext('2d').drawImage(after,0,0);
+ var pos=.5;function lay(){var r=stage.getBoundingClientRect(),k=Math.min(r.width/after.width,r.height/after.height),w=after.width*k,ox=(r.width-w)/2;
+  var px=ox+w*pos;B.style.clipPath='inset(0 '+(r.width-px)+'px 0 0)';split.style.left=(px-1)+'px'}
+ function move(e){var r=stage.getBoundingClientRect(),k=Math.min(r.width/after.width,r.height/after.height),w=after.width*k,ox=(r.width-w)/2,x=(e.touches?e.touches[0].clientX:e.clientX)-r.left;pos=Math.max(0,Math.min(1,(x-ox)/w));lay()}
+ stage.addEventListener('pointerdown',function(e){move(e);stage.setPointerCapture&&stage.setPointerCapture(e.pointerId)});stage.addEventListener('pointermove',function(e){if(e.buttons)move(e)});
+ setTimeout(lay,30);window.addEventListener('resize',lay);
+ $('luxeClose').onclick=closeOv;$('luxeMore').onclick=function(){closeOv();try{luxe.scrollIntoView({behavior:'smooth',block:'center'})}catch(e){}};
+ $('luxeSave').onclick=function(){after.toBlob(function(blob){var u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download='FaceCouture-'+L.n.replace(/\s+/g,'')+'.jpg';document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u)},4000);
+  if(!(window.FCNative&&window.FCNative.isNative))T('save_image',{via:'ai_luxe',look:L.k});try{toast('Saved. Your '+L.n+' photo is ready to share.')}catch(e){}},'image/jpeg',.95)}}
+
+// ---------- the look ----------
+var busy=false;
+grid.addEventListener('click',function(e){var b=e.target.closest('[data-luxe]');if(!b||busy)return;var L=LOOKS.filter(function(x){return x.k===b.dataset.luxe})[0];run(L)});
+async function run(L){
+ if(typeof userPhoto!=='undefined'&&!userPhoto){message('Add your photo first','Upload or take a selfie, then tap a look.');return}
+ if(!consent.checked){try{$('luxeConsentRow').scrollIntoView({behavior:'smooth',block:'center'})}catch(e){}message('One quick step','Please tick the consent box under the looks to use AI Luxe Looks.');return}
+ busy=true;T('ai_look_start',{look:L.k});
+ overlay('<div class="luxeRing"></div><h4></h4><p class="sub" id="luxeSub">Usually 15 to 25 seconds.</p><div class="luxeActs" style="margin-top:22px"><button class="luxeBtn ghost" id="luxeCancel">Cancel</button></div>');
+ ov.querySelector('h4').textContent='Creating your '+L.n;var cancelled=false;$('luxeCancel').onclick=function(){cancelled=true;closeOv()};
+ try{
+  var up=photoCanvas(2048),big=photoCanvas(4096);if(!up)throw new Error('Add your photo first.');
+  var F=await landmarks(up);
+  if(cancelled)return;
+  if(F.length===0){closeOv();message('No face found','Try a clear, front-facing photo with good light.');T('ai_look_noface',{look:L.k});return}
+  if(F.length>1){closeOv();message('Solo photos for now','AI Luxe Looks work on photos of one person for now. Group photos are coming soon. The Looks below work on group photos.');T('ai_look_group_blocked',{look:L.k,people:F.length});return}
+  var Fb=await landmarks(big),Lo=biggest(Fb.length?Fb:F),origC=Fb.length?big:up,mo=measures(Lo);
+  var image=up.toDataURL('image/jpeg',.92),best=null;
+  for(var attempt=0;attempt<3;attempt++){
+   if(cancelled)return;
+   if(attempt){var s=$('luxeSub');if(s)s.textContent='Perfecting the details…'}
+   var j=await callAI({task:'glam',intensity:L.k,image:image,width:up.width,height:up.height,consent:true,retry:attempt>0});
+   if(cancelled)return;
+   var resImg=await loadImg(j.image),resC=canvasOf(resImg),FA=await landmarks(resC);
+   if(!FA.length)continue;
+   var La=biggest(FA),mr=measures(La),sc=score(mo,mr),fit=realEyes(origC,Lo,resC,La);
+   if(fit>.10)sc.worst=Math.max(sc.worst,2);
+   if(!best||sc.worst<best.sc.worst)best={c:resC,sc:sc};
+   if(sc.worst<=1)break;
+  }
+  if(cancelled)return;
+  if(!best)throw new Error('The AI could not finish this look. Please try again.');
+  T('ai_look_done',{look:L.k,attempts:attempt+1,passed:best.sc.worst<=1?1:0});
+  busy=false;showResult(L,origC,best.c);
+ }catch(err){if(cancelled)return;closeOv();T('ai_look_error',{look:L.k,code:err.code||'client'});
+  message(err.code==='allowance'?'Daily limit reached':err.code==='ceiling'?'AI looks are resting':'Something went wrong',String(err.message||err))}
+}
+window.__luxe={run:run,LOOKS:LOOKS,_realEyes:realEyes,_measures:measures,_score:score};
+}catch(e){console.warn('v68 luxe',e)}})();
+</script>
+
 </body></html>
