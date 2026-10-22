@@ -3576,7 +3576,12 @@ function edgeDist(p,P){var m=1e9;for(var i=0,j=P.length-1;i<P.length;j=i++){var 
 var EYE_A=[33,7,163,144,145,153,154,155,133,173,157,158,159,160,161,246],EYE_B=[263,249,390,373,374,380,381,382,362,398,384,385,386,387,388,466];
 function measures(L){var ref=dist(L[33],L[263]);return {eyeWA:dist(L[33],L[133])/ref,eyeWB:dist(L[263],L[362])/ref,eyeOA:dist(L[159],L[145])/ref,eyeOB:dist(L[386],L[374])/ref,
  nose:dist(L[98],L[327])/ref,lipW:dist(L[61],L[291])/ref,up:dist(L[0],L[13])/ref,low:dist(L[14],L[17])/ref,face:dist(L[234],L[454])/ref,
- mouth:ang(L[61],L[291])-ang(L[33],L[263]),tA:ang(L[133],L[33])-ang(L[33],L[263]),tB:ang(L[362],L[263])-ang(L[33],L[263])}}
+ mouth:ang(L[61],L[291])-ang(L[33],L[263]),tA:ang(L[133],L[33])-ang(L[33],L[263]),tB:ang(L[362],L[263])-ang(L[33],L[263]),
+ lipA:polyArea([61,146,91,181,84,17,314,405,321,375,291,409,270,269,267,0,37,39,40,185].map(function(i){return L[i]}))/(ref*ref),
+ gA:gaze(L,33,133,468),gB:gaze(L,263,362,473)}}
+function polyArea(P){var a=0;for(var i=0,j=P.length-1;i<P.length;j=i++)a+=(P[j][0]+P[i][0])*(P[j][1]-P[i][1]);return Math.abs(a/2)}
+/* where the iris sits inside the eye (0 = one corner, 1 = the other; y = up/down), so a changed gaze is caught */
+function gaze(L,c1,c2,ir){var ax=L[c2][0]-L[c1][0],ay=L[c2][1]-L[c1][1],w2=ax*ax+ay*ay,px=L[ir][0]-L[c1][0],py=L[ir][1]-L[c1][1];return [(px*ax+py*ay)/w2,(px*-ay+py*ax)/w2]}
 /* v69: the photo must keep its integrity: same pose, same framing, same body. Face position/zoom/turn is measured on all
    468 face points (normalised to the photo); the body outline is compared with the on-device person finder. Outside the limits -> re-make. */
 var segLP=null;
@@ -3590,10 +3595,12 @@ function poseCheck(Lo,OW,OH,La,W,H){var x0=1e9,x1=-1e9,s=0;for(var i=0;i<468;i++
 function bodyOverlap(A,B){if(!A||!B||A.w!==B.w||A.h!==B.h)return 1;var n=0,u=0;for(var i=0;i<A.a.length;i++){if(A.a[i]&&B.a[i])n++;if(A.a[i]||B.a[i])u++}return u?n/u:1}
 var POSE_MAX=.06,BODY_MIN=.80;
 // how far a result is from the original (0 = perfect); anything over 1 is outside the owner's limits
-var LIM={up:.10,low:.10,lipW:.06,nose:.06,face:.06,eyeWA:.06,eyeWB:.06,eyeOA:.12,eyeOB:.12};
+/* v69 owner rules: overall lip size never more than 8% different; eyes keep their size and openness (10%) and gaze */
+var LIM={lipA:.08,up:.15,low:.15,lipW:.06,nose:.06,face:.06,eyeWA:.06,eyeWB:.06,eyeOA:.10,eyeOB:.10};
 function score(mo,mr){var s=0,worst=0;for(var k in LIM){var d=Math.abs(mr[k]/mo[k]-1)/LIM[k];s+=d;worst=Math.max(worst,d)}
  var dm=Math.abs(mr.mouth-mo.mouth)/2.5;worst=Math.max(worst,dm);s+=dm;
- var dt=Math.max(Math.abs(wrap(mr.tA-mo.tA)),Math.abs(wrap(mr.tB-mo.tB)))/4;worst=Math.max(worst,dt);s+=dt;return {sum:s,worst:worst}}
+ var dt=Math.max(Math.abs(wrap(mr.tA-mo.tA)),Math.abs(wrap(mr.tB-mo.tB)))/4;worst=Math.max(worst,dt);s+=dt;
+ var dg=Math.max(Math.abs(mr.gA[0]-mo.gA[0]),Math.abs(mr.gB[0]-mo.gB[0]),Math.abs(mr.gA[1]-mo.gA[1]),Math.abs(mr.gB[1]-mo.gB[1]))/.10;worst=Math.max(worst,dg);s+=dg;return {sum:s,worst:worst}}
 function wrap(a){while(a>180)a-=360;while(a<-180)a+=360;return a}
 
 // put the person's real eyes (white, iris, pupil, gaze, natural shine) into the AI result; the AI's lashes, liner and shadow stay
