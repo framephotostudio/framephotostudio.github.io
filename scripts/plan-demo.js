@@ -31,16 +31,14 @@
     if (p === 'hello') return json(200, { token: 'demo.ios.1.s', device: 'demo-device' });
     if (p === 'config') return json(200, CFG);
     if (p === 'me' || p === 'sync') return json(200, state.me);
-    if (p === 'ai') return state.aiOk ? realFetch('demo-face.jpg').then(function (r) { return r.blob(); }).then(function (bl) { return new Promise(function (res) { var fr = new FileReader(); fr.onload = function () { res(fr.result); }; fr.readAsDataURL(bl); }); }).then(function (d) { return json(200, { image: d }); }) : json(state.ai.status, state.ai.body);
+    if (p === 'ai') { if (!state.aiOk) return json(state.ai.status, state.ai.body); var im = (typeof originalPhoto !== 'undefined') && originalPhoto, c = document.createElement('canvas'); c.width = im.naturalWidth || im.width; c.height = im.naturalHeight || im.height; c.getContext('2d').drawImage(im, 0, 0); return json(200, { image: c.toDataURL('image/jpeg', .92) }); }
     return json(200, { ok: true });
   };
   function log(t) { console.log('[plandemo] ' + t); var d = document.getElementById('planDemoTag'); if (d) d.textContent = t; }
   function q(s) { return document.querySelector(s); }
   function photo() {
-    return realFetch('demo-face.jpg').then(function (r) { if (!r.ok) throw new Error('no demo photo'); return r.blob(); }).then(function (b) {
-      var f = new File([b], 'demo-face.jpg', { type: 'image/jpeg' }), dt = new DataTransfer(); dt.items.add(f);
-      var inp = q('#file'); inp.files = dt.files; inp.dispatchEvent(new Event('change', { bubbles: true })); log('photo loaded');
-    }).catch(function (e) { log('photo skipped: ' + e.message); });
+    // the site's own sample portrait (always available offline in the app)
+    var b = q('#heroSample'); if (b) { b.click(); log('sample photo loaded'); } else log('no sample button');
   }
   function luxe() { var l = q('#luxe'); if (l) l.scrollIntoView({ block: 'center' }); }
   var steps = [
