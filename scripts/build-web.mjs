@@ -25,15 +25,15 @@ html = html.replace("$('#generate').onclick=async()=>{openPro();return;", "$('#g
   .split('FRAME PRO').join('FACE COUTURE PRO').split('FRAME FREE').join('FACE COUTURE FREE');
 // per-build settings (backend URL and store keys come from repository variables; empty = feature stays off)
 fs.writeFileSync(path.join(OUT, 'app-config.js'), 'window.FC_CONFIG=' + JSON.stringify({
-  apiUrl: process.env.FC_API_URL || '', revenueCatIOS: process.env.FC_RC_IOS || '', revenueCatAndroid: process.env.FC_RC_ANDROID || '',
+  apiUrl: process.env.FC_API_URL || 'https://face-couture-api.facecouture.workers.dev', revenueCatIOS: process.env.FC_RC_IOS || '', revenueCatAndroid: process.env.FC_RC_ANDROID || '',
   analytics: !!process.env.FC_API_URL, preview: process.env.FC_PREVIEW === '1', supportEmail: process.env.FC_SUPPORT_EMAIL || 'hello@facecouture.app', version: process.env.APP_VERSION || '1.0.0' }) + ';');
 // Google Analytics stays on in the app: the studio reports app_platform = ios | android with an anonymous app-only id
 // (no photos, no face data, no names; no ad signals, so no tracking prompt is needed).
 // app mode hook (native look and feel is layered on in app.css / app.js)
 { const h = html.search(/<head(\s[^>]*)?>/i), hEnd = html.indexOf('>', h) + 1; html = html.slice(0, hEnd) + '<script>window.__FC_APP=true</script><script src="app-config.js"></script><script src="app-early.js"></script><script src="app-api.js"></script>' + html.slice(hEnd); }
 { const i = html.indexOf('</head>'); html = html.slice(0, i) + '<link rel="stylesheet" href="app.css">' + html.slice(i); }
-{ const i = html.lastIndexOf('</body>'); html = html.slice(0, i) + '<script src="app.js"></script><script src="app-pro.js"></script>' + html.slice(i); }
+{ const i = html.lastIndexOf('</body>'); html = html.slice(0, i) + '<script src="app.js"></script><script src="app-pro.js"></script><script src="app-plan.js"></script>' + html.slice(i); }
 fs.writeFileSync(path.join(OUT, 'index.html'), html);
-for (const f of ['app.css', 'app.js', 'app-early.js', 'app-api.js', 'app-pro.js']) fs.copyFileSync(path.join('app', f), path.join(OUT, f));
+for (const f of ['app.css', 'app.js', 'app-early.js', 'app-api.js', 'app-pro.js', 'app-plan.js']) fs.copyFileSync(path.join('app', f), path.join(OUT, f));
 const left = (html.match(/https:\/\/(cdn\.jsdelivr|storage\.googleapis)[^"'`\s)]*/g) || []); if (left.length) console.warn('Still online:', [...new Set(left)]);
 console.log('web bundle ready');

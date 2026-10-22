@@ -82,3 +82,47 @@ html.fc-app.fc-studio #fcTools{display:flex;gap:6px;overflow-x:auto;padding:8px 
 
 /* the app header already clears the notch; the site adds the same space on <html>, which doubled it */
 html.fc-app{padding-top:0!important}
+
+/* ---------- Face Couture Pro paywall & AI look packs ---------- */
+.fcPlan{position:fixed;inset:0;z-index:2147483100;background:rgba(32,14,44,.55);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);display:flex;align-items:flex-end;justify-content:center;padding:0}
+.fcPlan[hidden]{display:none}
+html.fcPlanOpen{overflow:hidden}
+.fcPlan .fcpCard{position:relative;width:100%;max-width:480px;max-height:94vh;max-height:94dvh;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#fffafd;border-radius:28px 28px 0 0;padding:0 20px calc(env(safe-area-inset-bottom,0px) + 18px);box-shadow:0 -20px 60px rgba(20,8,30,.45);color:#2a1838;animation:fcpUp .32s cubic-bezier(.2,.9,.3,1)}
+@media(min-width:700px){.fcPlan{align-items:center}.fcpCard{border-radius:28px;max-height:90vh}}
+@keyframes fcpUp{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+.fcpX{position:absolute;top:12px;right:12px;width:36px;height:36px;border-radius:50%;border:0;background:rgba(255,255,255,.14);color:#fff;font-size:22px;line-height:1}
+.fcPlan .fcpHero{color:#fff;text-align:center;margin:0 -20px 18px;padding:34px 26px 28px;background:radial-gradient(120% 90% at 50% 0%,#5a2a6a 0%,#3a1a48 55%,#2b1636 100%);border-radius:28px 28px 0 0;box-shadow:inset 0 -1px 0 rgba(233,199,123,.35)}
+.fcpHero.small{padding-bottom:22px}
+.fcpLogo{font-size:11px;letter-spacing:2.4px;color:#e9c77b;font-weight:700}
+.fcPlan .fcpHero h2{color:#fff;background:none;border:0;padding:0;margin:10px 0 8px;font-size:27px;line-height:1.12;letter-spacing:-.6px;font-weight:700;font-family:Georgia,'Times New Roman',serif}
+.fcPlan .fcpHero p{background:none;margin:0 auto;max-width:330px;font-size:13.5px;line-height:1.45;color:#ead9f0}
+.fcpPerks{list-style:none;margin:6px 0 16px;padding:14px 16px;background:#fff;border:1px solid #f0e1ea;border-radius:18px;box-shadow:0 8px 24px rgba(74,47,122,.08)}
+.fcpPerks li{position:relative;padding:5px 0 5px 26px;font-size:14px;color:#4a3757}
+.fcpPerks li:before{content:'✦';position:absolute;left:4px;top:5px;color:#c9a14a;font-size:13px}
+.fcpPerks b{color:#2a1838}
+.fcpPlans{display:flex;flex-direction:column;gap:10px}
+.fcpPlan{position:relative;display:grid;grid-template-columns:1fr auto;align-items:center;gap:2px 10px;text-align:left;border:1.5px solid #ecdbe6;background:#fff;border-radius:18px;padding:14px 16px;color:#2a1838;transition:border-color .15s,box-shadow .15s}
+.fcpPlan .fcpName{font-weight:700;font-size:15px}
+.fcpPlan .fcpPrice{font-weight:700;font-size:15px;text-align:right}
+.fcpPlan .fcpPrice small{font-weight:500;color:#8a7894;font-size:12px}
+.fcpPlan .fcpSub{grid-column:1/-1;font-size:12.5px;color:#7a4cc2;font-weight:600}
+.fcpPlan.year{padding:20px 16px 16px}
+.fcpPlan.year .fcpName,.fcpPlan.year .fcpPrice{font-size:18px}
+.fcpPlan.month{padding:11px 16px;opacity:.92}
+.fcpPlan.month .fcpName,.fcpPlan.month .fcpPrice{font-size:14px}
+.fcpPlan.on{border-color:#c9a14a;box-shadow:0 0 0 3px rgba(201,161,74,.22),0 10px 26px rgba(74,47,122,.12);background:linear-gradient(135deg,#fff 0%,#fdf6ea 100%)}
+.fcpBadge{position:absolute;top:-10px;left:14px;background:linear-gradient(135deg,#f1d590,#c9a24a);color:#2a1838;font-size:10.5px;letter-spacing:1.3px;font-weight:800;padding:4px 10px;border-radius:999px;box-shadow:0 4px 10px rgba(201,161,74,.35)}
+.fcpCta{display:block;width:100%;margin:16px 0 10px;border:0;border-radius:999px;padding:16px 18px;font-size:16.5px;font-weight:700;letter-spacing:.2px;color:#fff;background:linear-gradient(135deg,#7a4cc2 0%,#9b3f79 60%,#c06a8f 100%);box-shadow:0 12px 28px rgba(122,76,194,.35)}
+.fcpCta:disabled,.fcpPack:disabled{opacity:.6}
+.fcPlan.busy .fcpCta{background:linear-gradient(135deg,#9a85c6,#b892ac)}
+.fcpFine{font-size:11.5px;line-height:1.45;color:#8a7894;text-align:center;margin:4px 6px 10px}
+.fcpLinks{display:flex;justify-content:center;align-items:center;gap:6px;flex-wrap:wrap;font-size:12.5px;color:#b9a7c3}
+.fcpLinks button{border:0;background:none;color:#7a4cc2;font-weight:600;font-size:12.5px;padding:6px 2px}
+.fcpPacks{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:4px 0 14px}
+.fcpPack{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;border:1.5px solid #ecdbe6;background:#fff;border-radius:20px;padding:22px 10px 16px;color:#2a1838;box-shadow:0 8px 22px rgba(74,47,122,.08)}
+.fcpPack.best{border-color:#c9a14a;background:linear-gradient(160deg,#fff 0%,#fdf3e3 100%);box-shadow:0 0 0 3px rgba(201,161,74,.2),0 12px 26px rgba(74,47,122,.12)}
+.fcpPack .fcpBadge{left:50%;transform:translateX(-50%);white-space:nowrap}
+.fcpPack .fcpNum{font-family:Georgia,'Times New Roman',serif;font-size:38px;font-weight:700;line-height:1;color:#3c1d4a}
+.fcpPack .fcpName{font-size:13px;color:#7a6b88;font-weight:600}
+.fcpPack .fcpPrice{margin-top:8px;font-size:16px;font-weight:800;color:#2a1838;background:#f6eef9;border-radius:999px;padding:6px 14px}
+html.fc-noaitab [data-tab="ai"]{display:none!important}

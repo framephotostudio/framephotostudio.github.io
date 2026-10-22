@@ -19,7 +19,7 @@
   function applyConfig(c) {
     state.config = c;
     try {
-      FRAME_PRO.enabled = !!(c.pro && c.pro.enabled);
+      FRAME_PRO.enabled = false; // the studio's own gate stays open: on-device looks are unlimited, Pro is handled by app-plan.js
       FRAME_PRO.priceMonth = c.pro.priceMonth; FRAME_PRO.priceYear = c.pro.priceYear; FRAME_PRO.trialText = c.pro.trialDays + '-day free trial';
       FRAME_PRO.verify = function () { return Promise.resolve(state.pro); };
     } catch (e) {}
@@ -37,7 +37,7 @@
   function refresh() {
     if (!API || !API.url) return Promise.resolve();
     return API.api('/api/config').then(applyConfig).then(function () { return API.api('/api/me'); }).then(function (m) {
-      state.me = m; if (m.tier === 'paid' || m.tier === 'trial') setPro(true);
+      state.me = m; setPro(true);
       updateMeter();
     }).catch(function () {});
   }
@@ -169,9 +169,9 @@
     var s = $('#fcSettings'); if (!s) { s = document.createElement('div'); s.id = 'fcSettings'; s.className = 'proSheet'; s.setAttribute('role', 'dialog'); document.body.appendChild(s); }
     var dev = API.device() || '—';
     s.innerHTML = '<section class="proCard"><button class="toolbtn proClose" id="fcSetClose" aria-label="Close">✕</button><div class="prolabel">✦ FACE COUTURE</div><h2>Settings</h2>' +
-      '<p class="note" id="fcSetTier">' + (state.me ? ('Plan: ' + ({ paid: 'Pro', trial: 'Pro trial', promo: 'Promo', free: 'Free' }[state.me.tier] || state.me.tier) + ' · AI looks left today ' + state.me.left.today + ', this month ' + state.me.left.month) : 'Beauty tools work offline. AI looks need a connection.') + '</p>' +
+      '<p class="note" id="fcSetTier">' + (state.me ? ('Plan: ' + ({ paid: 'Face Couture Pro', trial: 'Pro · free trial', promo: 'Promo', free: 'Free', launch: 'Launch month (free)' }[state.me.tier] || state.me.tier) + ' · AI looks left: ' + state.me.left.total) : 'Beauty tools work offline. AI looks need a connection.') + '</p>' +
       '<div class="fcSetList">' +
-      (state.config && (state.config.pro.enabled || CFG.preview) ? '<button class="btn full" id="fcSetPro">' + (state.pro ? 'Manage subscription' : 'Try Face Couture Pro') + '</button>' : '') +
+      (window.FCPlan && window.FCPlan.state.me && window.FCPlan.state.me.paywall ? '<button class="btn full" id="fcSetPro">' + (/paid|trial/.test(window.FCPlan.state.me.tier) ? 'Manage subscription' : 'Face Couture Pro') + '</button>' : '') +
       '<button class="toolbtn full" id="fcSetPromo">Enter a promo code</button><button class="toolbtn full" id="fcSetRestore">Restore purchases</button>' +
       '<button class="toolbtn full" id="fcSetPrivacy">Privacy policy</button><button class="toolbtn full" id="fcSetTerms">Terms of use</button>' +
       '<button class="toolbtn full" id="fcSetSupport">Contact support</button><button class="toolbtn full" id="fcSetDelete">Delete my data</button></div>' +
@@ -179,8 +179,9 @@
       '<p class="note">Face Couture by Always Luxe · version ' + (CFG.version || '1.0.0') + '</p></section>';
     s.hidden = false;
     $('#fcSetClose').onclick = closeSheet;
-    var pro = $('#fcSetPro'); if (pro) pro.onclick = function () { if (state.pro) manage(); else { closeSheet(); try { openPro(); } catch (e) {} } };
-    $('#fcSetPromo').onclick = promoPrompt; $('#fcSetRestore').onclick = restore;
+    var pro = $('#fcSetPro'), plan = window.FCPlan, pm = plan && plan.state.me;
+    if (pro) pro.onclick = function () { closeSheet(); if (pm && (pm.tier === 'paid' || pm.tier === 'trial')) plan.manage(); else if (plan) plan.openPaywall('settings'); };
+    $('#fcSetPromo').onclick = function () { closeSheet(); plan ? plan.code() : promoPrompt(); }; $('#fcSetRestore').onclick = function () { plan ? plan.restore() : restore(); };
     $('#fcSetPrivacy').onclick = function () { closeSheet(); openLegal('privacy'); }; $('#fcSetTerms').onclick = function () { closeSheet(); openLegal('terms'); };
     $('#fcSetSupport').onclick = function () { location.href = 'mailto:' + (CFG.supportEmail || 'hello@facecouture.app') + '?subject=Face%20Couture%20app'; };
     $('#fcSetDelete').onclick = function () {
@@ -224,8 +225,9 @@
     addSettingsButtons();
     if (!API.url && CFG.preview) { previewMode(); return; }
     if (!API.url) return; // backend not configured yet: beauty studio only
-    extendAI(); decorateProSheet();
-    refresh().then(initPurchases).then(trackStudio);
+    // AI Luxe Looks (in the studio) replace the older AI tab; purchases and the paywall live in app-plan.js
+    document.documentElement.classList.add('fc-noaitab'); setPro(true);
+    refresh().then(trackStudio);
     setInterval(refresh, 10 * 60 * 1000);
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
