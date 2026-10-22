@@ -1,1 +1,1 @@
-iPhone build request: 1.0.0 (subscriptions + new membership screen)
+iPhone build request: 1.0.0 (owner mode)
