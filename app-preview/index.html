@@ -3880,7 +3880,7 @@ D.head.appendChild(st);
 // ---- luminous finish, drawn on the processed photo (so it shows in the preview, saves and every size) ----
 function blurCopy(src,k){var w=Math.max(8,Math.round(src.width/k)),h=Math.max(8,Math.round(src.height/k)),a=D.createElement('canvas');a.width=w;a.height=h;var x=a.getContext('2d');x.imageSmoothingEnabled=true;x.imageSmoothingQuality='high';x.drawImage(src,0,0,w,h);
  var b=D.createElement('canvas');b.width=Math.max(4,w>>1);b.height=Math.max(4,h>>1);var y=b.getContext('2d');y.imageSmoothingEnabled=true;y.drawImage(a,0,0,b.width,b.height);x.clearRect(0,0,w,h);x.drawImage(b,0,0,w,h);return a}
-function glowFx(c,g){try{if(!c||!c.getContext||g<=0)return;var ctx=c.getContext('2d'),W=c.width,H=c.height;
+function glowFx(c,g,raw){try{if(!c||!c.getContext||g<=0)return;var ctx=c.getContext('2d'),W=c.width,H=c.height;
  // 1) soft bloom from the highlights only (blurred copy multiplied by itself, screened back)
  var bl=blurCopy(c,10),bc=D.createElement('canvas');bc.width=bl.width;bc.height=bl.height;bc.getContext('2d').drawImage(bl,0,0);var bx=bl.getContext('2d');bx.globalCompositeOperation='multiply';bx.drawImage(bc,0,0);bx.drawImage(bc,0,0);bx.globalCompositeOperation='source-over';
  ctx.save();ctx.globalCompositeOperation='screen';ctx.globalAlpha=Math.min(.16,.1*g);ctx.imageSmoothingEnabled=true;ctx.drawImage(bl,0,0,W,H);ctx.restore();
@@ -3890,12 +3890,23 @@ function glowFx(c,g){try{if(!c||!c.getContext||g<=0)return;var ctx=c.getContext(
   var gr=ctx.createRadialGradient(cx*W,cy*H,R*.1,cx*W,cy*H,R*1.15);var a1=Math.min(.36,.24*g);gr.addColorStop(0,'rgba(255,255,255,0)');gr.addColorStop(.32,'rgba(255,255,255,0)');gr.addColorStop(.62,'rgba(196,150,136,'+a1+')');gr.addColorStop(.86,'rgba(205,165,150,'+(a1*.45)+')');gr.addColorStop(1,'rgba(255,255,255,0)');
   var sc=D.createElement('canvas');sc.width=W;sc.height=H;var sx=sc.getContext('2d');sx.fillStyle=gr;sx.fillRect(0,0,W,H);
   var fy0=(fo&&fo.length>4?y0:cy-.1)*H,fy1=(fo&&fo.length>4?y1:cy+.1)*H,top=fy0+(fy1-fy0)*.42,mk=sx.createLinearGradient(0,fy0,0,top);mk.addColorStop(0,'rgba(0,0,0,1)');mk.addColorStop(1,'rgba(0,0,0,0)');sx.globalCompositeOperation='destination-out';sx.fillStyle=mk;sx.fillRect(0,0,W,top);
-  ctx.save();if(fo&&fo.length>4){ctx.beginPath();fo.forEach(function(p,i){i?ctx.lineTo(p.x*W,p.y*H):ctx.moveTo(p.x*W,p.y*H)});ctx.closePath();ctx.clip()}ctx.globalCompositeOperation='multiply';ctx.drawImage(sc,0,0);ctx.restore()}
+  if(fo&&fo.length>4){var fq=8,fm=D.createElement('canvas');fm.width=Math.max(8,Math.round(W/fq));fm.height=Math.max(8,Math.round(H/fq));var fmx=fm.getContext('2d'),fcx=(x0+x1)/2,fcy=(y0+y1)/2;fmx.fillStyle='#fff';fmx.beginPath();fo.forEach(function(p,i){var X=(fcx+(p.x-fcx)*1.03)*W/fq,Y=(fcy+(p.y-fcy)*1.03)*H/fq;i?fmx.lineTo(X,Y):fmx.moveTo(X,Y)});fmx.closePath();fmx.fill();
+   var f2=D.createElement('canvas');f2.width=Math.max(4,fm.width>>2);f2.height=Math.max(4,fm.height>>2);var f2x=f2.getContext('2d');f2x.imageSmoothingEnabled=true;f2x.drawImage(fm,0,0,f2.width,f2.height);
+   sx.globalCompositeOperation='destination-in';sx.imageSmoothingEnabled=true;sx.imageSmoothingQuality='high';sx.drawImage(f2,0,0,W,H);sx.globalCompositeOperation='source-over'}
+  ctx.save();ctx.globalCompositeOperation='multiply';ctx.drawImage(sc,0,0);ctx.restore()}
  // 2a) a model-style smoky eye: soft brown-plum smoke along the upper lash line, deeper at the outer corner (nothing under the eyes)
  var EC0=beauty&&beauty.eyeContours,fcx=P&&P.nose?P.nose.x:.5;if(EC0&&EC0.length){EC0.forEach(function(e){if(!e||e.length<4)return;var x0=1,x1=0,y0=1,y1=0;e.forEach(function(p){x0=Math.min(x0,p.x);x1=Math.max(x1,p.x);y0=Math.min(y0,p.y);y1=Math.max(y1,p.y)});
   var ew=(x1-x0)*W,eh=Math.max((y1-y0)*H,ew*.28),cx=(x0+x1)/2*W,out=((x0+x1)/2<fcx)?-1:1,ox=cx+out*ew*.22,oy=y0*H+eh*.05,a2=Math.min(.27,.19*g);
   ctx.save();ctx.globalCompositeOperation='multiply';ctx.translate(ox,oy);ctx.scale(1,.42);var sg=ctx.createRadialGradient(0,0,0,0,0,ew*.62);sg.addColorStop(0,'rgba(120,78,74,'+a2+')');sg.addColorStop(.55,'rgba(150,104,98,'+(a2*.55)+')');sg.addColorStop(1,'rgba(170,125,118,0)');ctx.fillStyle=sg;ctx.beginPath();ctx.arc(0,0,ew*.62,0,6.2832);ctx.fill();ctx.restore();
   })}
+ // 2b) softer inner eye corner: lift the added dark makeup near the inner corner so it fades smoothly into the lash line, plus a touch of highlighter
+ var EC1=beauty&&beauty.eyeContours,nx=P&&P.nose?P.nose.x:.5;if(raw&&EC1&&EC1.length){EC1.forEach(function(e){if(!e||e.length<4)return;var x0=1,x1=0,y0=1,y1=0,inn=null,bd=1e9;e.forEach(function(p){x0=Math.min(x0,p.x);x1=Math.max(x1,p.x);y0=Math.min(y0,p.y);y1=Math.max(y1,p.y);var d=Math.abs(p.x-nx);if(d<bd){bd=d;inn=p}});
+  var ew=(x1-x0)*W;if(ew<6||!inn)return;var ix=inn.x*W,iy=inn.y*H,ox=((x0+x1)/2*W-ix)>0?1:-1,R=ew*.5;
+  var t=D.createElement('canvas');t.width=W;t.height=H;var tx=t.getContext('2d');tx.drawImage(raw,0,0,W,H);tx.globalCompositeOperation='destination-in';
+  var mg=tx.createRadialGradient(ix-ox*ew*.04,iy,0,ix-ox*ew*.04,iy,R);mg.addColorStop(0,'rgba(0,0,0,.92)');mg.addColorStop(.35,'rgba(0,0,0,.7)');mg.addColorStop(.75,'rgba(0,0,0,.2)');mg.addColorStop(1,'rgba(0,0,0,0)');tx.fillStyle=mg;tx.fillRect(0,0,W,H);
+  ctx.save();ctx.globalCompositeOperation='lighten';ctx.drawImage(t,0,0);ctx.restore();
+  var hr=ew*.13,hl=ctx.createRadialGradient(ix-ox*ew*.03,iy,0,ix-ox*ew*.03,iy,hr);hl.addColorStop(0,'rgba(255,240,225,'+Math.min(.42,.3*g)+')');hl.addColorStop(1,'rgba(255,240,225,0)');
+  ctx.save();ctx.globalCompositeOperation='screen';ctx.fillStyle=hl;ctx.beginPath();ctx.arc(ix-ox*ew*.03,iy,hr,0,6.2832);ctx.fill();ctx.restore()})}
  // 2c) keep the lipstick a true medium rose whatever lipstick she had on (coral, peach, nude): recolour inside the lip line only
  var LO=beauty&&beauty.lipOutline,LI=beauty&&beauty.lipInner;if(LO&&LO.length>5){var lx0=1,lx1=0,ly0=1,ly1=0;LO.forEach(function(p){lx0=Math.min(lx0,p.x);lx1=Math.max(lx1,p.x);ly0=Math.min(ly0,p.y);ly1=Math.max(ly1,p.y)});
   var pad=(lx1-lx0)*.15,bx=Math.max(0,(lx0-pad)*W),by=Math.max(0,(ly0-pad)*H),bw=Math.min(W-bx,(lx1-lx0+2*pad)*W),bh=Math.min(H-by,(ly1-ly0+2*pad)*H);
@@ -3916,7 +3927,7 @@ function glowFx(c,g){try{if(!c||!c.getContext||g<=0)return;var ctx=c.getContext(
  // 3) a whisper of warm gold over the whole photo
  ctx.save();ctx.globalCompositeOperation='soft-light';ctx.globalAlpha=0;ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);ctx.restore();
 }catch(e){}}
-var _pr=process;process=function(max,raw,photo){var r=_pr.apply(this,arguments);try{if(!raw&&(photo===undefined||photo===source)&&beauty&&beauty.glowFx>0){var n=D.createElement('canvas');n.width=r.width;n.height=r.height;n.getContext('2d').drawImage(r,0,0);glowFx(n,beauty.glowFx);return n}}catch(e){}return r};
+var _pr=process;process=function(max,raw,photo){var r=_pr.apply(this,arguments);try{if(!raw&&(photo===undefined||photo===source)&&beauty&&beauty.glowFx>0){var n=D.createElement('canvas');n.width=r.width;n.height=r.height;n.getContext('2d').drawImage(r,0,0);var rw=null;try{rw=_pr.call(this,max,true,photo)}catch(e){}glowFx(n,beauty.glowFx,rw);return n}}catch(e){}return r};
 var _av=applyVibe;applyVibe=async function(){try{if(beauty)beauty.glowFx=0}catch(e){}return _av.apply(this,arguments)};
 try{$('#reset').addEventListener('click',function(){try{beauty.glowFx=0;invalidate()}catch(e){}},true)}catch(e){}
 
