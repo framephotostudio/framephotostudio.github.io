@@ -252,7 +252,9 @@ async function generate(req, env, ctx, forcedTask) {
         flash31: { model: 'gemini-3.1-flash-image', size: '2K', cost: 0.101 },
         pro: { model: env.GEMINI_PRO_IMAGE_MODEL || 'gemini-3-pro-image-preview', size: '2K', cost: +(env.COST_PER_GEN_GEMINI_PRO || 0.134) } };
       const testKey = env.APP_SIGNING_SECRET && req.headers.get('x-fc-engine-key') === env.APP_SIGNING_SECRET;
-      engKey = (testKey && ENG[b.engine]) ? b.engine : (ENG[cfg.ai && cfg.ai.engine] ? cfg.ai.engine : 'std');
+      // users choose 'std' (AI) or 'nb21' (Extreme AI); owner test runs may pick any engine
+      const userEng = (b.engine === 'std' || b.engine === 'nb21') ? b.engine : null;
+      engKey = (testKey && ENG[b.engine]) ? b.engine : (userEng || (ENG[cfg.ai && cfg.ai.engine] ? cfg.ai.engine : 'std'));
       if (testKey && b.model) ENG[engKey] = Object.assign({}, ENG[engKey], { model: String(b.model).slice(0, 60) });
       const model = ENG[engKey].model; engSize = ENG[engKey].size; engCost = ENG[engKey].cost; engModel = model; usedPro = engKey !== 'std';
       const attempt = async (text) => {
