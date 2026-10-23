@@ -3832,7 +3832,7 @@ function glowFx(c,g){try{if(!c||!c.getContext||g<=0)return;var ctx=c.getContext(
   ctx.save();if(fo&&fo.length>4){ctx.beginPath();fo.forEach(function(p,i){i?ctx.lineTo(p.x*W,p.y*H):ctx.moveTo(p.x*W,p.y*H)});ctx.closePath();ctx.clip()}ctx.globalCompositeOperation='multiply';ctx.drawImage(sc,0,0);ctx.restore()}
  // 2a) a model-style smoky eye: soft brown-plum smoke along the upper lash line, deeper at the outer corner (nothing under the eyes)
  var EC0=beauty&&beauty.eyeContours,fcx=P&&P.nose?P.nose.x:.5;if(EC0&&EC0.length){EC0.forEach(function(e){if(!e||e.length<4)return;var x0=1,x1=0,y0=1,y1=0;e.forEach(function(p){x0=Math.min(x0,p.x);x1=Math.max(x1,p.x);y0=Math.min(y0,p.y);y1=Math.max(y1,p.y)});
-  var ew=(x1-x0)*W,eh=Math.max((y1-y0)*H,ew*.28),cx=(x0+x1)/2*W,out=((x0+x1)/2<fcx)?-1:1,ox=cx+out*ew*.22,oy=y0*H+eh*.05,a2=Math.min(.34,.24*g);
+  var ew=(x1-x0)*W,eh=Math.max((y1-y0)*H,ew*.28),cx=(x0+x1)/2*W,out=((x0+x1)/2<fcx)?-1:1,ox=cx+out*ew*.22,oy=y0*H+eh*.05,a2=Math.min(.27,.19*g);
   ctx.save();ctx.globalCompositeOperation='multiply';ctx.translate(ox,oy);ctx.scale(1,.42);var sg=ctx.createRadialGradient(0,0,0,0,0,ew*.62);sg.addColorStop(0,'rgba(120,78,74,'+a2+')');sg.addColorStop(.55,'rgba(150,104,98,'+(a2*.55)+')');sg.addColorStop(1,'rgba(170,125,118,0)');ctx.fillStyle=sg;ctx.beginPath();ctx.arc(0,0,ew*.62,0,6.2832);ctx.fill();ctx.restore();
   })}
  // 2c) keep the lipstick a true medium rose whatever lipstick she had on (coral, peach, nude): recolour inside the lip line only
@@ -3880,7 +3880,7 @@ function sparkle(before,opt){opt=opt||{};var pick=opt.el||function(){return $('#
 
 // ---- Auto Glow: same tap, clearly more glow ----
 // bronzed luxury glam: rosy blush, highlighter, smoky brown liner, visible lashes, shimmer bronze-gold eyes, medium rosy lip with gloss
-var GLOW={smooth:52,blemish:72,scars:55,wrinkles:76,foundation:12,concealer:0,bronzer:47,contour:42,highlight:62,blush:68,eyeShadow:96,eyeLiner:84,lashes:70,mascara:64,browMakeup:24,tint:56,gloss:72,eyeBright:26,faceLight:0,hairShine:20},
+var GLOW={smooth:52,blemish:72,scars:55,wrinkles:76,foundation:12,concealer:0,bronzer:47,contour:42,highlight:62,blush:68,eyeShadow:88,eyeLiner:72,lashes:70,mascara:64,browMakeup:24,tint:56,gloss:72,eyeBright:26,faceLight:0,hairShine:20},
  GLOWSH={color:'velvetRose',blushColor:'rose',eyeColor:'copperRose',eyeFinish:'matte',linerStyle:'smoky',linerColor:'brown',lashStyle:'length',glossShade:'gRose',contourShade:'cocoa',lipFinish:'shimmer'};
 function lipHue(){var L=beauty.lipOutline;if(!L||L.length<6||!source)return null;var x0=1,x1=0,y0=1,y1=0;L.forEach(function(p){x0=Math.min(x0,p.x);x1=Math.max(x1,p.x);y0=Math.min(y0,p.y);y1=Math.max(y1,p.y)});
  var c=D.createElement('canvas'),w=64,h=32;c.width=w;c.height=h;var sw=source.naturalWidth||source.width,sh=source.naturalHeight||source.height;
