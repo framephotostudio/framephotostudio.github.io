@@ -3828,6 +3828,21 @@ function glowFx(c,g){try{if(!c||!c.getContext||g<=0)return;var ctx=c.getContext(
  if(P&&P.nose){var cx=P.nose.x,cy=P.nose.y,R=.16*Math.max(W,H);if(fo&&fo.length>4){var x0=1,x1=0,y0=1,y1=0;fo.forEach(function(p){x0=Math.min(x0,p.x);x1=Math.max(x1,p.x);y0=Math.min(y0,p.y);y1=Math.max(y1,p.y)});cx=(x0+x1)/2;cy=(y0+y1)/2;R=Math.max((x1-x0)*W,(y1-y0)*H)*.62}
   var gr=ctx.createRadialGradient(cx*W,cy*H,R*.1,cx*W,cy*H,R*1.15);var a1=Math.min(.36,.24*g);gr.addColorStop(0,'rgba(255,255,255,0)');gr.addColorStop(.32,'rgba(255,255,255,0)');gr.addColorStop(.62,'rgba(196,150,136,'+a1+')');gr.addColorStop(.86,'rgba(205,165,150,'+(a1*.45)+')');gr.addColorStop(1,'rgba(255,255,255,0)');
   ctx.save();ctx.globalCompositeOperation='multiply';ctx.fillStyle=gr;ctx.fillRect(0,0,W,H);ctx.restore()}
+ // 2b) a fine champagne-rose shimmer on each eyelid
+ var EC=beauty&&beauty.eyeContours;if(EC&&EC.length){EC.forEach(function(e){if(!e||e.length<4)return;var x0=1,x1=0,y0=1,y1=0;e.forEach(function(p){x0=Math.min(x0,p.x);x1=Math.max(x1,p.x);y0=Math.min(y0,p.y);y1=Math.max(y1,p.y)});
+  var ew=(x1-x0)*W,eh=Math.max((y1-y0)*H,ew*.28),cx=(x0+x1)/2*W,cy=y0*H-eh*.55,rx=ew*.5,ry=eh*.75;
+  ctx.save();ctx.translate(cx,cy);ctx.scale(1,ry/rx);var lg2=ctx.createRadialGradient(0,0,0,0,0,rx);lg2.addColorStop(0,'rgba(255,226,206,'+Math.min(.34,.24*g)+')');lg2.addColorStop(.55,'rgba(246,206,186,'+Math.min(.16,.11*g)+')');lg2.addColorStop(1,'rgba(246,206,186,0)');ctx.globalCompositeOperation='screen';ctx.fillStyle=lg2;ctx.beginPath();ctx.arc(0,0,rx,0,6.2832);ctx.fill();
+  var n=Math.round(ew*.9),s=Math.max(.6,ew/140);for(var i=0;i<n;i++){var a=Math.random()*6.2832,r=Math.sqrt(Math.random())*rx*.72;ctx.globalAlpha=(.25+Math.random()*.35)*Math.min(1,g)*(1-r/rx);ctx.fillStyle=Math.random()<.5?'#fff3e6':'#ffd9c8';ctx.fillRect(Math.cos(a)*r,Math.sin(a)*r,s,s)}ctx.restore()})}
+ // 2c) keep the lipstick a true medium rose whatever lipstick she had on (coral, peach, nude): recolour inside the lip line only
+ var LO=beauty&&beauty.lipOutline,LI=beauty&&beauty.lipInner;if(LO&&LO.length>5){var lx0=1,lx1=0,ly0=1,ly1=0;LO.forEach(function(p){lx0=Math.min(lx0,p.x);lx1=Math.max(lx1,p.x);ly0=Math.min(ly0,p.y);ly1=Math.max(ly1,p.y)});
+  var pad=(lx1-lx0)*.15,bx=Math.max(0,(lx0-pad)*W),by=Math.max(0,(ly0-pad)*H),bw=Math.min(W-bx,(lx1-lx0+2*pad)*W),bh=Math.min(H-by,(ly1-ly0+2*pad)*H);
+  if(bw>4&&bh>4){var m=D.createElement('canvas');m.width=Math.ceil(bw);m.height=Math.ceil(bh);var mx=m.getContext('2d'),fe=Math.max(1,(lx1-lx0)*W*.02);try{mx.filter='blur('+fe.toFixed(1)+'px)'}catch(e){}
+   mx.fillStyle='rgb(175,66,92)';mx.beginPath();LO.forEach(function(p,i){var X=p.x*W-bx,Y=p.y*H-by;i?mx.lineTo(X,Y):mx.moveTo(X,Y)});mx.closePath();if(LI&&LI.length>3){LI.forEach(function(p,i){var X=p.x*W-bx,Y=p.y*H-by;i?mx.lineTo(X,Y):mx.moveTo(X,Y)});mx.closePath()}mx.fill('evenodd');
+   var lum=0;try{var dd=ctx.getImageData(Math.round(bx+bw*.3),Math.round(by+bh*.35),Math.max(1,Math.round(bw*.4)),Math.max(1,Math.round(bh*.3))).data;for(var q=0;q<dd.length;q+=4)lum+=.3*dd[q]+.59*dd[q+1]+.11*dd[q+2];lum/=dd.length/4}catch(e){}
+   ctx.save();ctx.globalCompositeOperation='color';ctx.globalAlpha=Math.min(.75,.6*Math.max(.8,g));ctx.drawImage(m,bx,by);
+   var lo=null;try{var oc=D.createElement('canvas');oc.width=32;oc.height=16;var sw=source.naturalWidth||source.width,sh=source.naturalHeight||source.height;oc.getContext('2d').drawImage(source,(bx+bw*.3)/W*sw,(by+bh*.35)/H*sh,bw*.4/W*sw,bh*.3/H*sh,0,0,32,16);var od=oc.getContext('2d').getImageData(0,0,32,16).data;lo=0;for(var q2=0;q2<od.length;q2+=4)lo+=.3*od[q2]+.59*od[q2+1]+.11*od[q2+2];lo/=od.length/4}catch(e){}
+   // lipstick never makes her lips lighter than they were, and very light lips get a richer colour
+   var tgt=Math.min(lo!=null?lo+4:999,118);if(lum>tgt+4){ctx.globalCompositeOperation='multiply';ctx.globalAlpha=Math.min(.7,(lum-tgt)/lum*2.2);ctx.drawImage(m,bx,by)}ctx.restore()}}
  // 3) a whisper of warm gold over the whole photo
  ctx.save();ctx.globalCompositeOperation='soft-light';ctx.globalAlpha=0;ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);ctx.restore();
 }catch(e){}}
@@ -3856,12 +3871,17 @@ function sparkle(before){var m=$('#main');if(!m||reduce)return;var cv=D.getEleme
 
 // ---- Auto Glow: same tap, clearly more glow ----
 // bronzed luxury glam: rosy blush, highlighter, smoky brown liner, visible lashes, shimmer bronze-gold eyes, medium rosy lip with gloss
-var GLOW={smooth:48,blemish:72,scars:55,wrinkles:60,foundation:12,concealer:20,bronzer:38,contour:28,highlight:60,blush:30,eyeShadow:82,eyeLiner:60,lashes:58,mascara:52,browMakeup:24,tint:44,gloss:52,eyeBright:26,faceLight:0,hairShine:20},
- GLOWSH={color:'petalRose',blushColor:'rose',eyeColor:'copperRose',eyeFinish:'shimmer',linerStyle:'smoky',linerColor:'brown',lashStyle:'volume',glossShade:'gRose',contourShade:'cocoa',lipFinish:'cream'};
+var GLOW={smooth:48,blemish:72,scars:55,wrinkles:60,foundation:12,concealer:20,bronzer:38,contour:28,highlight:80,blush:52,eyeShadow:96,eyeLiner:72,lashes:58,mascara:52,browMakeup:24,tint:62,gloss:62,eyeBright:26,faceLight:0,hairShine:20},
+ GLOWSH={color:'velvetRose',blushColor:'rose',eyeColor:'copperRose',eyeFinish:'shimmer',linerStyle:'smoky',linerColor:'brown',lashStyle:'volume',glossShade:'gRose',contourShade:'cocoa',lipFinish:'shimmer'};
+function lipHue(){var L=beauty.lipOutline;if(!L||L.length<6||!source)return null;var x0=1,x1=0,y0=1,y1=0;L.forEach(function(p){x0=Math.min(x0,p.x);x1=Math.max(x1,p.x);y0=Math.min(y0,p.y);y1=Math.max(y1,p.y)});
+ var c=D.createElement('canvas'),w=64,h=32;c.width=w;c.height=h;var sw=source.naturalWidth||source.width,sh=source.naturalHeight||source.height;
+ c.getContext('2d').drawImage(source,(x0+(x1-x0)*.25)*sw,(y0+(y1-y0)*.2)*sh,(x1-x0)*.5*sw,(y1-y0)*.6*sh,0,0,w,h);var d=c.getContext('2d').getImageData(0,0,w,h).data,r=0,g=0,b=0,n=0;for(var i=0;i<d.length;i+=4){r+=d[i];g+=d[i+1];b+=d[i+2];n++}r/=n;g/=n;b/=n;
+ var mx=Math.max(r,g,b),mn=Math.min(r,g,b);window.__fcLipRGB=[r,g,b];if(mx-mn<12)return null;var hh=mx===r?((g-b)/(mx-mn))%6:mx===g?(b-r)/(mx-mn)+2:(r-g)/(mx-mn)+4;hh*=60;if(hh<0)hh+=360;return hh}
+window.__fcLipHue=lipHue;
 var _ag=autoGlow;autoGlow=async function(){var before=snap(),r=await _ag.apply(this,arguments);
  try{if(source&&lastRecipe&&lastRecipe.type==='glow'){var men=window.frameStyle==='men',face=beauty&&beauty.points&&beauty.points.nose;
    var km=Math.max(.6,Math.min(2,(typeof strengthMult==='number'?strengthMult:.8)/.8));
-   if(face&&!men){for(var k in GLOW)beauty[k]=Math.max(0,Math.min(100,Math.round(GLOW[k]*km)));Object.assign(beauty,GLOWSH)}
+   if(face&&!men){for(var k in GLOW)beauty[k]=Math.max(0,Math.min(100,Math.round(GLOW[k]*km)));Object.assign(beauty,GLOWSH);}
    if(men){adj.light=Math.max(adj.light||0,10);adj.highlights=Math.max(adj.highlights||0,8)}else{adj.light=0;adj.contrast=5;adj.color=0;adj.warmth=-2;adj.highlights=3;adj.softness=6}
    for(var j of['light','contrast','highlights','softness','color','warmth']){var a=$('#'+j),b=$('#'+j+'Value');if(a)a.value=adj[j];if(b)b.value=adj[j]}
    beauty.glowFx=Math.max(.5,Math.min(1.6,(typeof strengthMult==='number'?strengthMult:.9)/.8))*(men?.5:1)*(face?1:.7);
