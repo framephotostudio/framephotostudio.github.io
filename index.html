@@ -3903,7 +3903,7 @@ var ag=$('#autoGlow');
 if(ag&&!$('#aiGlowBtn')){var b=D.createElement('button');b.type='button';b.id='aiGlowBtn';b.innerHTML='<span>✨ AI Glow</span><small>Premium AI version · uses 1 AI look</small>';ag.insertAdjacentElement('afterend',b);
  b.onclick=function(){try{window.fcTrack&&window.fcTrack('ai_glow_click')}catch(e){}
   if(!window.__luxe||!window.__luxe.run){toast('AI looks are loading. Try again in a moment.');return}
-  window.__luxe.run({k:'aiglow',n:'AI Glow',t:'Luminous, lit-from-within glow',g:'#f3d9a4,#b98a4a'})}}
+  var BL=(window.__luxe.LOOKS||[]).filter(function(x){return x.k==='bridal'})[0]||{k:'bridal',n:'Bridal Glow',t:'Rose-gold shimmer, glossy rose',g:'#f3c9d0,#c47487'};window.__luxe.run(Object.assign({},BL,{n:'AI Glow'}))}}
 
 // ---- website only: the iPhone app is coming soon to the App Store ----
 if(!isApp){var ha=D.querySelector('.heroActions');if(ha&&!D.querySelector('.fcAppSoon')){var s=D.createElement('div');s.className='fcAppSoon';s.setAttribute('role','note');
