@@ -3826,7 +3826,7 @@ function glowFx(c,g){try{if(!c||!c.getContext||g<=0)return;var ctx=c.getContext(
  // 2) light on the face, like a beauty dish
  var P=beauty&&beauty.points,fo=beauty&&beauty.faceOutline;
  if(P&&P.nose){var cx=P.nose.x,cy=P.nose.y,R=.16*Math.max(W,H);if(fo&&fo.length>4){var x0=1,x1=0,y0=1,y1=0;fo.forEach(function(p){x0=Math.min(x0,p.x);x1=Math.max(x1,p.x);y0=Math.min(y0,p.y);y1=Math.max(y1,p.y)});cx=(x0+x1)/2;cy=(y0+y1)/2;R=Math.max((x1-x0)*W,(y1-y0)*H)*.62}
-  var gr=ctx.createRadialGradient(cx*W,cy*H,R*.1,cx*W,cy*H,R*1.15);var a1=Math.min(.5,.34*g);gr.addColorStop(0,'rgba(255,255,255,0)');gr.addColorStop(.32,'rgba(255,255,255,0)');gr.addColorStop(.62,'rgba(196,150,136,'+a1+')');gr.addColorStop(.86,'rgba(205,165,150,'+(a1*.45)+')');gr.addColorStop(1,'rgba(255,255,255,0)');
+  var gr=ctx.createRadialGradient(cx*W,cy*H,R*.1,cx*W,cy*H,R*1.15);var a1=Math.min(.36,.24*g);gr.addColorStop(0,'rgba(255,255,255,0)');gr.addColorStop(.32,'rgba(255,255,255,0)');gr.addColorStop(.62,'rgba(196,150,136,'+a1+')');gr.addColorStop(.86,'rgba(205,165,150,'+(a1*.45)+')');gr.addColorStop(1,'rgba(255,255,255,0)');
   ctx.save();ctx.globalCompositeOperation='multiply';ctx.fillStyle=gr;ctx.fillRect(0,0,W,H);ctx.restore()}
  // 3) a whisper of warm gold over the whole photo
  ctx.save();ctx.globalCompositeOperation='soft-light';ctx.globalAlpha=0;ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);ctx.restore();
@@ -3856,8 +3856,8 @@ function sparkle(before){var m=$('#main');if(!m||reduce)return;var cv=D.getEleme
 
 // ---- Auto Glow: same tap, clearly more glow ----
 // bronzed luxury glam: rosy blush, highlighter, smoky brown liner, visible lashes, shimmer bronze-gold eyes, medium rosy lip with gloss
-var GLOW={smooth:48,blemish:72,scars:55,wrinkles:60,foundation:12,concealer:20,bronzer:38,contour:28,highlight:60,blush:30,eyeShadow:82,eyeLiner:60,lashes:58,mascara:52,browMakeup:24,tint:66,gloss:40,eyeBright:26,faceLight:0,hairShine:20},
- GLOWSH={color:'polishedRose',blushColor:'rose',eyeColor:'copperRose',eyeFinish:'shimmer',linerStyle:'smoky',linerColor:'brown',lashStyle:'volume',glossShade:'gRose',contourShade:'cocoa',lipFinish:'cream'};
+var GLOW={smooth:48,blemish:72,scars:55,wrinkles:60,foundation:12,concealer:20,bronzer:38,contour:28,highlight:60,blush:30,eyeShadow:82,eyeLiner:60,lashes:58,mascara:52,browMakeup:24,tint:44,gloss:52,eyeBright:26,faceLight:0,hairShine:20},
+ GLOWSH={color:'petalRose',blushColor:'rose',eyeColor:'copperRose',eyeFinish:'shimmer',linerStyle:'smoky',linerColor:'brown',lashStyle:'volume',glossShade:'gRose',contourShade:'cocoa',lipFinish:'cream'};
 var _ag=autoGlow;autoGlow=async function(){var before=snap(),r=await _ag.apply(this,arguments);
  try{if(source&&lastRecipe&&lastRecipe.type==='glow'){var men=window.frameStyle==='men',face=beauty&&beauty.points&&beauty.points.nose;
    var km=Math.max(.6,Math.min(2,(typeof strengthMult==='number'?strengthMult:.8)/.8));
