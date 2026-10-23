@@ -1,1 +1,1 @@
-iPhone build request: 1.0.0 (owner mode)
+iPhone build request: 1.0.0 (bigger photo, undo row, continue last edit, artist bar)
