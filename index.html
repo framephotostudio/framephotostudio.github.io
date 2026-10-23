@@ -3775,17 +3775,19 @@ var st=document.createElement('style');st.textContent=
   '.workspace.expanded .previewExtras #comparePosition{height:34px!important;flex:1}'+
   '.workspace.expanded .previewExtras #platformPreview{min-height:34px!important;height:34px!important;font-size:12.5px!important;padding:0 8px!important;flex:0 0 112px;max-width:112px}'+
   '.workspace.expanded .stagefoot{margin:6px 0 2px!important}.workspace.expanded .stagefoot .small{min-height:34px!important;height:34px!important}}'+
- /* Makeup Artist Mode: one slim line */
- 'html.fc-app #artistMode{display:flex!important;align-items:center;gap:10px;padding:10px 12px!important;margin:2px 0 12px!important;border-radius:16px!important}'+
- 'html.fc-app #artistMode .amSub{display:none!important}html.fc-app #artistMode .amTxt{flex:1;min-width:0;display:grid;gap:2px}'+'html.fc-app #artistMode .amTxt b{font-size:15px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}html.fc-app #artistMode .amTxt small{font-size:12px;line-height:1.3;color:#f1e4ec}'+'html.fc-app #artistMode .amInfo{flex:0 0 26px;width:26px;height:26px;border-radius:50%;border:1px solid rgba(243,220,150,.7);color:#f3dc96;display:grid;place-items:center;font:700 13px Georgia,serif}'+'html.fc-app #amPop{margin:-6px 0 12px;padding:12px 14px;border-radius:14px;background:#fffaf2;border:1px solid #e3cf9e;font-size:13px;line-height:1.45;color:#4a3757}#amPop[hidden]{display:none}'+
- 'html.fc-app #artistMode .amTag{display:none!important}html.fc-app #artistMode .amTxt b:before{content:"\\2726  ";color:#e9c77b}'+
- 'html.fc-app #artistMode .amGo{flex:0 0 auto;margin:0!important;padding:7px 12px!important;font-size:12.5px!important}';
+ /* Makeup Artist Mode: one slim line on phones (app and phone website); the large card stays on computers */
+ '#artistMode .amTxt{display:contents}#artistMode .amTxt small,#artistMode .amInfo{display:none}html:not(.fcSlimArtist) #amPop{display:none!important}'+
+ 'html.fcSlimArtist #artistMode{display:flex!important;align-items:center;gap:10px;padding:10px 12px!important;margin:2px 0 12px!important;border-radius:16px!important}'+
+ 'html.fcSlimArtist #artistMode .amSub{display:none!important}html.fcSlimArtist #artistMode .amTxt{flex:1;min-width:0;display:grid;gap:2px}'+'html.fcSlimArtist #artistMode .amTxt b{font-size:15px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}html.fcSlimArtist #artistMode .amTxt small{font-size:12px;line-height:1.3;color:#f1e4ec}'+'html.fcSlimArtist #artistMode .amInfo{flex:0 0 26px;width:26px;height:26px;border-radius:50%;border:1px solid rgba(243,220,150,.7);color:#f3dc96;display:grid;place-items:center;font:700 13px Georgia,serif}'+'html.fcSlimArtist #amPop{margin:-6px 0 12px;padding:12px 14px;border-radius:14px;background:#fffaf2;border:1px solid #e3cf9e;font-size:13px;line-height:1.45;color:#4a3757}#amPop[hidden]{display:none}'+
+ 'html.fcSlimArtist #artistMode .amTag{display:none!important}html.fcSlimArtist #artistMode .amTxt b:before{content:"\\2726  ";color:#e9c77b}'+
+ 'html.fcSlimArtist #artistMode .amGo{flex:0 0 auto;margin:0!important;padding:7px 12px!important;font-size:12.5px!important}';
 document.head.appendChild(st);
 function chips(){var ph=document.querySelector('.photo'),f=document.getElementById('faceCloseup'),fit=document.getElementById('previewFit');
  if(!ph||!f||!fit)return false;if(document.querySelector('.fcPhotoChips'))return true;
  var c=document.createElement('div');c.className='fcPhotoChips';c.appendChild(f);c.appendChild(fit);var ex=document.getElementById('expandPhoto');if(ex&&window.matchMedia('(max-width:760px)').matches&&ex.closest('.previewTools'))c.appendChild(ex);ph.appendChild(c);return true}
 if(!chips()){var n=0,t=setInterval(function(){if(chips()||++n>40)clearInterval(t)},150)}
-function artistBar(){if(!document.documentElement.classList.contains('fc-app'))return true;var bt=document.getElementById('artistMode');if(!bt)return false;if(bt.querySelector('.amTxt'))return true;
+function slimSet(){var on=document.documentElement.classList.contains('fc-app')||window.matchMedia('(max-width:760px)').matches;document.documentElement.classList.toggle('fcSlimArtist',on)}slimSet();try{window.matchMedia('(max-width:760px)').addEventListener('change',slimSet)}catch(e){}
+function artistBar(){var bt=document.getElementById('artistMode');if(!bt)return false;if(bt.querySelector('.amTxt'))return true;
  var t=bt.querySelector('b');var w=document.createElement('span');w.className='amTxt';bt.insertBefore(w,t);w.appendChild(t);
  var sm=document.createElement('small');sm.textContent='Refine finished makeup for a polished, photo-ready look.';w.appendChild(sm);
  var i=document.createElement('span');i.className='amInfo';i.setAttribute('role','button');i.setAttribute('tabindex','0');i.setAttribute('aria-label','What is Makeup Artist Mode?');i.textContent='i';
@@ -3794,7 +3796,7 @@ function artistBar(){if(!document.documentElement.classList.contains('fc-app'))r
  bt.insertAdjacentElement('afterend',pop);
  var tog=function(e){e.stopPropagation();e.preventDefault();pop.hidden=!pop.hidden};i.addEventListener('click',tog);i.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' ')tog(e)});return true}
 if(!artistBar()){var n2=0,t2=setInterval(function(){if(artistBar()||++n2>40)clearInterval(t2)},150)}
-setInterval(function(){if(!document.documentElement.classList.contains('fc-app'))return;var g=document.querySelector('#artistMode .amGo');if(g&&/Applied/.test(g.textContent)&&g.textContent!=='Applied ✓')g.textContent='Applied ✓';else if(g&&g.textContent==='Enhance this look')g.textContent='Enhance'},500);
+setInterval(function(){if(!document.documentElement.classList.contains('fcSlimArtist')){var g0=document.querySelector('#artistMode .amGo');if(g0&&(g0.textContent==='Enhance'||g0.textContent==='Applied ✓'))g0.textContent=g0.textContent==='Enhance'?'Enhance this look':'Applied. Use How strong to adjust';return}var g=document.querySelector('#artistMode .amGo');if(g&&/Applied/.test(g.textContent)&&g.textContent!=='Applied ✓')g.textContent='Applied ✓';else if(g&&g.textContent==='Enhance this look')g.textContent='Enhance'},500);
 }catch(e){console.warn('v71 layout',e)}})();
 </script>
 </body></html>
