@@ -3899,13 +3899,6 @@ function glowFx(c,g,raw){try{if(!c||!c.getContext||g<=0)return;var ctx=c.getCont
   var ew=(x1-x0)*W,eh=Math.max((y1-y0)*H,ew*.28),cx=(x0+x1)/2*W,out=((x0+x1)/2<fcx)?-1:1,ox=cx+out*ew*.22,oy=y0*H+eh*.05,a2=Math.min(.27,.19*g);
   ctx.save();ctx.globalCompositeOperation='multiply';ctx.translate(ox,oy);ctx.scale(1,.42);var sg=ctx.createRadialGradient(0,0,0,0,0,ew*.62);sg.addColorStop(0,'rgba(120,78,74,'+a2+')');sg.addColorStop(.55,'rgba(150,104,98,'+(a2*.55)+')');sg.addColorStop(1,'rgba(170,125,118,0)');ctx.fillStyle=sg;ctx.beginPath();ctx.arc(0,0,ew*.62,0,6.2832);ctx.fill();ctx.restore();
   })}
- // 2a2) a slight thin wing at the outer corner to finish the smoky eye (follows the upper lash line, tapers to a fine point)
- var EC2=beauty&&beauty.eyeContours,nx2=P&&P.nose?P.nose.x:.5;if(!window.__fcNoWing&&EC2&&EC2.length){EC2.forEach(function(e){if(!e||e.length<4)return;var oc=null,ic=null,bo=-1,bi=1e9;e.forEach(function(p){var d=Math.abs(p.x-nx2);if(d>bo){bo=d;oc=p}if(d<bi){bi=d;ic=p}});if(!oc||!ic)return;
-  var O2=[oc.x*W,oc.y*H],I2=[ic.x*W,ic.y*H],ux=O2[0]-I2[0],uy=O2[1]-I2[1],ew=Math.hypot(ux,uy);if(ew<8)return;ux/=ew;uy/=ew;var nxv=uy,nyv=-ux;if(nyv>0){nxv=-nxv;nyv=-nyv}
-  var L=ew*.2,a=17*Math.PI/180,tx=O2[0]+(ux*Math.cos(a)+nxv*Math.sin(a))*L,ty=O2[1]+(uy*Math.cos(a)+nyv*Math.sin(a))*L,th=ew*.05;
-  var p1=[O2[0]-ux*ew*.1+nxv*ew*.06,O2[1]-uy*ew*.1+nyv*ew*.06],p0=[O2[0]-ux*ew*.03+nxv*ew*.012,O2[1]-uy*ew*.03+nyv*ew*.012];
-  ctx.save();ctx.beginPath();ctx.rect(0,0,W,H);e.forEach(function(p,i){i?ctx.lineTo(p.x*W,p.y*H):ctx.moveTo(p.x*W,p.y*H)});ctx.closePath();ctx.clip('evenodd');ctx.fillStyle='rgba(30,19,17,.72)';ctx.shadowColor='rgba(30,19,17,.55)';ctx.shadowBlur=Math.max(1.2,ew*.025);ctx.beginPath();ctx.moveTo(p1[0],p1[1]);
-  ctx.quadraticCurveTo(O2[0]-ux*ew*.04+nxv*th*1.25,O2[1]-uy*ew*.04+nyv*th*1.25,tx,ty);ctx.quadraticCurveTo(O2[0]+ux*L*.35+nxv*th*.2,O2[1]+uy*L*.35+nyv*th*.2,p0[0],p0[1]);ctx.closePath();ctx.fill();ctx.restore()})}
  // 2b) softer inner eye corner: lift the added dark makeup near the inner corner so it fades smoothly into the lash line, plus a touch of highlighter
  var EC1=beauty&&beauty.eyeContours,nx=P&&P.nose?P.nose.x:.5;if(raw&&EC1&&EC1.length){EC1.forEach(function(e){if(!e||e.length<4)return;var x0=1,x1=0,y0=1,y1=0,inn=null,bd=1e9;e.forEach(function(p){x0=Math.min(x0,p.x);x1=Math.max(x1,p.x);y0=Math.min(y0,p.y);y1=Math.max(y1,p.y);var d=Math.abs(p.x-nx);if(d<bd){bd=d;inn=p}});
   var ew=(x1-x0)*W;if(ew<6||!inn)return;var ix=inn.x*W,iy=inn.y*H,ox=((x0+x1)/2*W-ix)>0?1:-1,R=ew*.5;
