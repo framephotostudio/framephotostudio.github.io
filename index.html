@@ -3799,4 +3799,84 @@ if(!artistBar()){var n2=0,t2=setInterval(function(){if(artistBar()||++n2>40)clea
 setInterval(function(){if(!document.documentElement.classList.contains('fcSlimArtist')){var g0=document.querySelector('#artistMode .amGo');if(g0&&(g0.textContent==='Enhance'||g0.textContent==='Applied ✓'))g0.textContent=g0.textContent==='Enhance'?'Enhance this look':'Applied. Use How strong to adjust';return}var g=document.querySelector('#artistMode .amGo');if(g&&/Applied/.test(g.textContent)&&g.textContent!=='Applied ✓')g.textContent='Applied ✓';else if(g&&g.textContent==='Enhance this look')g.textContent='Enhance'},500);
 }catch(e){console.warn('v71 layout',e)}})();
 </script>
+<script>
+// v72: a more magical Auto Glow (visible luminous finish + sparkle reveal), an AI Glow button, and an App Store "coming soon" badge on the website
+(function(){try{
+var D=document,isApp=D.documentElement.classList.contains('fc-app');
+var st=D.createElement('style');st.textContent=
+ '#aiGlowBtn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;margin:10px 0 0;padding:12px 16px;border-radius:999px;border:1px solid #d9b45a;background:linear-gradient(120deg,#2b174a,#4a2746 55%,#7a5530);color:#fff;font:600 15px/1.2 inherit;cursor:pointer;box-shadow:0 6px 18px #2b174a33;position:relative;overflow:hidden}'+
+ '#aiGlowBtn small{font-weight:500;font-size:12px;color:#f3dfae;opacity:.95}'+
+ '#aiGlowBtn:after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,#fff5 50%,transparent 70%);transform:translateX(-120%);animation:fcShine 3.2s ease-in-out infinite}'+
+ '@keyframes fcShine{60%,100%{transform:translateX(120%)}}'+
+ '#autoGlow{background:linear-gradient(120deg,#c9a24a,#e8cd85 50%,#c9a24a);color:#2b174a;border:0;box-shadow:0 6px 18px #c9a24a44}'+
+ '#fcSparkle{position:fixed;pointer-events:none;z-index:60}'+
+ '.fcAppSoon{display:inline-flex;align-items:center;gap:10px;margin:14px 0 16px;padding:8px 16px 8px 12px;border-radius:12px;background:#111;color:#fff;text-decoration:none;font:500 12px/1.15 inherit;border:1px solid #333}'+
+ '.fcAppSoon b{display:block;font-size:15px;font-weight:600;letter-spacing:.1px}.fcAppSoon svg{flex:0 0 auto}'+
+ 'html.fc-app .fcAppSoon{display:none!important}'+
+ '@media (prefers-reduced-motion:reduce){#aiGlowBtn:after{animation:none}}';
+D.head.appendChild(st);
+
+// ---- luminous finish, drawn on the processed photo (so it shows in the preview, saves and every size) ----
+function blurCopy(src,k){var w=Math.max(8,Math.round(src.width/k)),h=Math.max(8,Math.round(src.height/k)),a=D.createElement('canvas');a.width=w;a.height=h;var x=a.getContext('2d');x.imageSmoothingEnabled=true;x.imageSmoothingQuality='high';x.drawImage(src,0,0,w,h);
+ var b=D.createElement('canvas');b.width=Math.max(4,w>>1);b.height=Math.max(4,h>>1);var y=b.getContext('2d');y.imageSmoothingEnabled=true;y.drawImage(a,0,0,b.width,b.height);x.clearRect(0,0,w,h);x.drawImage(b,0,0,w,h);return a}
+function glowFx(c,g){try{if(!c||!c.getContext||g<=0)return;var ctx=c.getContext('2d'),W=c.width,H=c.height;
+ // 1) soft bloom from the highlights only (blurred copy multiplied by itself, screened back)
+ var bl=blurCopy(c,10),bc=D.createElement('canvas');bc.width=bl.width;bc.height=bl.height;bc.getContext('2d').drawImage(bl,0,0);var bx=bl.getContext('2d');bx.globalCompositeOperation='multiply';bx.drawImage(bc,0,0);bx.drawImage(bc,0,0);bx.globalCompositeOperation='source-over';
+ ctx.save();ctx.globalCompositeOperation='screen';ctx.globalAlpha=Math.min(.55,.34*g);ctx.imageSmoothingEnabled=true;ctx.drawImage(bl,0,0,W,H);ctx.restore();
+ // 2) light on the face, like a beauty dish
+ var P=beauty&&beauty.points,fo=beauty&&beauty.faceOutline;
+ if(P&&P.nose){var cx=P.nose.x,cy=P.nose.y,R=.16*Math.max(W,H);if(fo&&fo.length>4){var x0=1,x1=0,y0=1,y1=0;fo.forEach(function(p){x0=Math.min(x0,p.x);x1=Math.max(x1,p.x);y0=Math.min(y0,p.y);y1=Math.max(y1,p.y)});cx=(x0+x1)/2;cy=(y0+y1)/2;R=Math.max((x1-x0)*W,(y1-y0)*H)*.8}
+  var gr=ctx.createRadialGradient(cx*W,cy*H,R*.1,cx*W,cy*H,R*1.15);gr.addColorStop(0,'rgba(255,240,226,'+Math.min(.5,.34*g)+')');gr.addColorStop(.6,'rgba(255,232,214,'+Math.min(.22,.14*g)+')');gr.addColorStop(1,'rgba(255,232,214,0)');
+  ctx.save();ctx.globalCompositeOperation='soft-light';ctx.fillStyle=gr;ctx.fillRect(0,0,W,H);ctx.globalCompositeOperation='screen';ctx.globalAlpha=.16;ctx.fillRect(0,0,W,H);ctx.restore()}
+ // 3) a whisper of warm gold over the whole photo
+ ctx.save();ctx.globalCompositeOperation='soft-light';ctx.globalAlpha=Math.min(.14,.09*g);ctx.fillStyle='#ffc98f';ctx.fillRect(0,0,W,H);ctx.restore();
+}catch(e){}}
+var _pr=process;process=function(max,raw,photo){var r=_pr.apply(this,arguments);try{if(!raw&&(photo===undefined||photo===source)&&beauty&&beauty.glowFx>0){var n=D.createElement('canvas');n.width=r.width;n.height=r.height;n.getContext('2d').drawImage(r,0,0);glowFx(n,beauty.glowFx);return n}}catch(e){}return r};
+var _av=applyVibe;applyVibe=async function(){try{if(beauty)beauty.glowFx=0}catch(e){}return _av.apply(this,arguments)};
+try{$('#reset').addEventListener('click',function(){try{beauty.glowFx=0;invalidate()}catch(e){}},true)}catch(e){}
+
+// ---- sparkle reveal ----
+var reduce=false;try{reduce=matchMedia('(prefers-reduced-motion:reduce)').matches}catch(e){}
+function snap(){var m=$('#main');if(!m||!m.width)return null;var c=D.createElement('canvas');c.width=m.width;c.height=m.height;c.getContext('2d').drawImage(m,0,0);return c}
+function sparkle(before){var m=$('#main');if(!m||reduce)return;var cv=D.getElementById('fcSparkle');if(cv)cv.remove();cv=D.createElement('canvas');cv.id='fcSparkle';D.body.appendChild(cv);
+ var ctx=cv.getContext('2d'),dpr=Math.min(2,window.devicePixelRatio||1),t0=performance.now(),DUR=1500,FADE=500,parts=[];
+ function star(x,y,s,a){ctx.save();ctx.globalAlpha=a;ctx.translate(x,y);ctx.fillStyle='#fff7df';ctx.shadowColor='#ffd77a';ctx.shadowBlur=s*3;ctx.beginPath();for(var i=0;i<8;i++){var rr=i%2?s*.28:s,an=i*Math.PI/4;ctx.lineTo(Math.cos(an)*rr,Math.sin(an)*rr)}ctx.closePath();ctx.fill();ctx.restore()}
+ var waited=0,last=0,el=0;function frame(now){m=$('#main');var r=m&&m.getBoundingClientRect();if(!r||!r.width||r.bottom<0||r.top>innerHeight){if(++waited>240){cv.remove();return}requestAnimationFrame(frame);return}if(typeof currentProcessed!=='undefined'&&!currentProcessed&&waited<200){waited++;requestAnimationFrame(frame);return}cv.style.borderRadius=getComputedStyle(m).borderRadius;var dt=last?Math.min(34,now-last):16;last=now;el+=dt;
+  cv.style.left=r.left+'px';cv.style.top=r.top+'px';cv.style.width=r.width+'px';cv.style.height=r.height+'px';var W=Math.round(r.width*dpr),H=Math.round(r.height*dpr);if(cv.width!==W||cv.height!==H){cv.width=W;cv.height=H}
+  var t=el/DUR,e=t<1?1-Math.pow(1-t,3):1,slant=H*.35,pos=-slant+(W+slant*2)*e;ctx.clearRect(0,0,W,H);
+  // the old photo, still covering the part the light has not reached yet
+  if(before&&t<1){ctx.save();ctx.beginPath();ctx.moveTo(pos,0);ctx.lineTo(W,0);ctx.lineTo(W,H);ctx.lineTo(pos-slant,H);ctx.closePath();ctx.clip();ctx.drawImage(before,0,0,W,H);ctx.restore()}
+  // the golden light line
+  if(t<1){ctx.save();var lg=ctx.createLinearGradient(pos-60*dpr,0,pos+30*dpr,0);lg.addColorStop(0,'rgba(255,215,130,0)');lg.addColorStop(.75,'rgba(255,236,190,.55)');lg.addColorStop(1,'rgba(255,255,255,0)');ctx.fillStyle=lg;ctx.beginPath();ctx.moveTo(pos-60*dpr,0);ctx.lineTo(pos+30*dpr,0);ctx.lineTo(pos+30*dpr-slant,H);ctx.lineTo(pos-60*dpr-slant,H);ctx.closePath();ctx.fill();ctx.restore();
+   for(var i=0;i<5;i++){var v=Math.random();parts.push({x:pos-slant*v+(Math.random()-.5)*24*dpr,y:H*v,vx:(Math.random()-.3)*.6*dpr,vy:(-.4-Math.random()*.8)*dpr,s:(2.5+Math.random()*5)*dpr,life:1})}}
+  var fade=t<1?1:Math.max(0,1-(el-DUR)/FADE);
+  parts.forEach(function(p){p.x+=p.vx;p.y+=p.vy;p.life-=.018;if(p.life>0)star(p.x,p.y,p.s*(.6+.4*p.life),Math.min(1,p.life*1.4)*fade)});parts=parts.filter(function(p){return p.life>0});
+  if(t<1||fade>0)requestAnimationFrame(frame);else cv.remove()}
+ requestAnimationFrame(frame)}
+
+// ---- Auto Glow: same tap, clearly more glow ----
+var UP={eyeShadow:1.5,lashes:1.6,mascara:1.7,tint:1.3,gloss:1.5,blush:1.25,highlight:1.45,eyeBright:1.4,faceLight:1.6,contour:1.2,browMakeup:1.3,hairShine:1.3};
+var _ag=autoGlow;autoGlow=async function(){var before=snap(),r=await _ag.apply(this,arguments);
+ try{if(source&&lastRecipe&&lastRecipe.type==='glow'){var men=window.frameStyle==='men',face=beauty&&beauty.points&&beauty.points.nose;
+   if(face&&!men){for(var k in UP)if(typeof beauty[k]==='number')beauty[k]=Math.min(100,Math.round(beauty[k]*UP[k]))}
+   adj.light=Math.max(adj.light||0,men?10:11);adj.highlights=Math.max(adj.highlights||0,men?8:12);adj.softness=Math.max(adj.softness||0,men?6:18);adj.color=Math.max(adj.color||0,men?8:8);adj.warmth=men?adj.warmth:Math.max(adj.warmth||0,-3);
+   for(var j of['light','highlights','softness','color','warmth']){var a=$('#'+j),b=$('#'+j+'Value');if(a)a.value=adj[j];if(b)b.value=adj[j]}
+   beauty.glowFx=Math.max(.5,Math.min(1.6,(typeof strengthMult==='number'?strengthMult:.9)/.8))*(men?.5:1)*(face?1:.7);
+   try{syncBeauty()}catch(e){}invalidate();try{if(history.length)history[history.length-1]=capture();updateHistoryButtons()}catch(e){}
+   setTimeout(function(){sparkle(before)},60)}}catch(e){}
+ return r};
+
+// ---- AI Glow (one AI look) right under Auto Glow ----
+var ag=$('#autoGlow');
+if(ag&&!$('#aiGlowBtn')){var b=D.createElement('button');b.type='button';b.id='aiGlowBtn';b.innerHTML='<span>✨ AI Glow</span><small>Premium AI version · uses 1 AI look</small>';ag.insertAdjacentElement('afterend',b);
+ b.onclick=function(){try{window.fcTrack&&window.fcTrack('ai_glow_click')}catch(e){}
+  if(!window.__luxe||!window.__luxe.run){toast('AI looks are loading. Try again in a moment.');return}
+  window.__luxe.run({k:'aiglow',n:'AI Glow',t:'Luminous, lit-from-within glow',g:'#f3d9a4,#b98a4a'})}}
+
+// ---- website only: the iPhone app is coming soon to the App Store ----
+if(!isApp){var ha=D.querySelector('.heroActions');if(ha&&!D.querySelector('.fcAppSoon')){var s=D.createElement('div');s.className='fcAppSoon';s.setAttribute('role','note');
+ s.innerHTML='<svg width="20" height="26" viewBox="0 0 20 26" aria-hidden="true"><rect x="1.5" y="1" width="17" height="24" rx="4" fill="none" stroke="#e8cd85" stroke-width="1.8"/><rect x="7" y="21" width="6" height="1.6" rx=".8" fill="#e8cd85"/></svg><span>Coming soon<b>Face Couture for iPhone</b></span>';
+ ha.insertAdjacentElement('afterend',s)}}
+}catch(e){console.warn('v72 glow',e)}})();
+</script>
 </body></html>
