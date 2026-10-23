@@ -1,1 +1,1 @@
-iPhone build request: 1.0.0 (new bronzed Auto Glow with sparkle reveal)
+iPhone build request: 1.0.0 (softer Auto Glow: lighter smoky eye, less skin blur)
