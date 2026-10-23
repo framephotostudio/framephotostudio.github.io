@@ -3605,6 +3605,46 @@ function score(mo,mr){var s=0,worst=0;for(var k in LIM){var d=Math.abs(mr[k]/mo[
 function wrap(a){while(a>180)a-=360;while(a<-180)a+=360;return a}
 
 // put the person's real eyes (white, iris, pupil, gaze, natural shine) into the AI result; the AI's lashes, liner and shadow stay
+
+// Shape lock (every AI look): the finished photo keeps the person's exact face shape, feature sizes and positions.
+// The AI result is moved point by point (468 face points) onto the original face, then only the face area is taken from it;
+// hair, neck, body and background stay the original photo.
+function fcDelaunay(P){var n=P.length,minX=1e9,minY=1e9,maxX=-1e9,maxY=-1e9;for(var i=0;i<n;i++){minX=Math.min(minX,P[i][0]);minY=Math.min(minY,P[i][1]);maxX=Math.max(maxX,P[i][0]);maxY=Math.max(maxY,P[i][1])}
+ var d=Math.max(maxX-minX,maxY-minY)*20,mx=(minX+maxX)/2,my=(minY+maxY)/2,pts=P.concat([[mx-d,my-d],[mx,my+d],[mx+d,my-d]]),tris=[[n,n+1,n+2]];
+ function cc(t){var a=pts[t[0]],b=pts[t[1]],c=pts[t[2]],D=2*(a[0]*(b[1]-c[1])+b[0]*(c[1]-a[1])+c[0]*(a[1]-b[1]));if(Math.abs(D)<1e-12)return[0,0,1e30];
+  var a2=a[0]*a[0]+a[1]*a[1],b2=b[0]*b[0]+b[1]*b[1],c2=c[0]*c[0]+c[1]*c[1],ux=(a2*(b[1]-c[1])+b2*(c[1]-a[1])+c2*(a[1]-b[1]))/D,uy=(a2*(c[0]-b[0])+b2*(a[0]-c[0])+c2*(b[0]-a[0]))/D;return[ux,uy,(a[0]-ux)*(a[0]-ux)+(a[1]-uy)*(a[1]-uy)]}
+ var C=[cc(tris[0])];
+ for(i=0;i<n;i++){var p=pts[i],bad=[],keep=[],keepC=[];for(var t=0;t<tris.length;t++){var c=C[t];if((p[0]-c[0])*(p[0]-c[0])+(p[1]-c[1])*(p[1]-c[1])<c[2])bad.push(tris[t]);else{keep.push(tris[t]);keepC.push(c)}}
+  var edges={};bad.forEach(function(T){[[T[0],T[1]],[T[1],T[2]],[T[2],T[0]]].forEach(function(e){var k=Math.min(e[0],e[1])+'_'+Math.max(e[0],e[1]);edges[k]=edges[k]?0:e})});
+  for(var k in edges){var e=edges[k];if(e){var T=[e[0],e[1],i];keep.push(T);keepC.push(cc(T))}}tris=keep;C=keepC}
+ return tris.filter(function(T){return T[0]<n&&T[1]<n&&T[2]<n})}
+function fcAffine(s,d){var x0=s[0][0],y0=s[0][1],x1=s[1][0],y1=s[1][1],x2=s[2][0],y2=s[2][1],D=x0*(y1-y2)+x1*(y2-y0)+x2*(y0-y1);if(Math.abs(D)<1e-9)return null;
+ function solve(v0,v1,v2){return[(v0*(y1-y2)+v1*(y2-y0)+v2*(y0-y1))/D,(v0*(x2-x1)+v1*(x0-x2)+v2*(x1-x0))/D,(v0*(x1*y2-x2*y1)+v1*(x2*y0-x0*y2)+v2*(x0*y1-x1*y0))/D]}
+ var a=solve(d[0][0],d[1][0],d[2][0]),b=solve(d[0][1],d[1][1],d[2][1]);return[a[0],b[0],a[1],b[1],a[2],b[2]]}
+var FC_OVAL=[10,338,297,332,284,251,389,356,454,323,361,288,397,365,379,378,400,377,152,148,176,149,150,136,172,58,132,93,234,127,162,21,54,103,67,109];
+function shapeLock(origC,Lo,resC,La){
+ if(!origC||!resC||!Lo||!La)return null;
+ var k=Math.min(1,Math.max(resC.width,resC.height)/Math.max(origC.width,origC.height)),W=Math.round(origC.width*k),H=Math.round(origC.height*k);
+ var O=Lo.slice(0,468).map(function(p){return[p[0]*k,p[1]*k]}),A=La.slice(0,468);
+ // global fit (head size/position) used for the area around the face
+ var so=FC_OVAL.map(function(i){return O[i]}),sa=FC_OVAL.map(function(i){return A[i]}),T=simil(so,sa);function S(p){return[T.a*p[0]-T.b*p[1]+T.tx,T.b*p[0]+T.a*p[1]+T.ty]}
+ var cx=0,cy=0;O.forEach(function(p){cx+=p[0];cy+=p[1]});cx/=O.length;cy/=O.length;var rad=0;O.forEach(function(p){rad=Math.max(rad,Math.hypot(p[0]-cx,p[1]-cy))});
+ var D=O.slice(),Src=A.slice();for(var j=0;j<24;j++){var an=j/24*2*Math.PI,q=[cx+Math.cos(an)*rad*1.7,cy+Math.sin(an)*rad*1.7];D.push(q);Src.push(S(q))}
+ [[0,0],[W,0],[0,H],[W,H]].forEach(function(q){D.push(q);Src.push(S(q))});
+ var tris=fcDelaunay(D);if(tris.length<400)return null;
+ var warp=document.createElement('canvas');warp.width=W;warp.height=H;var wx=warp.getContext('2d');wx.imageSmoothingQuality='high';
+ tris.forEach(function(t){var d=[D[t[0]],D[t[1]],D[t[2]]],s=[Src[t[0]],Src[t[1]],Src[t[2]]],M=fcAffine(s,d);if(!M)return;
+  var gx=(d[0][0]+d[1][0]+d[2][0])/3,gy=(d[0][1]+d[1][1]+d[2][1])/3;wx.save();wx.beginPath();
+  d.forEach(function(p,i){var dx=p[0]-gx,dy=p[1]-gy,l=Math.hypot(dx,dy)||1,e=.9/l;i?wx.lineTo(p[0]+dx*e,p[1]+dy*e):wx.moveTo(p[0]+dx*e,p[1]+dy*e)});wx.closePath();wx.clip();
+  wx.setTransform(M[0],M[1],M[2],M[3],M[4],M[5]);wx.drawImage(resC,0,0);wx.restore()});
+ // soft face mask (face outline, slightly widened, feathered by a down/up scale so it works in every browser)
+ var ms=document.createElement('canvas'),q=8;ms.width=Math.max(8,Math.round(W/q));ms.height=Math.max(8,Math.round(H/q));var mx=ms.getContext('2d');
+ mx.fillStyle='#fff';mx.beginPath();FC_OVAL.forEach(function(i,n){var p=O[i],x=(cx+(p[0]-cx)*1.04)/q,y=(cy+(p[1]-cy)*1.04)/q;n?mx.lineTo(x,y):mx.moveTo(x,y)});mx.closePath();mx.fill();
+ var m2=document.createElement('canvas');m2.width=Math.max(4,ms.width>>2);m2.height=Math.max(4,ms.height>>2);var m2x=m2.getContext('2d');m2x.imageSmoothingEnabled=true;m2x.drawImage(ms,0,0,m2.width,m2.height);
+ var mask=document.createElement('canvas');mask.width=W;mask.height=H;var mk=mask.getContext('2d');mk.imageSmoothingEnabled=true;mk.imageSmoothingQuality='high';mk.drawImage(m2,0,0,W,H);
+ mk.globalCompositeOperation='source-in';mk.drawImage(warp,0,0);
+ var out=document.createElement('canvas');out.width=W;out.height=H;var ox=out.getContext('2d');ox.imageSmoothingQuality='high';ox.drawImage(origC,0,0,W,H);ox.drawImage(mask,0,0);
+ return out}
 function realEyes(origC,Lo,resC,La){var ctx=resC.getContext('2d'),W=resC.width,H=resC.height,od=origC.getContext('2d').getImageData(0,0,origC.width,origC.height),OW=origC.width,OH=origC.height,fit=0;
  /* v69: keep the AI eye (sharp, sits naturally with the new lashes and liner) and give it the person's TRUE iris colour.
     Pasting the original eye in looked soft and hazy next to the AI detail. Eye shape is still checked (fit) so a changed eye is re-made. */
@@ -3694,14 +3734,14 @@ async function run(L){
    if(fit>.10)sc.worst=Math.max(sc.worst,2);
    var moved=poseCheck(Lo,origC.width,origC.height,La,resC.width,resC.height),body=bodyO?bodyOverlap(bodyO,await bodyMask(resC,bw,bh)):1;
    if(moved>POSE_MAX||body<BODY_MIN){sc.worst=Math.max(sc.worst,2);sc.pose=1;T('ai_look_pose_remake',{look:L.k,moved:+moved.toFixed(3),body:+body.toFixed(3)})}
-   if(!best||(best.sc.pose&&!sc.pose)||(!best.sc.pose===!sc.pose&&sc.worst<best.sc.worst))best={c:resC,sc:sc};
+   if(!best||(best.sc.pose&&!sc.pose)||(!best.sc.pose===!sc.pose&&sc.worst<best.sc.worst))best={c:resC,sc:sc,La:La};
    if(sc.worst<=1)break;
   }
   if(cancelled)return;
   if(!best)throw new Error('The AI could not finish this look. Please try again.');
   if(best.sc.pose){T('ai_look_pose_blocked',{look:L.k});busy=false;closeOv();message('Let\u2019s try that again','The AI kept changing your pose, so we did not use it. Try the look again, or use a photo where your face is clearly in view.');return}
   T('ai_look_done',{look:L.k,attempts:attempt+1,passed:best.sc.worst<=1?1:0});refreshLeft();
-  busy=false;showResult(L,origC,best.c);
+  try{var lk=shapeLock(origC,Lo,best.c,best.La);if(lk)best.c=lk;T('ai_look_shape_lock',{look:L.k,ok:lk?1:0})}catch(e){console.warn('shape lock',e)}busy=false;showResult(L,origC,best.c);
  }catch(err){if(cancelled)return;closeOv();T('ai_look_error',{look:L.k,code:err.code||'client'});
   if(err.code==='ceiling'){busyFallback(L);return}
   if(err.code==='subscribe'||err.code==='allowance'){refreshLeft();
