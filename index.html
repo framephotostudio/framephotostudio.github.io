@@ -3862,10 +3862,10 @@ try{$('#reset').addEventListener('click',function(){try{beauty.glowFx=0;invalida
 // ---- sparkle reveal ----
 var reduce=false;try{reduce=matchMedia('(prefers-reduced-motion:reduce)').matches}catch(e){}
 function snap(){var m=$('#main');if(!m||!m.width)return null;var c=D.createElement('canvas');c.width=m.width;c.height=m.height;c.getContext('2d').drawImage(m,0,0);return c}
-function sparkle(before){var m=$('#main');if(!m||reduce)return;var cv=D.getElementById('fcSparkle');if(cv)cv.remove();cv=D.createElement('canvas');cv.id='fcSparkle';D.body.appendChild(cv);
+function sparkle(before,opt){opt=opt||{};var pick=opt.el||function(){return $('#main')},m=pick();if(!m||reduce){opt.done&&opt.done();return}var cv=D.getElementById('fcSparkle');if(cv)cv.remove();cv=D.createElement('canvas');cv.id='fcSparkle';if(opt.z)cv.style.zIndex=opt.z;D.body.appendChild(cv);
  var ctx=cv.getContext('2d'),dpr=Math.min(2,window.devicePixelRatio||1),t0=performance.now(),DUR=1500,FADE=500,parts=[];
  function star(x,y,s,a){ctx.save();ctx.globalAlpha=a;ctx.translate(x,y);ctx.fillStyle='#fff7df';ctx.shadowColor='#ffd77a';ctx.shadowBlur=s*3;ctx.beginPath();for(var i=0;i<8;i++){var rr=i%2?s*.28:s,an=i*Math.PI/4;ctx.lineTo(Math.cos(an)*rr,Math.sin(an)*rr)}ctx.closePath();ctx.fill();ctx.restore()}
- var waited=0,last=0,el=0;function frame(now){m=$('#main');var r=m&&m.getBoundingClientRect();if(!r||!r.width||r.bottom<0||r.top>innerHeight){if(++waited>240){cv.remove();return}requestAnimationFrame(frame);return}if(typeof currentProcessed!=='undefined'&&!currentProcessed&&waited<200){waited++;requestAnimationFrame(frame);return}cv.style.borderRadius=getComputedStyle(m).borderRadius;var dt=last?Math.min(34,now-last):16;last=now;el+=dt;
+ var waited=0,last=0,el=0;function frame(now){m=pick();var r=m&&m.getBoundingClientRect();if(!r||!r.width||r.bottom<0||r.top>innerHeight){if(++waited>240){cv.remove();return}requestAnimationFrame(frame);return}if(!opt.el&&typeof currentProcessed!=='undefined'&&!currentProcessed&&waited<200){waited++;requestAnimationFrame(frame);return}cv.style.borderRadius=getComputedStyle(m).borderRadius;var dt=last?Math.min(34,now-last):16;last=now;el+=dt;
   cv.style.left=r.left+'px';cv.style.top=r.top+'px';cv.style.width=r.width+'px';cv.style.height=r.height+'px';var W=Math.round(r.width*dpr),H=Math.round(r.height*dpr);if(cv.width!==W||cv.height!==H){cv.width=W;cv.height=H}
   var t=el/DUR,e=t<1?1-Math.pow(1-t,3):1,slant=H*.35,pos=-slant+(W+slant*2)*e;ctx.clearRect(0,0,W,H);
   // the old photo, still covering the part the light has not reached yet
@@ -3875,7 +3875,7 @@ function sparkle(before){var m=$('#main');if(!m||reduce)return;var cv=D.getEleme
    for(var i=0;i<5;i++){var v=Math.random();parts.push({x:pos-slant*v+(Math.random()-.5)*24*dpr,y:H*v,vx:(Math.random()-.3)*.6*dpr,vy:(-.4-Math.random()*.8)*dpr,s:(2.5+Math.random()*5)*dpr,life:1})}}
   var fade=t<1?1:Math.max(0,1-(el-DUR)/FADE);
   parts.forEach(function(p){p.x+=p.vx;p.y+=p.vy;p.life-=.018;if(p.life>0)star(p.x,p.y,p.s*(.6+.4*p.life),Math.min(1,p.life*1.4)*fade)});parts=parts.filter(function(p){return p.life>0});
-  if(t<1||fade>0)requestAnimationFrame(frame);else cv.remove()}
+  if(t<1||fade>0)requestAnimationFrame(frame);else{cv.remove();opt.done&&opt.done()}}
  requestAnimationFrame(frame)}
 
 // ---- Auto Glow: same tap, clearly more glow ----
@@ -3898,6 +3898,11 @@ var _ag=autoGlow;autoGlow=async function(){var before=snap(),r=await _ag.apply(t
    setTimeout(function(){sparkle(before)},60)}}catch(e){}
  return r};
 
+// ---- the same sparkle reveal when an AI look result opens ----
+try{new MutationObserver(function(){var st=D.getElementById('luxeStage');if(!st||st.__fcSp)return;st.__fcSp=1;
+ setTimeout(function(){var B=D.getElementById('luxeB');if(!B||!B.width)return;var bc=D.createElement('canvas');bc.width=B.width;bc.height=B.height;bc.getContext('2d').drawImage(B,0,0);
+  var hide=[B,D.getElementById('luxeSplit')].concat([].slice.call(st.querySelectorAll('.luxeTag')));hide.forEach(function(x){if(x){x.style.transition='opacity .45s';x.style.opacity='0'}});
+  sparkle(bc,{el:function(){var A=D.getElementById('luxeA');return A&&A.isConnected?A:null},z:'2147483000',done:function(){hide.forEach(function(x){if(x)x.style.opacity=''})}})},120)}).observe(D.body,{childList:true,subtree:true})}catch(e){}
 // ---- AI Glow (one AI look) right under Auto Glow ----
 var ag=$('#autoGlow');
 if(ag&&!$('#aiGlowBtn')){var b=D.createElement('button');b.type='button';b.id='aiGlowBtn';b.innerHTML='<span>✨ AI Glow</span><small>Premium AI version · uses 1 AI look</small>';ag.insertAdjacentElement('afterend',b);
