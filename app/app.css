@@ -24,7 +24,7 @@ html.fc-app:not(.fc-studio) body{padding-bottom:env(safe-area-inset-bottom,0px)!
 
 /* studio: photo on top, tools below, tab bar at the bottom (full screen, like a native editor) */
 html.fc-app.fc-studio .workspace.expanded{padding:calc(env(safe-area-inset-top,0px) + 6px) 8px calc(72px + env(safe-area-inset-bottom,0px))!important;gap:6px!important}
-html.fc-app.fc-studio .workspace.expanded .stage{flex:0 0 50%!important}
+html.fc-app.fc-studio .workspace.expanded .stage{flex:0 0 63%!important}
 html.fc-app.fc-studio #expandPhoto,html.fc-app.fc-studio .editorbar,html.fc-app.fc-studio .reelBox,html.fc-app.fc-studio .stagehead{display:none!important}
 html.fc-app.fc-studio #saveBar{display:none!important}
 html.fc-app.fc-studio body.hasSaveBar #quickSave{display:inline-flex!important}
