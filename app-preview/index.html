@@ -3644,7 +3644,7 @@ function protectMouth(out,origS,O){try{
  ox.putImageData(A,x0,y0)}catch(e){console.warn('mouth protect',e)}}
 function shapeLock(origC,Lo,resC,La){
  if(!origC||!resC||!Lo||!La)return null;
- var k=Math.min(1,Math.max(resC.width,resC.height)/Math.max(origC.width,origC.height)),W=Math.round(origC.width*k),H=Math.round(origC.height*k);
+ var k=Math.min(1,Math.max(2400,resC.width,resC.height)/Math.max(origC.width,origC.height)),W=Math.round(origC.width*k),H=Math.round(origC.height*k);
  var O=Lo.slice(0,468).map(function(p){return[p[0]*k,p[1]*k]}),A=La.slice(0,468);
  // global fit (head size/position) used for the area around the face
  var so=FC_OVAL.map(function(i){return O[i]}),sa=FC_OVAL.map(function(i){return A[i]}),T=simil(so,sa);function S(p){return[T.a*p[0]-T.b*p[1]+T.tx,T.b*p[0]+T.a*p[1]+T.ty]}
@@ -3754,6 +3754,8 @@ async function run(L){
    var La=biggest(FA),mr=measures(La),sc=score(mo,mr),fit=realEyes(origC,Lo,resC,La);
    if(fit>.10)sc.worst=Math.max(sc.worst,2);
    var moved=poseCheck(Lo,origC.width,origC.height,La,resC.width,resC.height),body=bodyO?bodyOverlap(bodyO,await bodyMask(resC,bw,bh)):1;
+   // the AI sometimes zooms or shifts the whole photo: put its face back onto the original first, then check again
+   if(!window.__fcNoReframe&&(moved>POSE_MAX||body<BODY_MIN)){try{var lc=shapeLock(origC,Lo,resC,La),FL=lc&&await landmarks(lc);if(FL&&FL.length){var LL=biggest(FL),mv2=poseCheck(Lo,origC.width,origC.height,LL,lc.width,lc.height);if(mv2<=POSE_MAX){resC=lc;La=LL;mr=measures(La);sc=score(mo,mr);moved=mv2;body=1;T('ai_look_reframe_fixed',{look:L.k})}}}catch(e){}}
    if(moved>POSE_MAX||body<BODY_MIN){sc.worst=Math.max(sc.worst,2);sc.pose=1;T('ai_look_pose_remake',{look:L.k,moved:+moved.toFixed(3),body:+body.toFixed(3)})}
    if(!best||(best.sc.pose&&!sc.pose)||(!best.sc.pose===!sc.pose&&sc.worst<best.sc.worst))best={c:resC,sc:sc,La:La};
    if(sc.worst<=1)break;
