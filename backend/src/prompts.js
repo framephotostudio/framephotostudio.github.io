@@ -116,6 +116,7 @@ export function buildPrompt(task, o = {}) {
       p = `Replace only the background with ${bg || 'a clean studio backdrop'}. Keep the person, their outfit and hair exactly as they are with clean natural edges around hair and body; match lighting direction, color temperature and shadows so the person looks truly present in the scene, with correct perspective and depth of field.`;
       break;
     case 'blur':
+      if (o.locked) { p = 'Make this look like it was shot on a professional camera with an 85mm f/1.8 portrait lens: keep the person (or people) in front perfectly sharp and exactly the same - same position, size, pose, face, hair, outfit and framing - and give everything behind them a smooth, natural, creamy background blur that increases gradually with distance, with soft round bokeh from lights. The ground and objects right next to the person stay in focus at their distance. The edges of hair and clothing must blend naturally into the blurred background, exactly like a real photo with shallow depth of field, never a cut-out. Keep the same colors, light and photo grain.'; break; }
       p = 'Keep the person exactly as they are and smoothly blur the existing background like an 85mm f/1.8 portrait lens, with clean hair edges.';
       break;
     case 'vanish':
@@ -133,5 +134,6 @@ export function buildPrompt(task, o = {}) {
   if (extra && task !== 'vanish') p += ' Additional instruction: ' + extra + '.';
   if ((task === 'background' || task === 'travel') && o.locked) return p;
   if (task === 'vanish' && (o.marked || o.people)) return p;
+  if (task === 'blur' && o.locked) return p;
   return p + ' ' + KEEP;
 }
