@@ -3953,12 +3953,11 @@ function glowFx(c,g,raw){try{if(!c||!c.getContext||g<=0)return;var ctx=c.getCont
   ctx.save();ctx.globalCompositeOperation='screen';ctx.translate(cx,sy);ctx.scale(1,.55);ctx.translate(-cx,-sy);ctx.fillStyle=sh;ctx.beginPath();ctx.arc(cx,sy,ew*.32,0,6.2832);ctx.fill();ctx.restore()})}
  // 2b) softer inner eye corner: lift the added dark makeup near the inner corner so it fades smoothly into the lash line, plus a touch of highlighter
  var EC1=!OWN&&beauty&&beauty.eyeContours,nx=P&&P.nose?P.nose.x:.5;if(raw&&EC1&&EC1.length){EC1.forEach(function(e){if(!e||e.length<4)return;var x0=1,x1=0,y0=1,y1=0,inn=null,bd=1e9;e.forEach(function(p){x0=Math.min(x0,p.x);x1=Math.max(x1,p.x);y0=Math.min(y0,p.y);y1=Math.max(y1,p.y);var d=Math.abs(p.x-nx);if(d<bd){bd=d;inn=p}});
-  var ew=(x1-x0)*W;if(ew<6||!inn)return;var ix=inn.x*W,iy=inn.y*H,ox=((x0+x1)/2*W-ix)>0?1:-1,R=ew*.5;
+  var ew=(x1-x0)*W;if(ew<6||!inn)return;var G4=eyeGeo(e,W,H),ox=((x0+x1)/2*W-inn.x*W)>0?1:-1,ix=inn.x*W+(G4?G4.nx*ew*.06+G4.ux*ox*ew*.06:0),iy=inn.y*H+(G4?G4.ny*ew*.06+G4.uy*ox*ew*.06:0),R=ew*.28;
   var t=D.createElement('canvas');t.width=W;t.height=H;var tx=t.getContext('2d');tx.drawImage(raw,0,0,W,H);tx.globalCompositeOperation='destination-in';
   var mg=tx.createRadialGradient(ix-ox*ew*.04,iy,0,ix-ox*ew*.04,iy,R);mg.addColorStop(0,'rgba(0,0,0,.92)');mg.addColorStop(.35,'rgba(0,0,0,.7)');mg.addColorStop(.75,'rgba(0,0,0,.2)');mg.addColorStop(1,'rgba(0,0,0,0)');tx.fillStyle=mg;tx.fillRect(0,0,W,H);
   ctx.save();ctx.globalCompositeOperation='lighten';ctx.drawImage(t,0,0);ctx.restore();
-  var hr=ew*.13,hl=ctx.createRadialGradient(ix-ox*ew*.03,iy,0,ix-ox*ew*.03,iy,hr);hl.addColorStop(0,'rgba(255,240,225,'+Math.min(.42,.3*g)+')');hl.addColorStop(1,'rgba(255,240,225,0)');
-  ctx.save();ctx.globalCompositeOperation='screen';ctx.fillStyle=hl;ctx.beginPath();ctx.arc(ix-ox*ew*.03,iy,hr,0,6.2832);ctx.fill();ctx.restore()})}
+  })}
  // 2c) keep the lipstick a true medium rose whatever lipstick she had on (coral, peach, nude): recolour inside the lip line only
  var LO=beauty&&beauty.lipOutline,LI=beauty&&beauty.lipInner;if(LO&&LO.length>5){var lx0=1,lx1=0,ly0=1,ly1=0;LO.forEach(function(p){lx0=Math.min(lx0,p.x);lx1=Math.max(lx1,p.x);ly0=Math.min(ly0,p.y);ly1=Math.max(ly1,p.y)});
   var pad=(lx1-lx0)*.15,bx=Math.max(0,(lx0-pad)*W),by=Math.max(0,(ly0-pad)*H),bw=Math.min(W-bx,(lx1-lx0+2*pad)*W),bh=Math.min(H-by,(ly1-ly0+2*pad)*H);
