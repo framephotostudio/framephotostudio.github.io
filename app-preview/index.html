@@ -4164,4 +4164,132 @@ try{var fs=D.getElementById('finSex'),sf=D.querySelector('.stage .stagefoot');if
 try{thumbKey=''}catch(e){}
 }catch(e){console.warn('v74 men light looks',e)}})();
 </script>
+<script>
+/* v75: Background tools (Phase 1). Everything runs on the device, free, offline in the app.
+   - Person cut-out: U2Net human segmentation (Apache 2.0), 8-bit, refined at full resolution with a colour guided filter
+     so hair strands and earrings keep a natural 1-2px edge.
+   - Depth: Depth Anything V2 Small (Apache 2.0), so the blur grows with distance like a real lens.
+   - Blur: lens-style disc bokeh in linear light (not a Gaussian smear), the person and everything at her depth stay sharp,
+     the photo's own grain is put back so the blur never looks plastic. Strength slider, default 60%.
+   The person is never redrawn: her pixels are always the original pixels (after the looks/filters she chose). */
+;(function(){try{
+var D=document,ORT='https://cdn.jsdelivr.net/npm/onnxruntime-web@1.30.0/dist/';
+var sess={};
+function load(name){if(!sess[name]){sess[name]=(async function(){var ort=await import(ORT+'ort.webgpu.min.mjs');ort.env.wasm.wasmPaths=ORT;ort.env.wasm.numThreads=1;
+  var s=await ort.InferenceSession.create(new URL(name,location.href).href,{executionProviders:['wasm']});return{ort:ort,s:s}})();sess[name].catch(function(){sess[name]=null})}return sess[name]}
+window.__fcLoadModel=load;
+function cv(w,h){var c=D.createElement('canvas');c.width=w;c.height=h;return c}
+function pix(src,w,h){var c=cv(w,h),x=c.getContext('2d');x.imageSmoothingEnabled=true;x.imageSmoothingQuality='high';x.drawImage(src,0,0,w,h);return x.getImageData(0,0,w,h).data}
+// bilinear resize of a single-channel float map
+function rs(a,w,h,W,H){var o=new Float32Array(W*H),sx=w/W,sy=h/H;for(var y=0;y<H;y++){var fy=Math.min(h-1,Math.max(0,(y+.5)*sy-.5)),y0=fy|0,y1=Math.min(h-1,y0+1),ty=fy-y0;for(var x=0;x<W;x++){var fx=Math.min(w-1,Math.max(0,(x+.5)*sx-.5)),x0=fx|0,x1=Math.min(w-1,x0+1),tx=fx-x0;
+  o[y*W+x]=(a[y0*w+x0]*(1-tx)+a[y0*w+x1]*tx)*(1-ty)+(a[y1*w+x0]*(1-tx)+a[y1*w+x1]*tx)*ty}}return o}
+// box mean with radius r (separable running sums, clamped edges)
+function box(a,w,h,r){var t=new Float32Array(w*h),o=new Float32Array(w*h),n=2*r+1;
+  for(var y=0;y<h;y++){var row=y*w,s=0;for(var i=-r;i<=r;i++)s+=a[row+Math.min(w-1,Math.max(0,i))];for(var x=0;x<w;x++){t[row+x]=s/n;s+=a[row+Math.min(w-1,x+r+1)]-a[row+Math.max(0,x-r)]}}
+  for(var x2=0;x2<w;x2++){var s2=0;for(var j=-r;j<=r;j++)s2+=t[Math.min(h-1,Math.max(0,j))*w+x2];for(var y2=0;y2<h;y2++){o[y2*w+x2]=s2/n;s2+=t[Math.min(h-1,y2+r+1)*w+x2]-t[Math.max(0,y2-r)*w+x2]}}return o}
+// colour guided filter (He et al.), refines a soft mask against the photo's own edges
+function guided(rgb,p,w,h,r,eps){var n=w*h,I=[new Float32Array(n),new Float32Array(n),new Float32Array(n)];for(var i=0;i<n;i++){I[0][i]=rgb[i*4]/255;I[1][i]=rgb[i*4+1]/255;I[2][i]=rgb[i*4+2]/255}
+  var mI=I.map(function(c){return box(c,w,h,r)}),mp=box(p,w,h,r),prod=function(a,b){var o=new Float32Array(n);for(var i=0;i<n;i++)o[i]=a[i]*b[i];return o};
+  var cov=[0,1,2].map(function(c){var m=box(prod(I[c],p),w,h,r);for(var i=0;i<n;i++)m[i]-=mI[c][i]*mp[i];return m});
+  var V={};[[0,0],[0,1],[0,2],[1,1],[1,2],[2,2]].forEach(function(q){var m=box(prod(I[q[0]],I[q[1]]),w,h,r);for(var i=0;i<n;i++)m[i]-=mI[q[0]][i]*mI[q[1]][i];V[q[0]+''+q[1]]=m});
+  var A=[new Float32Array(n),new Float32Array(n),new Float32Array(n)],B=new Float32Array(n);
+  for(var i=0;i<n;i++){var a00=V['00'][i]+eps,a01=V['01'][i],a02=V['02'][i],a11=V['11'][i]+eps,a12=V['12'][i],a22=V['22'][i]+eps;
+    var c00=a11*a22-a12*a12,c01=a02*a12-a01*a22,c02=a01*a12-a02*a11,c11=a00*a22-a02*a02,c12=a01*a02-a00*a12,c22=a00*a11-a01*a01,det=a00*c00+a01*c01+a02*c02;if(Math.abs(det)<1e-12)det=1e-12;
+    var b0=cov[0][i],b1=cov[1][i],b2=cov[2][i],x0=(c00*b0+c01*b1+c02*b2)/det,x1=(c01*b0+c11*b1+c12*b2)/det,x2=(c02*b0+c12*b1+c22*b2)/det;
+    A[0][i]=x0;A[1][i]=x1;A[2][i]=x2;B[i]=mp[i]-x0*mI[0][i]-x1*mI[1][i]-x2*mI[2][i]}
+  var mA=A.map(function(c){return box(c,w,h,r)}),mB=box(B,w,h,r),q=new Float32Array(n);for(var i2=0;i2<n;i2++){var v=mA[0][i2]*I[0][i2]+mA[1][i2]*I[1][i2]+mA[2][i2]*I[2][i2]+mB[i2];q[i2]=v<0?0:v>1?1:v}return q}
+// push-pull fill: unknown pixels take the colour of the surrounding known ones (canvas premultiplied pyramid)
+function pushPull(src,w,h,known){var c=cv(w,h),x=c.getContext('2d');x.drawImage(src,0,0,w,h);var id=x.getImageData(0,0,w,h),d=id.data;for(var i=0;i<w*h;i++)if(!known[i])d[i*4+3]=0;x.putImageData(id,0,0);
+  var lv=[c];while(lv[lv.length-1].width>2||lv[lv.length-1].height>2){var p=lv[lv.length-1],q=cv(Math.max(1,Math.ceil(p.width/2)),Math.max(1,Math.ceil(p.height/2))),qx=q.getContext('2d');qx.imageSmoothingEnabled=true;qx.imageSmoothingQuality='high';qx.drawImage(p,0,0,q.width,q.height);lv.push(q)}
+  var acc=null;for(var k=lv.length-1;k>=0;k--){var L=lv[k],o=cv(L.width,L.height),ox=o.getContext('2d');ox.imageSmoothingEnabled=true;ox.imageSmoothingQuality='high';if(acc)ox.drawImage(acc,0,0,L.width,L.height);
+    // known pixels are boosted to full opacity so the fill never shows a transparent seam
+    var t=cv(L.width,L.height),tx=t.getContext('2d');tx.drawImage(L,0,0);var td=tx.getImageData(0,0,L.width,L.height),dd=td.data;for(var j=3;j<dd.length;j+=4)dd[j]=Math.min(255,dd[j]*(k?3:1));tx.putImageData(td,0,0);ox.drawImage(t,0,0);acc=o}
+  return acc}
+function dilate(m,w,h,r){var t=new Uint8Array(w*h),o=new Uint8Array(w*h),nx=new Int32Array(Math.max(w,h));
+  for(var y=0;y<h;y++){var nn=1e9;for(var x=w-1;x>=0;x--){if(m[y*w+x])nn=x;nx[x]=nn}var last=-1e9;for(var x2=0;x2<w;x2++){if(m[y*w+x2])last=x2;t[y*w+x2]=(x2-last<=r||nx[x2]-x2<=r)?1:0}}
+  for(var x3=0;x3<w;x3++){var n2=1e9;for(var y2=h-1;y2>=0;y2--){if(t[y2*w+x3])n2=y2;nx[y2]=n2}var l2=-1e9;for(var y3=0;y3<h;y3++){if(t[y3*w+x3])l2=y3;o[y3*w+x3]=(y3-l2<=r||nx[y3]-y3<=r)?1:0}}return o}
+// disc (lens) blur of 3 float channels, radius r, via per-row prefix sums
+function discBlur(ch,w,h,r){if(r<.75)return ch.map(function(c){return c.slice()});var R=Math.round(r),half=[];for(var dy=-R;dy<=R;dy++)half.push(Math.floor(Math.sqrt(Math.max(0,r*r-dy*dy))+.5));
+  var cnt=0;half.forEach(function(v){cnt+=2*v+1});return ch.map(function(c){var P=new Float32Array((w+1)*h);for(var y=0;y<h;y++){var s=0,b=y*(w+1);P[b]=0;for(var x=0;x<w;x++){s+=c[y*w+x];P[b+x+1]=s}}
+    var o=new Float32Array(w*h);for(var y2=0;y2<h;y2++)for(var x2=0;x2<w;x2++){var sum=0,n=0;for(var k=0;k<half.length;k++){var yy=y2+k-R;if(yy<0)yy=0;else if(yy>=h)yy=h-1;var hw=half[k],a=x2-hw,b2=x2+hw;if(a<0)a=0;if(b2>w-1)b2=w-1;var base=yy*(w+1);sum+=P[base+b2+1]-P[base+a];n+=b2-a+1}o[y2*w+x2]=sum/n}return o})}
+var LIN=new Float32Array(256);for(var i=0;i<256;i++)LIN[i]=Math.pow(i/255,2.2);
+
+// ---- the masks for one photo (cached) ----
+var cache={key:null,p:null};
+function photoKey(){try{return (source.naturalWidth||source.width)+'x'+(source.naturalHeight||source.height)+':'+(source.src||'').slice(-40)}catch(e){return ''}}
+async function maps(){var k=photoKey();if(cache.key===k&&cache.p)return cache.p;cache.key=k;cache.p=(async function(){
+  var sw=source.naturalWidth||source.width,sh=source.naturalHeight||source.height,s=Math.min(1,1600/Math.max(sw,sh)),W=Math.round(sw*s),H=Math.round(sh*s);
+  var A=await load('person-cutout.onnx'),d=pix(source,320,320),n=320*320,x=new Float32Array(3*n),M=[.485,.456,.406],S=[.229,.224,.225];
+  for(var i=0;i<n;i++)for(var c=0;c<3;c++)x[c*n+i]=(d[i*4+c]/255-M[c])/S[c];
+  var o=await A.s.run({[A.s.inputNames[0]]:new A.ort.Tensor('float32',x,[1,3,320,320])}),m=o[A.s.outputNames[0]].data,mn=1e9,mx=-1e9;for(var j=0;j<n;j++){mn=Math.min(mn,m[j]);mx=Math.max(mx,m[j])}
+  var m2=new Float32Array(n);for(var j2=0;j2<n;j2++)m2[j2]=(m[j2]-mn)/(mx-mn+1e-6);
+  var full=rs(m2,320,320,W,H),rgb=pix(source,W,H),r=Math.max(5,Math.round(Math.max(W,H)/110))|1,g=guided(rgb,full,W,H,r,1e-3);
+  // keep the confident core, refine only the uncertain band around the edge
+  var band=new Float32Array(W*H);for(var q=0;q<W*H;q++)band[q]=(full[q]>.05&&full[q]<.95)?1:0;band=box(band,W,H,r);
+  var al=new Float32Array(W*H);for(var q2=0;q2<W*H;q2++){var b=Math.min(1,band[q2]*2);al[q2]=full[q2]*(1-b)+g[q2]*b}
+  var cnt=0;for(var q3=0;q3<W*H;q3++)if(al[q3]>.5)cnt++;if(cnt<W*H*.01)throw Object.assign(new Error('noperson'),{code:'noperson'});
+  // depth (relative, 1 = near)
+  var Dm=await load('depth.onnx'),dk=392/Math.max(sw,sh),dw=Math.max(14,Math.round(sw*dk/14)*14),dh=Math.max(14,Math.round(sh*dk/14)*14),dd=pix(source,dw,dh),dn=dw*dh,dx=new Float32Array(3*dn);
+  for(var i3=0;i3<dn;i3++)for(var c3=0;c3<3;c3++)dx[c3*dn+i3]=(dd[i3*4+c3]/255-M[c3])/S[c3];
+  var dr=await Dm.s.run({[Dm.s.inputNames[0]]:new Dm.ort.Tensor('float32',dx,[1,3,dh,dw])}),dv=dr[Dm.s.outputNames[0]],da=dv.data,dims=dv.dims,ow=dims[dims.length-1],oh=dims[dims.length-2],dmn=1e9,dmx=-1e9;
+  for(var j3=0;j3<da.length;j3++){dmn=Math.min(dmn,da[j3]);dmx=Math.max(dmx,da[j3])}var dn2=new Float32Array(ow*oh);for(var j4=0;j4<ow*oh;j4++)dn2[j4]=(da[j4]-dmn)/(dmx-dmn+1e-6);
+  return{W:W,H:H,alpha:al,depth:rs(dn2,ow,oh,W,H)}})();cache.p.catch(function(){cache.p=null;cache.key=null});return cache.p}
+window.__fcBgMaps=maps;
+
+// ---- the lens blur, applied to an already-processed canvas ----
+// per photo and size: everything that does not depend on the colours (edges, depth, how much each pixel blurs)
+function prep(mp,W,H){var key=W+'x'+H;if(mp.prep&&mp.prep.key===key)return mp.prep;var n=W*H;
+  var al=(W===mp.W&&H===mp.H)?mp.alpha:rs(mp.alpha,mp.W,mp.H,W,H),dep=(W===mp.W&&H===mp.H)?mp.depth:rs(mp.depth,mp.W,mp.H,W,H);
+  var sm=Math.min(1,480/Math.max(W,H)),w=Math.max(8,Math.round(W*sm)),h=Math.max(8,Math.round(H*sm)),sn=w*h;
+  var als=rs(al,W,H,w,h),hard0=new Uint8Array(sn);for(var i=0;i<sn;i++)hard0[i]=als[i]>.03?1:0;var hard=dilate(hard0,w,h,2),known=new Uint8Array(sn);for(var i1=0;i1<sn;i1++)known[i1]=hard[i1]?0:1;
+  var deps=rs(dep,W,H,w,h),dc=cv(w,h),dx=dc.getContext('2d'),did=dx.createImageData(w,h),dd=did.data;for(var i2=0;i2<sn;i2++){var v=Math.round(deps[i2]*255);dd[i2*4]=dd[i2*4+1]=dd[i2*4+2]=v;dd[i2*4+3]=255}dx.putImageData(did,0,0);
+  var dfd=pushPull(dc,w,h,known).getContext('2d').getImageData(0,0,w,h).data;
+  var vals=[];for(var i3=0;i3<n;i3+=5)if(al[i3]>.6)vals.push(dep[i3]);vals.sort(function(a,b){return a-b});var df=vals.length?vals[vals.length>>1]:1;
+  var coc=new Float32Array(sn);for(var i4=0;i4<sn;i4++){var dv=dfd[i4*4]/255,c=Math.abs(dv-df);if(dv>df)c*=.6;coc[i4]=Math.min(1,c/Math.max(.25,df*.8))}coc=box(coc,w,h,2);
+  var cfull=rs(coc,w,h,W,H),sharp=new Float32Array(n),gr=new Float32Array(n);for(var i5=0;i5<n;i5++){sharp[i5]=Math.max(0,Math.min(1,1-cfull[i5]*6));gr[i5]=Math.min(1,cfull[i5]*3)}
+  var src=pix(source,W,H),hfs=[];for(var i7=W+1;i7<n-W-1;i7+=97){var l=src[i7*4+1]*4-src[(i7-1)*4+1]-src[(i7+1)*4+1]-src[(i7-W)*4+1]-src[(i7+W)*4+1];hfs.push(Math.abs(l)/4)}hfs.sort(function(a,b){return a-b});
+  var seed=12345,rnd=function(){seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296},noise=new Float32Array(n),sd=(hfs[hfs.length>>1]||1)*.9;for(var i8=0;i8<n;i8++)noise[i8]=(rnd()+rnd()+rnd()-1.5)*1.41*sd*gr[i8];
+  mp.prep={key:key,al:al,w:w,h:h,known:known,coc:coc,sharp:sharp,noise:noise};return mp.prep}
+var GAM=new Uint8ClampedArray(4096);for(var gi=0;gi<4096;gi++)GAM[gi]=Math.round(Math.pow(gi/4095,1/2.2)*255);
+function lensBlur(canvas,mp,strength){var OW=canvas.width,OH=canvas.height,s=Math.min(1,1600/Math.max(OW,OH)),W=Math.round(OW*s),H=Math.round(OH*s),n=W*H,P=prep(mp,W,H),w=P.w,h=P.h,sn=w*h;
+  // the background with her removed (filled from the surroundings), at blur resolution
+  var fillC=pushPull(canvas,w,h,P.known),small=fillC.getContext('2d').getImageData(0,0,w,h).data,ch=[new Float32Array(sn),new Float32Array(sn),new Float32Array(sn)];
+  for(var i=0;i<sn;i++){ch[0][i]=LIN[small[i*4]];ch[1][i]=LIN[small[i*4+1]];ch[2][i]=LIN[small[i*4+2]]}
+  var rmax=Math.hypot(w,h)*.022*strength/.6,ks=[0,.15,.3,.5,.75,1],lv=ks.map(function(k){return k?discBlur(ch,w,h,Math.max(1,rmax*k)):ch});
+  var bc=cv(w,h),bx=bc.getContext('2d'),bid=bx.createImageData(w,h),bd=bid.data;
+  for(var i2=0;i2<sn;i2++){var xk=P.coc[i2]*(ks.length-1),k0=Math.min(ks.length-2,Math.floor(xk)),t=xk-k0;for(var c=0;c<3;c++){var v=lv[k0][c][i2]*(1-t)+lv[k0+1][c][i2]*t;bd[i2*4+c]=GAM[Math.max(0,Math.min(4095,(v*4095)|0))]}bd[i2*4+3]=255}bx.putImageData(bid,0,0);
+  var up=pix(bc,W,H),fup=pix(fillC,W,H),src=pix(canvas,W,H),oc=cv(W,H),ox=oc.getContext('2d'),oid=ox.createImageData(W,H),od=oid.data,al=P.al,sh=P.sharp,no=P.noise;
+  for(var j=0;j<n;j++){var a=al[j],sp=sh[j],q=j*4;for(var c2=0;c2<3;c2++){var sharpBg=a>.02?fup[q+c2]:src[q+c2],b=up[q+c2]*(1-sp)+sharpBg*sp+no[j];od[q+c2]=src[q+c2]*a+b*(1-a)}od[q+3]=255}
+  ox.putImageData(oid,0,0);if(W===OW&&H===OH)return oc;var fc=cv(OW,OH),fx=fc.getContext('2d');fx.imageSmoothingQuality='high';fx.drawImage(oc,0,0,OW,OH);
+  var big=fx.getImageData(0,0,OW,OH),bg2=big.data,orig=canvas.getContext('2d').getImageData(0,0,OW,OH).data,A2=rs(al,W,H,OW,OH);for(var i9=0;i9<OW*OH;i9++){var aa=A2[i9];if(aa<=0)continue;for(var c9=0;c9<3;c9++)bg2[i9*4+c9]=orig[i9*4+c9]*aa+bg2[i9*4+c9]*(1-aa)}fx.putImageData(big,0,0);return fc}
+window.__fcLensBlur=lensBlur;
+
+// ---- hook into the studio: the blur is a separate layer AFTER the looks and filters ----
+var state={on:false,strength:.6,maps:null,cacheKey:'',cacheCanvas:null};window.__fcBlur=state;
+if(typeof process==='function'){var _p75=process;process=function(max,raw,photo){var r=_p75.apply(this,arguments);
+  try{if(state.on&&state.maps&&r&&!raw&&(photo===undefined||photo===source)&&r.width>64){var k=r.width+'x'+r.height+':'+state.strength+':'+(typeof renderKey==='function'?renderKey():'')+':'+sig(r);if(state.cacheKey!==k){state.cacheCanvas=lensBlur(r,state.maps,state.strength);state.cacheKey=k}return state.cacheCanvas}}catch(e){console.warn('blur',e)}return r}}
+function sig(c){try{var x=c.getContext('2d'),d=x.getImageData(0,0,c.width,c.height).data,s=0,st=Math.max(4,((d.length/4/400)|0)*4);for(var i=0;i<d.length;i+=st)s=(s*31+d[i]+d[i+1]*7+d[i+2]*13)>>>0;return s}catch(e){return Math.random()}}
+
+// ---- UI: a Background card (Blur now; Vanish brush and Travel backgrounds join here) ----
+var css=D.createElement('style');css.textContent='#fcBg{margin:14px 0;padding:14px;border-radius:18px;border:1px solid #e2c98f;background:linear-gradient(135deg,#fffaf3,#f5ecff)}#fcBg h3{margin:0 0 4px;font-size:17px;color:#4a2a52}#fcBg p{margin:0 0 10px;font-size:13px;color:#7a6890}#fcBg .row{display:flex;gap:8px;flex-wrap:wrap}#fcBg button.chip{flex:1 1 140px;border:1.5px solid #c9a24a;border-radius:999px;background:#fff;color:#4a2a52;font:650 15px/1.2 system-ui,-apple-system,sans-serif;padding:11px 14px;cursor:pointer}#fcBg button.chip[aria-pressed=true]{background:linear-gradient(120deg,#2b174a,#5a2d5c);color:#fff;border-color:transparent}#fcBg button.chip:disabled{opacity:.6}#fcBgStr{margin-top:10px}#fcBgStr[hidden]{display:none}#fcBgStr label{display:flex;justify-content:space-between;font-size:13px;color:#4a2a52;font-weight:600}#fcBgStr input{width:100%}';D.head.appendChild(css);
+var card=D.createElement('section');card.id='fcBg';card.innerHTML='<h3>Background</h3><p>Portrait-mode blur, made on your phone. You stay exactly as you are.</p><div class="row"><button type="button" class="chip" id="fcBlurBtn" aria-pressed="false">Blur background</button></div><div id="fcBgStr" hidden><label for="fcBlurAmt"><span>Blur strength</span><output id="fcBlurOut">60%</output></label><input type="range" id="fcBlurAmt" min="10" max="100" value="60"></div>';
+var anchor=D.getElementById('luxe');if(anchor&&anchor.parentNode)anchor.parentNode.insertBefore(card,anchor.nextSibling);else{var ed=D.getElementById('edit');ed&&ed.appendChild(card)}
+var btn=card.querySelector('#fcBlurBtn'),str=card.querySelector('#fcBgStr'),amt=card.querySelector('#fcBlurAmt'),out=card.querySelector('#fcBlurOut');
+function T(n,p){try{window.fcTrack&&window.fcTrack(n,p)}catch(e){}}
+function refresh(){btn.setAttribute('aria-pressed',state.on?'true':'false');str.hidden=!state.on;btn.textContent=state.on?'Blur on':'Blur background'}
+btn.onclick=async function(){if(typeof source==='undefined'||!source){toast('Add your photo first.');return}
+  if(state.on){state.on=false;refresh();try{invalidate();checkpoint()}catch(e){}T('bg_blur_off');return}
+  btn.disabled=true;var lbl=btn.textContent;btn.textContent='Finding you…';
+  try{state.maps=await maps();state.on=true;state.cacheKey='';refresh();try{invalidate();checkpoint()}catch(e){}T('bg_blur_on')}
+  catch(e){toast(e&&e.code==='noperson'?'We could not find a person in this photo. Try a clearer photo.':'Blur could not start. Please try again.');btn.textContent=lbl}
+  finally{btn.disabled=false;refresh()}};
+amt.oninput=function(){out.value=amt.value+'%';out.textContent=amt.value+'%'};
+amt.onchange=function(){state.strength=+amt.value/100;state.cacheKey='';try{invalidate();checkpoint()}catch(e){}T('bg_blur_strength',{v:+amt.value})};
+// a new photo turns the blur off; undo/redo keeps it in step
+var lastKey='';setInterval(function(){var k=photoKey();if(k!==lastKey){lastKey=k;if(state.on){state.on=false;state.maps=null;refresh()}}},700);
+if(typeof capture==='function'&&typeof restore==='function'){var _c=capture,_r=restore;capture=function(){var o=JSON.parse(_c.apply(this,arguments));o.bgBlur=state.on?state.strength:0;return JSON.stringify(o)};
+  restore=function(st){var r=_r.apply(this,arguments);try{var v=JSON.parse(st);var want=+(v&&v.bgBlur)||0;if(!want){state.on=false}else if(state.maps){state.on=true;state.strength=want;amt.value=Math.round(want*100);amt.oninput()}refresh()}catch(e){}return r}}
+}catch(e){console.warn('v75 background',e)}})();
+
+</script>
 </body></html>
