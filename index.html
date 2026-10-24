@@ -4387,9 +4387,33 @@ async function tryOn(file){if(!needs()||X._isBusy())return;X._setBusy(true);T('a
    var r=lockFace(big,Lo,ai,La);if(r.crop&&(r.crop[2]<big.width*.85||r.crop[3]<big.height*.85))continue;var ref=big;if(r.crop){ref=cv(r.crop[2],r.crop[3]);ref.getContext('2d').drawImage(big,r.crop[0],r.crop[1],r.crop[2],r.crop[3],0,0,r.crop[2],r.crop[3])}
    r.ref=ref;if(r.err<.03&&Math.abs(r.scl-1)<.1&&changed(ref,r.c,null)>4)best=r}
   if(!best){X._close();X._message('Let’s try that again','The outfit did not come out perfectly, so we did not use it. Try a clear photo of the outfit on its own, and a photo of you standing.');T('ai_tryon_rejected');return}
+  try{var s3=D.getElementById('luxeSub');if(s3)s3.textContent='Matching the outfit colour…'}catch(e){}best.c=await outfitColour(best.ref,best.c,gar);
   X._refresh();T('ai_tryon_done');X._setBusy(false);X._showResult({k:'tryon',n:'Outfit try-on'},best.ref,best.c)}
  catch(err){errMsg(err,{k:'tryon',n:'Outfit try-on'});T('ai_tryon_error',{code:err&&err.code||'client'})}finally{X._setBusy(false)}}
 window.__fcTryOn=tryOn;
+// ---- outfit colour integrity: the dress in the result must be the same colour as the uploaded outfit photo ----
+function toLab(r,g,b){var f=function(v){v/=255;return v<=.04045?v/12.92:Math.pow((v+.055)/1.055,2.4)},R=f(r),G=f(g),B=f(b),X=(R*.4124+G*.3576+B*.1805)/.95047,Y=R*.2126+G*.7152+B*.0722,Z=(R*.0193+G*.1192+B*.9505)/1.08883,q=function(t){return t>.008856?Math.cbrt(t):7.787*t+16/116};return[116*q(Y)-16,500*(q(X)-q(Y)),200*(q(Y)-q(Z))]}
+function fromLab(L,a,b){var fy=(L+16)/116,fx=fy+a/500,fz=fy-b/200,c=function(t){var q=t*t*t;return q>.008856?q:(t-16/116)/7.787},X=c(fx)*.95047,Y=c(fy),Z=c(fz)*1.08883,g=function(v){v=v<=.0031308?12.92*v:1.055*Math.pow(v,1/2.4)-.055;return Math.max(0,Math.min(255,Math.round(v*255)))};return[g(X*3.2406+Y*-1.5372+Z*-.4986),g(X*-.9689+Y*1.8758+Z*.0415),g(X*.0557+Y*-.204+Z*1.057)]}
+function isSkin(l){return l[1]>4&&l[1]<33&&l[2]>4&&l[0]>31}
+async function personMask(c){var A=await window.__fcLoadModel('person-cutout.onnx'),d=c.getContext('2d'),t=cv(320,320);t.getContext('2d').drawImage(c,0,0,320,320);var px=t.getContext('2d').getImageData(0,0,320,320).data,n=320*320,x=new Float32Array(3*n),M=[.485,.456,.406],S=[.229,.224,.225];
+  for(var i=0;i<n;i++)for(var k=0;k<3;k++)x[k*n+i]=(px[i*4+k]/255-M[k])/S[k];var o=await A.s.run({[A.s.inputNames[0]]:new A.ort.Tensor('float32',x,[1,3,320,320])}),m=o[A.s.outputNames[0]].data,mn=1e9,mx=-1e9;for(var j=0;j<n;j++){mn=Math.min(mn,m[j]);mx=Math.max(mx,m[j])}
+  return function(u,v){var X2=Math.min(319,Math.max(0,Math.floor(u*320))),Y2=Math.min(319,Math.max(0,Math.floor(v*320)));return(m[Y2*320+X2]-mn)/(mx-mn+1e-6)}}
+function dominant(pts){if(pts.length<50)return null;var C=[pts[0],pts[pts.length>>1],pts[pts.length-1]].map(function(p){return p.slice()}),lab;
+  for(var it=0;it<12;it++){var s=C.map(function(){return[0,0,0,0]});pts.forEach(function(p){var bi=0,bd=1e18;for(var c=0;c<3;c++){var d=(p[0]-C[c][0])*(p[0]-C[c][0])+(p[1]-C[c][1])*(p[1]-C[c][1])+(p[2]-C[c][2])*(p[2]-C[c][2]);if(d<bd){bd=d;bi=c}}s[bi][0]+=p[0];s[bi][1]+=p[1];s[bi][2]+=p[2];s[bi][3]++});
+   C=C.map(function(c,i){return s[i][3]?[s[i][0]/s[i][3],s[i][1]/s[i][3],s[i][2]/s[i][3]]:c});lab=s}
+  var best=0;for(var c2=1;c2<3;c2++)if(lab[c2][3]>lab[best][3])best=c2;return C[best]}
+async function outfitColour(ref,res,gar){try{var W=res.width,H=res.height,sw=Math.min(1,480/Math.max(W,H)),w=Math.round(W*sw),h=Math.round(H*sw);
+  var gm=await personMask(gar),gw=Math.min(240,gar.width),gh=Math.round(gar.height*gw/gar.width),gc=cv(gw,gh);gc.getContext('2d').drawImage(gar,0,0,gw,gh);var gd=gc.getContext('2d').getImageData(0,0,gw,gh).data,gp=[];
+  for(var y=Math.floor(gh*.12);y<gh;y++)for(var x=0;x<gw;x++){if(gm(x/gw,y/gh)<.5)continue;var i=(y*gw+x)*4,l=toLab(gd[i],gd[i+1],gd[i+2]);if(!isSkin(l))gp.push(l)}
+  var tgt=dominant(gp);if(!tgt)return res;
+  var rm=await personMask(res),a=cv(w,h),b=cv(w,h);a.getContext('2d').drawImage(ref,0,0,w,h);b.getContext('2d').drawImage(res,0,0,w,h);var ad=a.getContext('2d').getImageData(0,0,w,h).data,bd=b.getContext('2d').getImageData(0,0,w,h).data,rp=[];
+  for(var y2=0;y2<h;y2++)for(var x2=0;x2<w;x2++){var j=(y2*w+x2)*4;if(rm(x2/w,y2/h)<.5)continue;var lb=toLab(bd[j],bd[j+1],bd[j+2]),la=toLab(ad[j],ad[j+1],ad[j+2]);if(Math.abs(lb[0]-la[0])+Math.abs(lb[1]-la[1])+Math.abs(lb[2]-la[2])<12||isSkin(lb))continue;rp.push(lb)}
+  var cur=dominant(rp);if(!cur)return res;var dL=Math.max(-8,Math.min(8,(tgt[0]-cur[0])*.5)),da=tgt[1]-cur[1],db=tgt[2]-cur[2];if(Math.hypot(da,db)<2.5&&Math.abs(dL)<3)return res;
+  var out=cv(W,H),ox=out.getContext('2d');ox.drawImage(res,0,0);var id=ox.getImageData(0,0,W,H),d=id.data;
+  for(var y3=0;y3<H;y3++)for(var x3=0;x3<W;x3++){if(rm(x3/W,y3/H)<.5)continue;var q=(y3*W+x3)*4,l3=toLab(d[q],d[q+1],d[q+2]);
+   var near=Math.exp(-((l3[1]-cur[1])*(l3[1]-cur[1])+(l3[2]-cur[2])*(l3[2]-cur[2]))/288)*Math.exp(-((l3[0]-cur[0])*(l3[0]-cur[0]))/1800);if(near<.02)continue;
+   var o3=fromLab(l3[0]+dL*near,l3[1]+da*near,l3[2]+db*near);d[q]=o3[0];d[q+1]=o3[1];d[q+2]=o3[2]}
+  ox.putImageData(id,0,0);T('ai_tryon_colour',{da:Math.round(da),db:Math.round(db),dL:Math.round(dL)});return out}catch(e){console.warn('v76 colour',e);return res}}
 // ---- UI: inside the Background card ----
 var card=D.getElementById('fcBg');if(!card)return;
 var css=D.createElement('style');css.textContent='#fcTravel{display:flex;gap:10px;overflow-x:auto;padding:4px 2px 8px;scroll-snap-type:x mandatory}#fcTravel button{flex:0 0 138px;scroll-snap-align:start;border:0;border-radius:16px;min-height:92px;padding:12px;text-align:left;color:#fff;display:flex;flex-direction:column;justify-content:flex-end;cursor:pointer;box-shadow:0 4px 14px #2b174a22;text-shadow:0 1px 4px #0007}#fcTravel b{font-size:15px}#fcTravel span{font-size:12px;opacity:.95}#fcBg h4{margin:14px 0 6px;font-size:15px;color:#4a2a52}#fcBg .aiNote{font-size:12px;color:#7a6890;margin:4px 0 0}';D.head.appendChild(css);
