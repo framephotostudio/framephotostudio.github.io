@@ -14,6 +14,12 @@ const BACKDROPS = {
   greece: 'Santorini, Greece: white-washed walls, blue domes and the Aegean sea in soft afternoon light', paris: 'Paris with the Eiffel Tower softly blurred in the distance, golden-hour light',
   newyork: 'a New York City street with blurred skyscrapers and warm evening light', london: 'London with Big Ben softly blurred behind, overcast soft light',
   dubai: 'a Dubai skyline at dusk with the Burj Khalifa softly blurred', bali: 'a Bali rice terrace with warm tropical light', maldives: 'a Maldives beach with turquoise water and an overwater villa',
+  // curated Face Couture scenes (v1: no open prompt)
+  santorini_day: 'a bright Santorini, Greece terrace in clear midday sun: white-washed walls, a blue-domed church and the deep blue Aegean caldera behind, crisp natural daylight',
+  santorini_sunset: 'a Santorini, Greece terrace at golden sunset: white-washed houses and a blue dome glowing in warm orange light, the sea and caldera behind, soft warm sunset light',
+  mykonos: 'a Mykonos, Greece whitewashed lane with blue doors and shutters, pink bougainvillea and the blue sea in the distance, bright Mediterranean daylight',
+  beach_lux: 'a luxurious white-sand beach with turquoise water, palm trees and soft sunlight, gently blurred like a real photo',
+  paris_cafe: 'a charming Parisian cafe terrace with wicker chairs, small round tables and Haussmann buildings, softly blurred behind, warm natural light',
   rome: 'Rome with the Colosseum softly blurred in warm light', tokyo: 'a Tokyo street at night with soft neon bokeh', alps: 'snow-capped Swiss Alps with clear morning light'
 };
 // ---- Face Couture luxury beauty finishes ------------------------------------------------------------------------------
@@ -106,12 +112,14 @@ export function buildPrompt(task, o = {}) {
       break;
     case 'background':
     case 'travel':
+      if (o.locked) { p = `Replace only the background of this photo with ${bg || 'a clean studio backdrop'}. The person must stay in exactly the same position, size, pose and framing, with the same camera angle and lens, so she lines up perfectly with the original photo. Keep the person, face, hair, outfit and accessories exactly as they are. Match the perspective and horizon to the camera height, match the light direction and color of the new scene to the light already on the person, and add a soft natural contact shadow where she stands. No extra people.`; break; }
       p = `Replace only the background with ${bg || 'a clean studio backdrop'}. Keep the person, their outfit and hair exactly as they are with clean natural edges around hair and body; match lighting direction, color temperature and shadows so the person looks truly present in the scene, with correct perspective and depth of field.`;
       break;
     case 'blur':
       p = 'Keep the person exactly as they are and smoothly blur the existing background like an 85mm f/1.8 portrait lens, with clean hair edges.';
       break;
     case 'vanish':
+      if (o.marked) { p = `In this photo the area painted solid magenta marks something to remove. Remove it completely and rebuild what was behind it so it looks like it was never there: continue the surrounding background, lines, textures, lighting, shadows and the natural photo grain seamlessly. Do not leave any magenta, smudge or blur. Change nothing outside the magenta area.`; break; }
       p = `Remove ${extra || 'the marked distraction'} from this photo and rebuild the background behind it naturally and seamlessly, matching texture, lighting and perspective. Keep the main person untouched.`;
       break;
     case 'tryon':
@@ -122,5 +130,7 @@ export function buildPrompt(task, o = {}) {
       p = `Refine this photo for ${o.platform || 'social media'}: natural professional retouch, ${outfit ? 'change the outfit to ' + outfit + ', ' : ''}${bg ? 'change the background to ' + bg + ', ' : ''}balanced flattering light.`;
   }
   if (extra && task !== 'vanish') p += ' Additional instruction: ' + extra + '.';
+  if ((task === 'background' || task === 'travel') && o.locked) return p;
+  if (task === 'vanish' && o.marked) return p;
   return p + ' ' + KEEP;
 }
