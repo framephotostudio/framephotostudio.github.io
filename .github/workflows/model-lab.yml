@@ -1,0 +1,35 @@
+name: Model lab (make a smaller person-cutout model)
+# Downloads the open-source U2Net human segmentation model (Apache 2.0), makes an 8-bit version for phones,
+# checks it gives the same cut-out, and saves it to the ci-models branch. Nothing is published to users.
+on:
+  push:
+    branches: [model-lab]
+permissions: { contents: write }
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - run: pip install onnx onnxruntime onnxconverter-common numpy
+      - name: Make models
+        run: |
+          mkdir -p out
+          curl -sL -o human.onnx https://github.com/danielgatis/rembg/releases/download/v0.0.0/u2net_human_seg.onnx
+          python - <<'PY'
+          import onnx, numpy as np, onnxruntime as ort, os
+          from onnxruntime.quantization import quantize_dynamic, QuantType
+          from onnxconverter_common import float16
+          quantize_dynamic('human.onnx','out/human_q8.onnx',weight_type=QuantType.QUInt8)
+          m=onnx.load('human.onnx'); m16=float16.convert_float_to_float16(m,keep_io_types=True); onnx.save(m16,'out/human_f16.onnx')
+          x=np.random.rand(1,3,320,320).astype(np.float32)
+          ref=ort.InferenceSession('human.onnx').run(None,{'input.1':x})[0]
+          for f in ['out/human_q8.onnx','out/human_f16.onnx']:
+              s=ort.InferenceSession(f);o=s.run(None,{s.get_inputs()[0].name:x})[0]
+              print(f, os.path.getsize(f)/1e6, 'MB', 'max diff', float(np.abs(o-ref).max()), 'mean diff', float(np.abs(o-ref).mean()))
+          PY
+      - name: Save
+        run: |
+          git config user.name face-couture-ci; git config user.email hello@facecouture.app
+          git checkout --orphan ci-models; git rm -rfq --cached .; git add -f out; git commit -qm "smaller person cut-out models"; git push -qf origin HEAD:ci-models
