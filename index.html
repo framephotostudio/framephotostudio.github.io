@@ -3962,7 +3962,7 @@ function glowFx(c,g,raw){try{if(!c||!c.getContext||g<=0)return;var ctx=c.getCont
  var LO=beauty&&beauty.lipOutline,LI=beauty&&beauty.lipInner;if(LO&&LO.length>5){var lx0=1,lx1=0,ly0=1,ly1=0;LO.forEach(function(p){lx0=Math.min(lx0,p.x);lx1=Math.max(lx1,p.x);ly0=Math.min(ly0,p.y);ly1=Math.max(ly1,p.y)});
   var pad=(lx1-lx0)*.15,bx=Math.max(0,(lx0-pad)*W),by=Math.max(0,(ly0-pad)*H),bw=Math.min(W-bx,(lx1-lx0+2*pad)*W),bh=Math.min(H-by,(ly1-ly0+2*pad)*H);
   if(bw>4&&bh>4){var m=D.createElement('canvas');m.width=Math.ceil(bw);m.height=Math.ceil(bh);var mx=m.getContext('2d'),fe=Math.max(.8,(lx1-lx0)*W*.012);try{mx.filter='blur('+fe.toFixed(1)+'px)'}catch(e){}
-   mx.fillStyle='rgb(206,92,118)';var lcx=(lx0+lx1)/2,lcy=(ly0+ly1)/2,lhw=(lx1-lx0)/2||1,shx=Math.max(.9,1-fe/(lhw*W)),shy=Math.max(.85,1-fe/(((ly1-ly0)/2||.01)*H));mx.beginPath();LO.forEach(function(p,i){var X=(lcx+(p.x-lcx)*shx)*W-bx,Y=(lcy+(p.y-lcy)*shy)*H-by;i?mx.lineTo(X,Y):mx.moveTo(X,Y)});mx.closePath();if(LI&&LI.length>3){LI.forEach(function(p,i){var X=p.x*W-bx,Y=p.y*H-by;i?mx.lineTo(X,Y):mx.moveTo(X,Y)});mx.closePath()}mx.fill('evenodd');
+   mx.fillStyle='rgb('+(window.__fcLipTarget||[206,92,118]).join(',')+')';var lcx=(lx0+lx1)/2,lcy=(ly0+ly1)/2,lhw=(lx1-lx0)/2||1,shx=Math.max(.9,1-fe/(lhw*W)),shy=Math.max(.85,1-fe/(((ly1-ly0)/2||.01)*H));mx.beginPath();LO.forEach(function(p,i){var X=(lcx+(p.x-lcx)*shx)*W-bx,Y=(lcy+(p.y-lcy)*shy)*H-by;i?mx.lineTo(X,Y):mx.moveTo(X,Y)});mx.closePath();if(LI&&LI.length>3){LI.forEach(function(p,i){var X=p.x*W-bx,Y=p.y*H-by;i?mx.lineTo(X,Y):mx.moveTo(X,Y)});mx.closePath()}mx.fill('evenodd');
    var lum=0;try{var dd=ctx.getImageData(Math.round(bx+bw*.3),Math.round(by+bh*.35),Math.max(1,Math.round(bw*.4)),Math.max(1,Math.round(bh*.3))).data;for(var q=0;q<dd.length;q+=4)lum+=.3*dd[q]+.59*dd[q+1]+.11*dd[q+2];lum/=dd.length/4}catch(e){}
    ctx.save();ctx.globalCompositeOperation='color';ctx.globalAlpha=Math.min(.75,.6*Math.max(.8,g));ctx.drawImage(m,bx,by);
    var lo=null;try{var oc=D.createElement('canvas');oc.width=32;oc.height=16;var sw=source.naturalWidth||source.width,sh=source.naturalHeight||source.height;oc.getContext('2d').drawImage(source,(bx+bw*.3)/W*sw,(by+bh*.35)/H*sh,bw*.4/W*sw,bh*.3/H*sh,0,0,32,16);var od=oc.getContext('2d').getImageData(0,0,32,16).data;lo=0;for(var q2=0;q2<od.length;q2+=4)lo+=.3*od[q2]+.59*od[q2+1]+.11*od[q2+2];lo/=od.length/4}catch(e){}
@@ -4010,6 +4010,27 @@ function lipHue(){var L=beauty.lipOutline;if(!L||L.length<6||!source)return null
  c.getContext('2d').drawImage(source,(x0+(x1-x0)*.25)*sw,(y0+(y1-y0)*.2)*sh,(x1-x0)*.5*sw,(y1-y0)*.6*sh,0,0,w,h);var d=c.getContext('2d').getImageData(0,0,w,h).data,r=0,g=0,b=0,n=0;for(var i=0;i<d.length;i+=4){r+=d[i];g+=d[i+1];b+=d[i+2];n++}r/=n;g/=n;b/=n;
  var mx=Math.max(r,g,b),mn=Math.min(r,g,b);window.__fcLipRGB=[r,g,b];if(mx-mn<12)return null;var hh=mx===r?((g-b)/(mx-mn))%6:mx===g?(b-r)/(mx-mn)+2:(r-g)/(mx-mn)+4;hh*=60;if(hh<0)hh+=360;return hh}
 window.__fcLipHue=lipHue;
+// Auto Glow adapts to the person: skin depth, lipstick she already wears, eye makeup she already wears, blush she already has
+function fcSample(x0,y0,x1,y1){if(!source)return null;var sw=source.naturalWidth||source.width,sh=source.naturalHeight||source.height,w=Math.max(2,Math.round((x1-x0)*sw)),h=Math.max(2,Math.round((y1-y0)*sh)),cw=Math.min(48,w),ch=Math.min(48,h),c=D.createElement('canvas');c.width=cw;c.height=ch;c.getContext('2d').drawImage(source,x0*sw,y0*sh,w,h,0,0,cw,ch);var d=c.getContext('2d').getImageData(0,0,cw,ch).data,r=0,g=0,b=0,n=0;for(var i=0;i<d.length;i+=4){r+=d[i];g+=d[i+1];b+=d[i+2];n++}return[r/n,g/n,b/n]}
+function fcLab(c){var f=function(v){v/=255;return v<=.04045?v/12.92:Math.pow((v+.055)/1.055,2.4)},R=f(c[0]),G=f(c[1]),B=f(c[2]),X=(R*.4124+G*.3576+B*.1805)/.95047,Y=R*.2126+G*.7152+B*.0722,Z=(R*.0193+G*.1192+B*.9505)/1.08883,q=function(t){return t>.008856?Math.cbrt(t):7.787*t+16/116};return[116*q(Y)-16,500*(q(X)-q(Y)),200*(q(Y)-q(Z))]}
+function fcAnalyse(){var P=beauty&&beauty.points,EC=beauty&&beauty.eyeContours,LO=beauty&&beauty.lipOutline,o={};if(!P||!P.nose||!EC||EC.length<2)return null;
+ var bb=function(e){var x0=1,x1=0,y0=1,y1=0;e.forEach(function(p){x0=Math.min(x0,p.x);x1=Math.max(x1,p.x);y0=Math.min(y0,p.y);y1=Math.max(y1,p.y)});return[x0,y0,x1,y1]};
+ var E=EC.map(bb),ew=Math.min(E[0][2]-E[0][0],E[1][2]-E[1][0]),sw0=source.naturalWidth||source.width,sh0=source.naturalHeight||source.height,ey=ew*sw0/sh0;
+ // cheeks: below each eye, a little toward the nose; forehead-ish skin between the brows is skipped (hair/brows)
+ var ck=E.map(function(e){var cx=(e[0]+e[2])/2*.85+P.nose.x*.15,cy=e[3]+ey*.75;return fcSample(cx-ew*.15,cy-ey*.1,cx+ew*.15,cy+ey*.1)}),
+  // true skin depth: lower cheeks beside the mouth (glam photos brighten the under-eyes with concealer and highlighter)
+  lc=(function(){if(!LO||LO.length<6)return null;var l=bb(LO),lw=l[2]-l[0],my=(l[1]+l[3])/2;return[fcSample(l[0]-lw*.55,my-ey*.12,l[0]-lw*.25,my+ey*.12),fcSample(l[2]+lw*.25,my-ey*.12,l[2]+lw*.55,my+ey*.12)]})(),nb=fcSample(P.nose.x-ew*.07,(E[0][3]+E[1][3])/2+ey*.1,P.nose.x+ew*.07,(E[0][3]+E[1][3])/2+ey*.3);
+ var lid=E.map(function(e){var w=e[2]-e[0],wy=w*sw0/sh0;return fcSample(e[0]+w*.2,e[1]-wy*.3,e[2]-w*.2,e[1]-wy*.06)});
+ var pts=[ck[0],ck[1]].concat(lc||[]);
+ try{var lb=LO&&LO.length>5?bb(LO):null;if(lb){pts.push(fcSample(P.nose.x-ew*.12,lb[3]+ey*.25,P.nose.x+ew*.12,lb[3]+ey*.45))}
+  E.forEach(function(e){var cx=(e[0]+e[2])/2*.5+P.nose.x*.5;pts.push(fcSample(cx-ew*.08,P.nose.y-ey*.15,cx+ew*.08,P.nose.y+ey*.05))});
+  pts.push(fcSample(P.nose.x-ew*.15,Math.min(E[0][1],E[1][1])-ey*1.1,P.nose.x+ew*.15,Math.min(E[0][1],E[1][1])-ey*.8))}catch(e){}
+ // skin depth = the median of many skin patches, so hair, concealer and highlighter never decide it
+ pts=pts.filter(Boolean).map(function(c){return{c:c,L:fcLab(c)[0]}}).sort(function(a,b){return a.L-b.L});var mid=pts[Math.floor(pts.length/2)],skin=mid?mid.c:[0,1,2].map(function(i){return(ck[0][i]+ck[1][i])/2}),SL=fcLab(skin),cheekA=(fcLab(ck[0])[1]+fcLab(ck[1])[1])/2,noseA=fcLab(nb)[1];
+ o.skinL=SL[0];o.lidRatio=(fcLab(lid[0])[0]+fcLab(lid[1])[0])/2/Math.max(1,SL[0]);o.blushHave=cheekA-noseA;
+ if(LO&&LO.length>5){var l=bb(LO),lw=l[2]-l[0],lc=fcSample(l[0]+lw*.3,l[1]+(l[3]-l[1])*.55,l[2]-lw*.3,l[3]-(l[3]-l[1])*.15),LL=fcLab(lc);o.lip=lc;o.lipL=LL;o.lipChroma=Math.hypot(LL[1],LL[2]);o.lipDark=SL[0]-LL[0];o.lipVsSkin=Math.hypot(LL[1]-SL[1],LL[2]-SL[2])}
+ return o}
+window.__fcAnalyse=fcAnalyse;
 function ownEyeColour(){var EC=beauty&&beauty.eyeContours;if(!EC||EC.length<2||!source)return false;var sw=source.naturalWidth||source.width,sh=source.naturalHeight||source.height,hit=0,tot=0;
  EC.forEach(function(e){var x0=1,x1=0,y0=1,y1=0;e.forEach(function(p){x0=Math.min(x0,p.x);x1=Math.max(x1,p.x);y0=Math.min(y0,p.y);y1=Math.max(y1,p.y)});var ew=(x1-x0);
   var bx=x0-ew*.15,by=y0-ew*.45,bw=ew*1.3,bh=(y1-y0)+ew*.6;var c=D.createElement('canvas'),cw=64,chh=Math.max(16,Math.round(64*bh*sh/(bw*sw)));c.width=cw;c.height=chh;var cx=c.getContext('2d');cx.drawImage(source,bx*sw,by*sh,bw*sw,bh*sh,0,0,cw,chh);var d=cx.getImageData(0,0,cw,chh).data;
@@ -4018,7 +4039,27 @@ function ownEyeColour(){var EC=beauty&&beauty.eyeContours;if(!EC||EC.length<2||!
 var _ag=autoGlow;autoGlow=async function(){var before=snap(),r=await _ag.apply(this,arguments);
  try{if(source&&lastRecipe&&lastRecipe.type==='glow'){var men=window.frameStyle==='men',face=beauty&&beauty.points&&beauty.points.nose;
    var km=Math.max(.6,Math.min(2,(typeof strengthMult==='number'?strengthMult:.8)/.8));
-   if(face&&!men){for(var k in GLOW)beauty[k]=Math.max(0,Math.min(100,Math.round(GLOW[k]*km)));Object.assign(beauty,GLOWSH);beauty.ownEyes=0;
+   if(face&&!men){for(var k in GLOW)beauty[k]=Math.max(0,Math.min(100,Math.round(GLOW[k]*km)));Object.assign(beauty,GLOWSH);beauty.ownEyes=0;window.__fcLipTarget=null;
+     try{var A=fcAnalyse();window.__fcLastAnalyse=A;if(A){
+      // deep and medium-deep skin: richer rose-berry and rose-brown instead of a light pink; softer, warmer blush
+      var L=A.skinL,dep=L<56?3:L<64?2:L<70?1:0;
+      // the lipstick is always a rose a few shades deeper than her skin: medium rose on light skin, rich berry-rose on deep skin
+      var lt=Math.max(34,Math.min(52,L-20)),lab2rgb=function(Lv,a,b){var fy=(Lv+16)/116,fx=fy+a/500,fz=fy-b/200,c=function(t){var q=t*t*t;return q>.008856?q:(t-16/116)/7.787},X=c(fx)*.95047,Y=c(fy),Z=c(fz)*1.08883,g=function(v){v=v<=.0031308?12.92*v:1.055*Math.pow(v,1/2.4)-.055;return Math.max(0,Math.min(255,Math.round(v*255)))};return[g(X*3.2406+Y*-1.5372+Z*-.4986),g(X*-.9689+Y*1.8758+Z*.0415),g(X*.0557+Y*-.204+Z*1.057)]};
+      var T=lab2rgb(lt,46-(52-lt)*.25,6);beauty.color=['velvetRose','polishedRose','rosewood','deepRose'][dep];
+      if(dep>=2){beauty.blushColor='wine';beauty.blush=Math.round(beauty.blush*.5);beauty.highlight=Math.round(beauty.highlight*.7)}else if(dep===1){beauty.blushColor='berry';beauty.blush=Math.round(beauty.blush*.75)}
+      // she already wears lipstick (her lip colour is clearly not her natural lip): keep her shade, just richer and glossier
+      var full=A.lidRatio<.58;
+      // enhance HER lip: her own shade made a little richer and deeper (nude stays nude, brown stays brown, red stays red);
+      // bare lips get a soft rose that suits her skin depth mixed in
+      if(A.lip&&A.lipL){var wear=full||A.lipVsSkin>16||A.lipDark>22||A.lipChroma>32,LL=A.lipL,ch=Math.hypot(LL[1],LL[2])||1,boost=Math.min(1.35,Math.max(1.12,30/ch)),
+        own=lab2rgb(Math.max(26,LL[0]-5),LL[1]*boost,LL[2]*boost),w=wear?.12:.35;
+       T=[0,1,2].map(function(i){return Math.round(own[i]*(1-w)+T[i]*w)});beauty.tint=Math.round(beauty.tint*(wear?.3:.45));beauty.ownLip=wear?1:0}
+      window.__fcLipTarget=T;
+      // she already wears blush: add much less
+      if(A.blushHave>7){beauty.blush=Math.round(beauty.blush*(A.blushHave>12?.3:.55))}
+      // she already wears eye makeup (dark lids, liner, lashes): keep her eyes exactly as they are
+      if(A.lidRatio<.58){beauty.ownEyes=1;beauty.eyeShadow=0;beauty.eyeLiner=0;beauty.lashes=0;beauty.mascara=0;beauty.contour=Math.round(beauty.contour*.6);beauty.bronzer=Math.round(beauty.bronzer*.7)}
+     }}catch(e){}
      // she already wears coloured eye makeup (green, blue, purple liner or shadow): keep her eyes exactly as they are
      try{if(ownEyeColour()){beauty.ownEyes=1;beauty.eyeShadow=0;beauty.eyeLiner=0;beauty.lashes=0;beauty.mascara=0;window.__fcOwnEyesMsg=1}}catch(e){}}
    if(men){adj.light=Math.max(adj.light||0,10);adj.highlights=Math.max(adj.highlights||0,8)}else{adj.light=0;adj.contrast=5;adj.color=0;adj.warmth=-2;adj.highlights=3;adj.softness=2}
