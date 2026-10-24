@@ -4435,4 +4435,13 @@ window.__fcTravel=travel;window.__fcVanish=vanishPeople;
  var n=0,t=setInterval(function(){if(place()||++n>40)clearInterval(t)},250);place();
 }catch(e){console.warn('v77 wow',e)}})();
 </script>
+<script>
+/* v78: "Upload my own outfit" right under the Clothing menu in the AI tab; uses the same face-locked outfit try-on */
+;(function(){try{var D=document;function add(){var s=D.getElementById('outfit'),tb=D.getElementById('fcTryBtn');if(!s||!tb)return false;if(D.getElementById('fcOwnOutfit'))return true;
+ var w=D.createElement('div');w.id='fcOwnOutfitWrap';w.innerHTML='<button type="button" id="fcOwnOutfit" class="chip">&#128087; Upload my own outfit</button><p class="aiNote" style="margin:6px 0 0">Add a photo of a dress or outfit (a shop photo works). Uses 1 AI look. Your face stays exactly yours.</p>';
+ s.insertAdjacentElement('afterend',w);D.getElementById('fcOwnOutfit').onclick=function(){D.getElementById('fcTryBtn').click()};return true}
+ var c=D.createElement('style');c.textContent='#fcOwnOutfitWrap{margin-top:10px}#fcOwnOutfit{width:100%;min-height:44px;font-weight:650}#fcOwnOutfitWrap .aiNote{font-size:13px;line-height:1.4;opacity:.8}';D.head.appendChild(c);
+ var n=0,t=setInterval(function(){if(add()||++n>40)clearInterval(t)},250);add();
+}catch(e){console.warn('v78 own outfit',e)}})();
+</script>
 </body></html>
