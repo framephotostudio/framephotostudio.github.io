@@ -3801,7 +3801,12 @@ function busyFallback(L){var k=ONDEVICE[L.k],v=k&&typeof VIBES!=='undefined'&&VI
  var b=$('luxeDev');b.textContent=L.k==='aiglow'?'Use Auto Glow on-device':v?'Use '+v.n+' on-device':'Use an on-device look';$('luxeOk').onclick=closeOv;T('ai_look_busy_fallback',{look:L.k});
  b.onclick=function(){closeOv();try{if(L.k==='aiglow'&&typeof autoGlow==='function'){autoGlow();return}if(v&&typeof applyVibe==='function')applyVibe(k);var e=document.getElementById('vibes');e&&e.scrollIntoView({behavior:'smooth',block:'center'})}catch(e){}}
 }
-window.__luxe={run:run,LOOKS:LOOKS,_realEyes:realEyes,_measures:measures,_score:score};
+window.__luxe={run:run,LOOKS:LOOKS,_realEyes:realEyes,_measures:measures,_score:score,
+ _call:callAI,_landmarks:landmarks,_biggest:biggest,_simil:simil,_photoCanvas:photoCanvas,_overlay:overlay,_ov:function(){return ov},_message:message,_close:closeOv,
+ _consent:function(){return consent},_consentRow:function(){return $('luxeConsentRow')},_isBusy:function(){return busy},_setBusy:function(v){busy=!!v},_refresh:refreshLeft,_showResult:showResult,
+ _handleErr:function(err,L){if(err.code==='ceiling'){overlay('<div class="luxeRes" style="flex:0;align-items:center;text-align:center"><h4>AI is busy right now</h4><p class="sub">Please try again later. Blur and all on-device looks still work.</p><div class="luxeActs" style="margin-top:14px"><button class="luxeBtn gold" id="luxeOk">OK</button></div></div>');$('luxeOk').onclick=closeOv;return}
+  refreshLeft();if(isApp&&window.FCPlan){var me=window.__luxeMe||{};if(err.code==='subscribe'){window.FCPlan.openPaywall('ai_'+L.k);return}if(me.paywall&&(err.tier==='paid'||err.tier==='trial')){window.FCPlan.openTopups('ai_'+L.k);return}}
+  message(err.code==='subscribe'?'AI Luxe Looks':'You\'re out of AI looks for now',isApp?String(err.message):'You\'ve used your AI looks for today. Come back tomorrow, or enjoy the on-device Looks below, unlimited.')}};
 }catch(e){console.warn('v68 luxe',e)}})();
 </script>
 
@@ -4291,6 +4296,110 @@ var lastKey='';setInterval(function(){var k=photoKey();if(k!==lastKey){lastKey=k
 if(typeof capture==='function'&&typeof restore==='function'){var _c=capture,_r=restore;capture=function(){var o=JSON.parse(_c.apply(this,arguments));o.bgBlur=state.on?state.strength:0;return JSON.stringify(o)};
   restore=function(st){var r=_r.apply(this,arguments);try{var v=JSON.parse(st);var want=+(v&&v.bgBlur)||0;if(!want){state.on=false}else if(state.maps){state.on=true;state.strength=want;amt.value=Math.round(want*100);amt.oninput()}refresh()}catch(e){}return r}}
 }catch(e){console.warn('v75 background',e)}})();
+
+</script>
+<script>
+/* v76: AI Travel backgrounds + AI Vanish (Meta-style, natural).
+   Travel: the AI re-creates the whole photo in the new place (so light, edges and shadows are naturally blended),
+   then her REAL face from her own photo is locked back in at full resolution and gently relit to the scene.
+   The AI's version of her face is never shown. Quality gates: face found in both, AI did not reshape the face,
+   the background really changed; otherwise she is told kindly and nothing is changed.
+   Vanish: the AI removes everyone in the background; the main person/people are kept pixel-for-pixel from her photo. */
+;(function(){try{
+var D=document,X=window.__luxe;if(!X||!X._call)return;
+var OVAL=[10,338,297,332,284,251,389,356,454,323,361,288,397,365,379,378,400,377,152,148,176,149,150,136,172,58,132,93,234,127,162,21,54,103,67,109];
+var SCENES=[{k:'santorini_day',n:'Santorini',t:'Blue domes, midday sun',g:'#bfe0ff,#2f6fb5'},{k:'santorini_sunset',n:'Santorini Sunset',t:'Golden hour on the caldera',g:'#ffd29a,#c4587a'},
+ {k:'mykonos',n:'Mykonos',t:'White lanes, bougainvillea',g:'#ffffff,#d0398e'},{k:'beach_lux',n:'Luxury Beach',t:'White sand, turquoise sea',g:'#bff4ef,#2aa8a0'},{k:'paris_cafe',n:'Paris Café',t:'Terrace, Haussmann facades',g:'#f1e3c8,#7a5a3a'}];
+function cv(w,h){var c=D.createElement('canvas');c.width=w;c.height=h;return c}
+function T(n,p){try{window.fcTrack&&window.fcTrack(n,p)}catch(e){}}
+function loadI(src){return new Promise(function(res,rej){var im=new Image();im.onload=function(){res(im)};im.onerror=rej;im.src=src})}
+function blurC(src,r){var w=src.width,h=src.height,s=Math.max(1,r/2),c=cv(Math.max(2,Math.round(w/s)),Math.max(2,Math.round(h/s))),x=c.getContext('2d');x.imageSmoothingEnabled=true;x.imageSmoothingQuality='high';x.drawImage(src,0,0,c.width,c.height);
+  var o=cv(w,h),ox=o.getContext('2d');try{ox.filter='blur('+(r/2).toFixed(1)+'px)'}catch(e){}ox.imageSmoothingEnabled=true;ox.imageSmoothingQuality='high';ox.drawImage(c,0,0,w,h);return o}
+// face landmarks; small faces in full-length photos: look again on an enlarged crop around the head
+async function face(c){var F=await X._landmarks(c);if(F.length)return X._biggest(F);
+  try{var mp=await window.__fcBgMaps();if(!mp)return null;var W=mp.W,H=mp.H,al=mp.alpha,top=-1,xs=[];for(var y=0;y<H&&top<0;y++)for(var x=0;x<W;x++)if(al[y*W+x]>.5){top=y;break}
+   if(top<0)return null;var ys=top,ye=H;for(var y2=H-1;y2>top;y2--){var any=false;for(var x2=0;x2<W;x2+=2)if(al[y2*W+x2]>.5){any=true;break}if(any){ye=y2;break}}
+   var ph=ye-ys,band=Math.round(top+ph*.12);for(var y3=top;y3<band;y3++)for(var x3=0;x3<W;x3++)if(al[y3*W+x3]>.5)xs.push(x3);xs.sort(function(a,b){return a-b});
+   var cx=xs[xs.length>>1]/W*c.width,sz=Math.max(ph*.32,40)/H*c.height,x0=Math.max(0,cx-sz/2),y0=Math.max(0,top/H*c.height-sz*.15),k=640/sz,cc=cv(640,640);
+   cc.getContext('2d').drawImage(c,x0,y0,sz,sz,0,0,640,640);var G=await X._landmarks(cc);if(!G.length)return null;return X._biggest(G).map(function(p){return[p[0]/k+x0,p[1]/k+y0]})}catch(e){return null}}
+// put her real face (from her own photo) into the AI's naturally lit photo, at her photo's full resolution
+function lockFace(orig,Lo,ai,La){var W=orig.width,H=orig.height,so=OVAL.map(function(i){return Lo[i]}),sa=OVAL.map(function(i){return La[i]}),M=X._simil(sa,so);
+  var g=cv(W,H),gx=g.getContext('2d');gx.imageSmoothingEnabled=true;gx.imageSmoothingQuality='high';gx.setTransform(M.a,M.b,-M.b,M.a,M.tx,M.ty);gx.drawImage(ai,0,0);gx.setTransform(1,0,0,1,0,0);
+  // how far the AI's face shape is from hers once aligned (identity check)
+  var scl=Math.hypot(M.a,M.b)*ai.width/orig.width,fw=Math.hypot(Lo[234][0]-Lo[454][0],Lo[234][1]-Lo[454][1]),err=0;for(var i=0;i<468;i++){var q=[M.a*La[i][0]-M.b*La[i][1]+M.tx,M.b*La[i][0]+M.a*La[i][1]+M.ty];err+=Math.hypot(q[0]-Lo[i][0],q[1]-Lo[i][1])}err/=468*fw;
+  // a crisp but natural upscale of the AI scene
+  var gb=blurC(g,2.4),gd=gx.getImageData(0,0,W,H),gbd=gb.getContext('2d').getImageData(0,0,W,H).data,d=gd.data;for(var j=0;j<d.length;j+=4)for(var c=0;c<3;c++){var v=d[j+c]+(d[j+c]-gbd[j+c])*.6;d[j+c]=v<0?0:v>255?255:v}gx.putImageData(gd,0,0);
+  // feathered face mask from her own face outline
+  var m=cv(W,H),mx=m.getContext('2d'),sh=Math.max(2,fw*.035);mx.fillStyle='#fff';mx.beginPath();so.forEach(function(p,i){var cxp=0,cyp=0;so.forEach(function(q){cxp+=q[0];cyp+=q[1]});cxp/=so.length;cyp/=so.length;var x=cxp+(p[0]-cxp)*.97,y=cyp+(p[1]-cyp)*.97;i?mx.lineTo(x,y):mx.moveTo(x,y)});mx.closePath();mx.fill();
+  var mb=blurC(m,sh*2),md=mb.getContext('2d').getImageData(0,0,W,H).data;
+  // relight: her detail + the scene's light and colour
+  var r=Math.max(3,fw*.07),fo=orig.getContext('2d').getImageData(0,0,W,H).data,lf=blurC(orig,r*2).getContext('2d').getImageData(0,0,W,H).data,lg=blurC(g,r*2).getContext('2d').getImageData(0,0,W,H).data,out=gx.getImageData(0,0,W,H),od=out.data;
+  for(var k=0;k<od.length;k+=4){var a=md[k+3]/255*(md[k]/255);if(a<=.002)continue;for(var c2=0;c2<3;c2++){var f=fo[k+c2]-lf[k+c2]+lg[k+c2]*.55+lf[k+c2]*.45;od[k+c2]=od[k+c2]*(1-a)+f*a}}
+  gx.putImageData(out,0,0);
+  // the AI photo may not reach every edge of her frame: keep only the area it covers (no empty borders)
+  var cn=[[0,0],[ai.width,0],[0,ai.height],[ai.width,ai.height]].map(function(p){return[M.a*p[0]-M.b*p[1]+M.tx,M.b*p[0]+M.a*p[1]+M.ty]}),
+   x0=Math.ceil(Math.max(0,Math.max(cn[0][0],cn[2][0]))),x1=Math.floor(Math.min(W,Math.min(cn[1][0],cn[3][0]))),y0=Math.ceil(Math.max(0,Math.max(cn[0][1],cn[1][1]))),y1=Math.floor(Math.min(H,Math.min(cn[2][1],cn[3][1])));
+  if(x0>0||y0>0||x1<W||y1<H){var cw=Math.max(16,x1-x0),ch=Math.max(16,y1-y0),cc=cv(cw,ch);cc.getContext('2d').drawImage(g,x0,y0,cw,ch,0,0,cw,ch);return{c:cc,err:err,scl:scl,crop:[x0,y0,cw,ch]}}
+  return{c:g,err:err,scl:scl}}
+function changed(a,b,alphaFn){var w=96,h=Math.max(8,Math.round(96*a.height/a.width)),A=cv(w,h),B=cv(w,h);A.getContext('2d').drawImage(a,0,0,w,h);B.getContext('2d').drawImage(b,0,0,w,h);var da=A.getContext('2d').getImageData(0,0,w,h).data,db=B.getContext('2d').getImageData(0,0,w,h).data,s=0,n=0;
+  for(var i=0;i<w*h;i++){if(alphaFn&&alphaFn(i%w/w,(i/w|0)/h)>.3)continue;s+=Math.abs(da[i*4]-db[i*4])+Math.abs(da[i*4+1]-db[i*4+1])+Math.abs(da[i*4+2]-db[i*4+2]);n++}return n?s/n/3:0}
+function sampler(mp){return function(x,y){var X2=Math.min(mp.W-1,Math.round(x*mp.W)),Y2=Math.min(mp.H-1,Math.round(y*mp.H));return mp.alpha[Y2*mp.W+X2]}}
+function busyMsg(L){X._overlay('<div class="luxeRing"></div><h4></h4><p class="sub" id="luxeSub">Usually 15 to 25 seconds.</p>');X._ov().querySelector('h4').textContent=L}
+function needs(){if(typeof source==='undefined'||!source||typeof originalPhoto==='undefined'||!originalPhoto){X._message('Add your photo first','Upload or take a photo, then choose.');return false}
+  if(!X._consent().checked){try{X._consentRow().scrollIntoView({behavior:'smooth',block:'center'})}catch(e){}X._message('One quick step','Please tick the consent box above to use AI.');return false}return true}
+function errMsg(err,L){X._close();if(err&&(err.code==='subscribe'||err.code==='allowance'||err.code==='ceiling')){X._handleErr(err,L);return}X._message('Let’s try that again',(err&&err.message)||'The AI could not finish. Please try again.')}
+
+async function travel(S){if(!needs()||X._isBusy())return;X._setBusy(true);T('ai_travel_start',{scene:S.k});busyMsg('Taking you to '+S.n);
+ try{var up=X._photoCanvas(2048),big=X._photoCanvas(4096);if(!up)throw new Error('Add your photo first.');
+  var Lo=await face(big);if(!Lo){X._close();X._message('Let’s get closer','We could not see your face clearly. Try a photo where your face is bigger in the picture.');T('ai_travel_noface');return}
+  var best=null;for(var t=0;t<2&&!best;t++){if(t){var s=D.getElementById('luxeSub');if(s)s.textContent='Perfecting the details…'}
+   var j=await X._call({task:'travel',background:S.k,locked:true,image:up.toDataURL('image/jpeg',.92),width:up.width,height:up.height,consent:true,retry:t>0});
+   var im=await loadI(j.image),ai=cv(im.naturalWidth,im.naturalHeight);ai.getContext('2d').drawImage(im,0,0);var La=await face(ai);if(!La)continue;
+   var r=lockFace(big,Lo,ai,La),mp=null;try{mp=await window.__fcBgMaps()}catch(e){}var ref=big;if(r.crop){ref=cv(r.crop[2],r.crop[3]);ref.getContext('2d').drawImage(big,r.crop[0],r.crop[1],r.crop[2],r.crop[3],0,0,r.crop[2],r.crop[3])}
+   if(r.crop&&(r.crop[2]<big.width*.8||r.crop[3]<big.height*.8))continue;
+   var smp=mp?sampler(mp):null,cr=r.crop,fn=smp&&(cr?function(x,y){return smp((cr[0]+x*cr[2])/big.width,(cr[1]+y*cr[3])/big.height)}:smp);
+   var ch=changed(ref,r.c,fn);r.ref=ref;
+   if(r.err<.03&&ch>25&&Math.abs(r.scl-1)<.12)best=r}
+  if(!best){X._close();X._message('Let’s try that again','This photo did not come out perfectly, so we did not use it. Try another scene or a different photo.');T('ai_travel_rejected',{scene:S.k});return}
+  X._refresh();T('ai_travel_done',{scene:S.k});X._setBusy(false);X._showResult({k:'travel_'+S.k,n:S.n},best.ref||big,best.c)}
+ catch(err){errMsg(err,{k:'travel',n:S.n});T('ai_travel_error',{scene:S.k,code:err&&err.code||'client'})}finally{X._setBusy(false)}}
+
+async function vanishPeople(){if(!needs()||X._isBusy())return;X._setBusy(true);T('ai_vanish_start');busyMsg('Clearing the background');
+ try{var up=X._photoCanvas(2048),big=X._photoCanvas(4096);var mp=await window.__fcBgMaps();if(!mp)throw new Error('We could not find a person in this photo.');
+  var F=await X._landmarks(big);if(F.length<2)F=await X._landmarks(up);
+  var j=await X._call({task:'vanish',people:F.length>1?'people':'person',image:up.toDataURL('image/jpeg',.92),width:up.width,height:up.height,consent:true});
+  var im=await loadI(j.image),W=big.width,H=big.height,out=cv(W,H),ox=out.getContext('2d');ox.imageSmoothingEnabled=true;ox.imageSmoothingQuality='high';ox.drawImage(im,0,0,W,H);
+  // the main people stay exactly as photographed (their own pixels, soft 2px edge)
+  var a=cv(mp.W,mp.H),ax=a.getContext('2d'),aid=ax.createImageData(mp.W,mp.H);for(var i=0;i<mp.W*mp.H;i++){var v=mp.alpha[i];aid.data[i*4+3]=Math.round(Math.min(1,v>.5?1:v*1.4)*255)}ax.putImageData(aid,0,0);
+  var keep=cv(W,H),kx=keep.getContext('2d');kx.imageSmoothingEnabled=true;kx.drawImage(a,0,0,W,H);kx.globalCompositeOperation='source-in';kx.drawImage(big,0,0);ox.drawImage(keep,0,0);
+  if(changed(big,out,sampler(mp))<3){X._close();X._message('Nothing to remove','We did not find anyone in the background to remove.');return}
+  X._refresh();T('ai_vanish_done');X._setBusy(false);X._showResult({k:'vanish',n:'Background cleared'},big,out)}
+ catch(err){errMsg(err,{k:'vanish',n:'Vanish'});T('ai_vanish_error',{code:err&&err.code||'client'})}finally{X._setBusy(false)}}
+
+// ---- Outfit try-on: her photo + a photo of the outfit; Couture AI model; her real face locked back in ----
+function fileToCanvas(f,max){return new Promise(function(res,rej){var u=URL.createObjectURL(f),im=new Image();im.onload=function(){var k=Math.min(1,max/Math.max(im.naturalWidth,im.naturalHeight)),c=cv(Math.round(im.naturalWidth*k),Math.round(im.naturalHeight*k));c.getContext('2d').drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);res(c)};im.onerror=function(){URL.revokeObjectURL(u);rej(new Error('That outfit photo could not be opened. Try a JPEG or PNG.'))};im.src=u})}
+async function tryOn(file){if(!needs()||X._isBusy())return;X._setBusy(true);T('ai_tryon_start');busyMsg('Dressing you');
+ try{var gar=await fileToCanvas(file,1024),up=X._photoCanvas(2048),big=X._photoCanvas(4096);
+  var Lo=await face(big);if(!Lo){X._close();X._message('Let’s get closer','We could not see your face clearly. Try a photo where your face is bigger in the picture.');return}
+  var best=null;for(var t=0;t<2&&!best;t++){if(t){var s2=D.getElementById('luxeSub');if(s2)s2.textContent='Perfecting the fit…'}
+   var j=await X._call({task:'tryon',category:'outfit',locked:true,engine:'nb21',image:up.toDataURL('image/jpeg',.92),garment:gar.toDataURL('image/jpeg',.9),width:up.width,height:up.height,consent:true,retry:t>0});
+   var im=await loadI(j.image),ai=cv(im.naturalWidth,im.naturalHeight);ai.getContext('2d').drawImage(im,0,0);var La=await face(ai);if(!La)continue;
+   var r=lockFace(big,Lo,ai,La);if(r.crop&&(r.crop[2]<big.width*.85||r.crop[3]<big.height*.85))continue;var ref=big;if(r.crop){ref=cv(r.crop[2],r.crop[3]);ref.getContext('2d').drawImage(big,r.crop[0],r.crop[1],r.crop[2],r.crop[3],0,0,r.crop[2],r.crop[3])}
+   r.ref=ref;if(r.err<.03&&Math.abs(r.scl-1)<.1&&changed(ref,r.c,null)>4)best=r}
+  if(!best){X._close();X._message('Let’s try that again','The outfit did not come out perfectly, so we did not use it. Try a clear photo of the outfit on its own, and a photo of you standing.');T('ai_tryon_rejected');return}
+  X._refresh();T('ai_tryon_done');X._setBusy(false);X._showResult({k:'tryon',n:'Outfit try-on'},best.ref,best.c)}
+ catch(err){errMsg(err,{k:'tryon',n:'Outfit try-on'});T('ai_tryon_error',{code:err&&err.code||'client'})}finally{X._setBusy(false)}}
+window.__fcTryOn=tryOn;
+// ---- UI: inside the Background card ----
+var card=D.getElementById('fcBg');if(!card)return;
+var css=D.createElement('style');css.textContent='#fcTravel{display:flex;gap:10px;overflow-x:auto;padding:4px 2px 8px;scroll-snap-type:x mandatory}#fcTravel button{flex:0 0 138px;scroll-snap-align:start;border:0;border-radius:16px;min-height:92px;padding:12px;text-align:left;color:#fff;display:flex;flex-direction:column;justify-content:flex-end;cursor:pointer;box-shadow:0 4px 14px #2b174a22;text-shadow:0 1px 4px #0007}#fcTravel b{font-size:15px}#fcTravel span{font-size:12px;opacity:.95}#fcBg h4{margin:14px 0 6px;font-size:15px;color:#4a2a52}#fcBg .aiNote{font-size:12px;color:#7a6890;margin:4px 0 0}';D.head.appendChild(css);
+var h=D.createElement('div');h.innerHTML='<h4>Travel backgrounds <small style="font-weight:600;color:#b8913a">AI</small></h4><div id="fcTravel" role="group" aria-label="Travel backgrounds"></div><h4>Vanish <small style="font-weight:600;color:#b8913a">AI</small></h4><div class="row"><button type="button" class="chip" id="fcVanishBtn">Remove people in the background</button></div><h4>Outfit try-on <small style="font-weight:600;color:#b8913a">AI</small></h4><p class="aiNote" style="margin:0 0 8px">Upload a photo of an outfit you love (a shop photo works). Best with a photo of you standing.</p><div class="row"><button type="button" class="chip" id="fcTryBtn">Choose outfit photo</button><input type="file" id="fcTryFile" accept="image/*" hidden></div><p class="aiNote">Each uses 1 AI look. Your face always stays exactly yours.</p>';
+card.appendChild(h);var row=card.querySelector('#fcTravel');
+SCENES.forEach(function(S){var b=D.createElement('button');b.type='button';b.style.background='linear-gradient(140deg,'+S.g+')';b.innerHTML='<b></b><span></span>';b.querySelector('b').textContent=S.n;b.querySelector('span').textContent=S.t;b.onclick=function(){travel(S)};row.appendChild(b)});
+card.querySelector('#fcVanishBtn').onclick=vanishPeople;var tf=card.querySelector('#fcTryFile');card.querySelector('#fcTryBtn').onclick=function(){if(!needs())return;tf.value='';tf.click()};tf.onchange=function(){if(tf.files&&tf.files[0])tryOn(tf.files[0])};
+var p=card.querySelector('p');if(p)p.textContent='Blur is free and made on your phone. Travel, Vanish and Outfit try-on use AI. Your face always stays exactly yours.';var hh=card.querySelector('h3');if(hh)hh.textContent='Background & outfit';
+window.__fcTravel=travel;window.__fcVanish=vanishPeople;
+}catch(e){console.warn('v76 travel/vanish',e)}})();
 
 </script>
 </body></html>
