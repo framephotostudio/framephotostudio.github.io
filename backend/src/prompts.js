@@ -65,14 +65,23 @@ GLAM.bridal = Object.assign({}, GLAM.aiglow, { name: 'Bridal Glow' });
 export function simplePrompt(task, o = {}) {
   if (task !== 'glam') return null;
   const L = GLAM[o.intensity] || GLAM.glam;
-  return o.style === 'men' ? 'Lightly retouch this photo: clearer even skin and neatly groomed brows. Keep everything else the same. Photorealistic.'
+  return o.style === 'men' ? 'Lightly retouch this photo of a man: clearer even skin and neatly groomed brows, no makeup of any kind. Keep his face, expression and everything else the same. Photorealistic.'
     : `Give ${o.target ? 'only ' + String(o.target).slice(0, 120) : o.who ? String(o.who).slice(0, 120) : 'this woman'} luxurious ${L.name} makeup and beauty retouching: ${L.short}, with flawless real skin and realistic separated lashes. Keep her face, nose, natural lip size, eye shape and eye color, expression, skin tone and everything else in the photo the same${o.target ? ', and leave everyone else in the photo completely unchanged' : ''}. Photorealistic.`;
 }
 const GROOM = {
   soft: 'clearer, more even skin with less redness and shine, softened under-eye darkness, tidy brows',
   glam: 'clear even skin with natural texture, reduced redness, shine and under-eye shadows, neatly groomed brows, crisp beard and hairline edges, subtly sculpted jawline and cheekbones, brighter healthy complexion',
-  max: 'flawless even skin with natural texture, no blemishes or redness, refreshed eyes, sharply groomed brows and facial hair, a defined chiseled jawline and cheekbones, healthy bronzed glow'
+  max: 'flawless even skin with natural texture, no blemishes or redness, refreshed eyes, sharply groomed brows and facial hair, a defined chiseled jawline and cheekbones, healthy bronzed glow',
+  // men's AI Grooming cards and the men's AI Glow (no makeup of any kind)
+  aiglow: 'a luxury groomed glow: clear, even, healthy skin with real texture and pores, no blemishes, redness, shine or spots; fine lines and under-eye darkness softened naturally; a subtle healthy warm bronze tone (never orange, never lighter or paler than his real skin); neat, natural brows; crisp, clean beard and hairline edges with the beard kept exactly its real shape, length, density and color; a lightly defined jawline and cheekbones through natural light and shadow only',
+  mgroomed: 'freshly groomed: clear, even skin with real texture, less redness and shine, softened under-eye shadows, neat natural brows, crisp clean beard and hairline edges with the beard kept exactly its real shape, length and color',
+  mheadshot: 'a sharp professional headshot polish: even matte skin with real texture and no shine, reduced redness and blemishes, neat brows, crisp beard edges, clear bright eyes, confident and trustworthy',
+  mcover: 'a magazine-cover grooming finish: crisp, even, healthy skin with real texture, no blemishes or redness, refreshed eyes, sharply groomed brows and facial hair, a defined jawline and cheekbones through light and shadow, an editorial polish',
+  mwedding: 'a wedding-day groom finish: clear, even, rested skin with real texture, softened under-eye darkness and fine lines, neat brows, immaculate beard and hairline edges, a fresh healthy glow, camera-ready and natural',
+  mbronzed: 'a healthy sun-bronzed finish: a warm, natural tan suited to his skin tone (never orange), clear even skin with real texture, no shine, neat brows, crisp beard edges, a lightly defined jawline',
+  mrested: 'a well-rested finish: fresher, brighter under-eyes with dark circles and puffiness softened, clear even skin with real texture, less redness, neat brows, a healthy awake complexion'
 };
+const MEN_KEEP = 'Keep his exact same face shape, head size, nose, eyes, eye color, lips, ears, hair, beard shape and length, skin tone, expression, pose, clothing and background. Keep his exact same relaxed facial expression: do not add or deepen creases at the mouth corners, smile lines or around the eyes, and do not change his smile. No makeup of any kind: no lipstick, lip color or gloss, no eyeshadow, eyeliner or mascara, no lash changes, no blush, no visible highlighter or shimmer. Photorealistic with natural skin texture; he must look exactly like himself, just well groomed.';
 export const TRAVEL_KEYS = ['greece', 'paris', 'newyork', 'london', 'dubai', 'bali', 'maldives', 'rome', 'tokyo', 'alps', 'beach', 'sunset'];
 
 export function buildPrompt(task, o = {}) {
@@ -87,7 +96,7 @@ export function buildPrompt(task, o = {}) {
       p = men
         ? `Retouch this man like a high-end magazine grooming artist. The result must look noticeably more polished than the original: ${L}. No visible makeup, no lipstick, no eye makeup. Keep the background, clothing and lighting unchanged.`
         : `MOST IMPORTANT: her eyes must stay exactly the same shape and size as in the original photo - the same outline, the same corners, the same openness and the same eye color. Makeup goes around the eyes; it never changes the eyes. Exceptional professional makeup and beauty retouching for ${o.target ? 'only ' + String(o.target).slice(0, 120) + ' (edit her face only; leave every other person in the photo exactly as they are, completely untouched)' : o.who ? String(o.who).slice(0, 120) + ' (apply the full finish consistently to every one of them, adapted to each person\'s own features and skin tone)' : 'the woman in this photo'}. ${L.look}${o.eyes ? ' Eyes: ' + o.eyes + '.' : ''}${o.lip ? ' Lips: ' + o.lip + '.' : ''} ${LASHES} ${EYES} ${STANDARD}`;
-      return p + ' ' + (men ? 'Keep the same person with the same face, features, eyes, skin tone, hair, expression, pose, clothing and background. Photorealistic with natural skin texture.' : PRESERVE);
+      return p + ' ' + (men ? MEN_KEEP : PRESERVE);
     }
     case 'enhance':
       p = 'Enhance this photo naturally like a professional retoucher: balanced exposure and color, clean skin with real texture, bright clear eyes, crisp details. Do not change makeup, hair, outfit or background.';
