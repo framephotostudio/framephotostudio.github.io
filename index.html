@@ -3904,11 +3904,7 @@ D.head.appendChild(st);
 // ---- luminous finish, drawn on the processed photo (so it shows in the preview, saves and every size) ----
 function blurCopy(src,k){var w=Math.max(8,Math.round(src.width/k)),h=Math.max(8,Math.round(src.height/k)),a=D.createElement('canvas');a.width=w;a.height=h;var x=a.getContext('2d');x.imageSmoothingEnabled=true;x.imageSmoothingQuality='high';x.drawImage(src,0,0,w,h);
  var b=D.createElement('canvas');b.width=Math.max(4,w>>1);b.height=Math.max(4,h>>1);var y=b.getContext('2d');y.imageSmoothingEnabled=true;y.drawImage(a,0,0,b.width,b.height);x.clearRect(0,0,w,h);x.drawImage(b,0,0,w,h);return a}
-function glowFx(c,g,raw){try{if(!c||!c.getContext||g<=0)return;var ctx=c.getContext('2d'),W=c.width,H=c.height;
- // 1) soft bloom from the highlights only (blurred copy multiplied by itself, screened back)
- var bl=blurCopy(c,10),bc=D.createElement('canvas');bc.width=bl.width;bc.height=bl.height;bc.getContext('2d').drawImage(bl,0,0);var bx=bl.getContext('2d');bx.globalCompositeOperation='multiply';bx.drawImage(bc,0,0);bx.drawImage(bc,0,0);bx.globalCompositeOperation='source-over';
- ctx.save();ctx.globalCompositeOperation='screen';ctx.globalAlpha=Math.min(.11,.07*g);ctx.imageSmoothingEnabled=true;ctx.drawImage(bl,0,0,W,H);ctx.restore();
- if(window.frameStyle==='men'){ // men: light and skin only, no makeup finish; calm flushed redness on the face skin (lips untouched)
+function menCalm(c,g){try{var ctx=c.getContext('2d'),W=c.width,H=c.height;
   var P9=beauty&&beauty.points,fo9=beauty&&beauty.faceOutline;if(!fo9||fo9.length<5)return;var x0=1,x1=0,y0=1,y1=0;fo9.forEach(function(p){x0=Math.min(x0,p.x);x1=Math.max(x1,p.x);y0=Math.min(y0,p.y);y1=Math.max(y1,p.y)});
   var bx=Math.max(0,Math.floor(x0*W)-4),by=Math.max(0,Math.floor(y0*H)-4),bw=Math.min(W-bx,Math.ceil((x1-x0)*W)+8),bh=Math.min(H-by,Math.ceil((y1-y0)*H)+8);if(bw<8||bh<8)return;
   var mk=D.createElement('canvas');mk.width=bw;mk.height=bh;var mx=mk.getContext('2d'),fe=Math.max(2,bw*.04);try{mx.filter='blur('+fe.toFixed(1)+'px)'}catch(e){}
@@ -3921,7 +3917,14 @@ function glowFx(c,g,raw){try{if(!c||!c.getContext||g<=0)return;var ctx=c.getCont
    var X=(R*.4124+G*.3576+B*.1805)/.95047,Y=R*.2126+G*.7152+B*.0722,Z=(R*.0193+G*.1192+B*.9505)/1.08883,fx=f(X),fy=f(Y),fz=f(Z),A=500*(fx-fy),Bb=200*(fy-fz);
    var ex=A-13;if(ex<=0)continue;var A2=A-ex*k*m;var nfx=fy+A2/500;var X2=fi(nfx)*.95047,Y2=Y,Z2=fi(fz)*1.08883;
    d[i]=gam(X2*3.2406+Y2*-1.5372+Z2*-.4986);d[i+1]=gam(X2*-.9689+Y2*1.8758+Z2*.0415);d[i+2]=gam(X2*.0557+Y2*-.204+Z2*1.057)}
-  ctx.putImageData(img,bx,by);return}
+  ctx.putImageData(img,bx,by);
+}catch(e){}}
+window.__fcMenCalm=menCalm;
+function glowFx(c,g,raw){try{if(!c||!c.getContext||g<=0)return;var ctx=c.getContext('2d'),W=c.width,H=c.height;
+ // 1) soft bloom from the highlights only (blurred copy multiplied by itself, screened back)
+ var bl=blurCopy(c,10),bc=D.createElement('canvas');bc.width=bl.width;bc.height=bl.height;bc.getContext('2d').drawImage(bl,0,0);var bx=bl.getContext('2d');bx.globalCompositeOperation='multiply';bx.drawImage(bc,0,0);bx.drawImage(bc,0,0);bx.globalCompositeOperation='source-over';
+ ctx.save();ctx.globalCompositeOperation='screen';ctx.globalAlpha=Math.min(.11,.07*g);ctx.imageSmoothingEnabled=true;ctx.drawImage(bl,0,0,W,H);ctx.restore();
+ if(window.frameStyle==='men'){menCalm(c,g);return} // men: light and skin only, no makeup finish; calm flushed redness (lips untouched)
  // 2) light on the face, like a beauty dish
  var P=beauty&&beauty.points,fo=beauty&&beauty.faceOutline;
  if(P&&P.nose){var cx=P.nose.x,cy=P.nose.y,R=.16*Math.max(W,H);if(fo&&fo.length>4){var x0=1,x1=0,y0=1,y1=0;fo.forEach(function(p){x0=Math.min(x0,p.x);x1=Math.max(x1,p.x);y0=Math.min(y0,p.y);y1=Math.max(y1,p.y)});cx=(x0+x1)/2;cy=(y0+y1)/2;R=Math.max((x1-x0)*W,(y1-y0)*H)*.62}
@@ -4048,7 +4051,9 @@ if(!isApp){var ha=D.querySelector('.heroActions');if(ha&&!D.querySelector('.fcAp
    grooming looks and cards are shown. */
 ;(function(){try{var D=document,$=function(q){return D.querySelector(q)};
 var MK=['blush','eyeShadow','eyeLiner','lashes','mascara','tint','gloss'];
-if(typeof process==='function'){var _p73=process;process=function(){if(window.frameStyle!=='men'||typeof beauty!=='object'||!beauty)return _p73.apply(this,arguments);var sv={};MK.forEach(function(k){sv[k]=beauty[k];beauty[k]=0});try{return _p73.apply(this,arguments)}finally{MK.forEach(function(k){beauty[k]=sv[k]})}}}
+if(typeof process==='function'){var _p73=process;process=function(){if(window.frameStyle!=='men'||typeof beauty!=='object'||!beauty)return _p73.apply(this,arguments);var sv={};MK.forEach(function(k){sv[k]=beauty[k];beauty[k]=0});var r;try{r=_p73.apply(this,arguments)}finally{MK.forEach(function(k){beauty[k]=sv[k]})}
+ // every men's look also calms flushed redness (Auto Glow already does this in its finish)
+ try{var a=arguments;if(r&&!a[1]&&(a[2]===undefined||a[2]===source)&&!(beauty.glowFx>0)&&beauty.faceOutline&&beauty.faceOutline.length>4&&window.__fcMenCalm){var n=D.createElement('canvas');n.width=r.width;n.height=r.height;n.getContext('2d').drawImage(r,0,0);window.__fcMenCalm(n,lastRecipe&&lastRecipe.key==='m_clear'?.75:.56);return n}}catch(e){}return r}}
 // men's Auto Glow: grooming only, and a clear message
 if(typeof autoGlow==='function'){var _g73=autoGlow;autoGlow=async function(){var r=await _g73.apply(this,arguments);try{if(window.frameStyle==='men'&&lastRecipe&&lastRecipe.type==='glow'){MK.forEach(function(k){beauty[k]=0});Object.assign(adj,{light:8,contrast:8,color:-3,warmth:2,highlights:6,shadows:8,softness:3,detail:8});['light','contrast','color','warmth','highlights','shadows','softness','detail'].forEach(function(j){var a=$('#'+j),b=$('#'+j+'Value');if(a)a.value=adj[j];if(b)b.value=adj[j]});try{if(history.length)history[history.length-1]=capture();updateHistoryButtons()}catch(e){}try{syncBeauty()}catch(e){}invalidate();toast('Auto Glow applied: clearer even skin, softer under-eyes, neat brows and a healthy glow. No makeup. Tap Before / after to compare.')}}catch(e){}return r};try{$('#autoGlow').onclick=function(){autoGlow()}}catch(e){}}
 var MENOK=['sharp','matte','outdoor','moody','rested','clean','film','fresh','golden'],
