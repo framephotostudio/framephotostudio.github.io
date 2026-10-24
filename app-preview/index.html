@@ -3523,7 +3523,16 @@ var LOOKS=[
  {k:'datenight',n:'Date Night',t:'Mauve smoke, berry lip',g:'#cfa0bd,#6c2f52'},
  {k:'executive',n:'Executive',t:'Polished and headshot-ready',g:'#dcc3b5,#7b5a4c'}];
 // matching on-device look, offered when AI is busy (budget limit)
-var ONDEVICE={soft:'softglam',max:'glam',glam:'hollywood',clean:'cleangirl',bridal:'bridal',golden:'golden',datenight:'datenight',executive:'cover'};
+// men see grooming cards only (no makeup of any kind); the AI server gets style:'men'
+var MENLOOKS=[
+ {k:'mgroomed',n:'Fresh Groomed',t:'Clear skin, neat brows, crisp beard',g:'#dfe6ee,#6f7f93'},
+ {k:'mheadshot',n:'Sharp Headshot',t:'Matte, crisp and confident',g:'#cfd6de,#3f4b5b'},
+ {k:'mcover',n:'Magazine Cover',t:'Editorial polish, defined jaw',g:'#d9c8b4,#4a3a2c'},
+ {k:'mwedding',n:'Wedding Day',t:'Rested, immaculate, camera-ready',g:'#efe6da,#8a7660'},
+ {k:'mbronzed',n:'Sun-Bronzed',t:'Healthy, warm natural tan',g:'#e8c39a,#8a5a34'},
+ {k:'mrested',n:'Well Rested',t:'Brighter, fresher under-eyes',g:'#e3efe6,#5f8a76'}];
+var ONDEVICE={soft:'softglam',max:'glam',glam:'hollywood',clean:'cleangirl',bridal:'bridal',golden:'golden',datenight:'datenight',executive:'cover',mgroomed:'m_groomed',mheadshot:'matte',mcover:'m_cover',mwedding:'m_rested',mbronzed:'m_bronzed',mrested:'m_rested'};
+var isMen=function(){return window.frameStyle==='men'};
 var $=function(id){return document.getElementById(id)};
 var T=function(n,p){try{window.fcTrack&&window.fcTrack(n,p)}catch(e){}};
 var store={get:function(k){try{return localStorage.getItem(k)}catch(e){return null}},set:function(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
@@ -3531,8 +3540,11 @@ var luxe=$('luxe');
 // place the section right above the studio's Looks
 try{var anchor=document.querySelector('h3.vibesTitle');if(anchor&&anchor.parentNode)anchor.parentNode.insertBefore(luxe,anchor)}catch(e){}
 var grid=$('luxeGrid');
-LOOKS.forEach(function(L){var b=document.createElement('button');b.type='button';b.className='luxeCard';b.dataset.luxe=L.k;
+var gridFor=null;function paintGrid(){var m=isMen()?'men':'women';if(gridFor===m)return;gridFor=m;grid.innerHTML='';
+ (m==='men'?MENLOOKS:LOOKS).forEach(function(L){var b=document.createElement('button');b.type='button';b.className='luxeCard';b.dataset.luxe=L.k;
  b.style.background='linear-gradient(140deg,'+L.g+')';b.innerHTML='<b></b><span></span>';b.querySelector('b').textContent=L.n;b.querySelector('span').textContent=L.t;grid.appendChild(b)});
+ try{var h=$('luxeTitle'),p=luxe.querySelector('.lx');if(h&&h.firstChild)h.firstChild.nodeValue=m==='men'?'AI Grooming Looks ':'AI Luxe Looks ';if(p)p.textContent=m==='men'?'Professional AI grooming on your own photo, no makeup. Works on solo photos.':'Professional AI glam on your own photo. Works on solo photos.';grid.setAttribute('aria-label',m==='men'?'AI Grooming Looks':'AI Luxe Looks')}catch(e){}}
+paintGrid();setInterval(paintGrid,300);
 var consent=$('luxeConsent');consent.checked=store.get('fc-ai-consent')==='1';
 consent.onchange=function(){store.set('fc-ai-consent',consent.checked?'1':'')};
 var ov=$('luxeOv');
@@ -3541,7 +3553,7 @@ var ov=$('luxeOv');
 var platform=(window.Capacitor&&window.Capacitor.getPlatform)?window.Capacitor.getPlatform():'web';
 function hello(force){var t=store.get('fc-token');if(t&&!force)return Promise.resolve(t);
  return fetch(API+'/api/hello',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({platform:platform})}).then(function(r){return r.json()}).then(function(j){store.set('fc-token',j.token);store.set('fc-device',j.device);return j.token})}
-function callAI(body,retried){if(body&&!body.engine)body.engine=window.__fcEngine||'std';return hello(retried).then(function(t){return fetch(API+'/api/ai',{method:'POST',headers:{'content-type':'application/json',authorization:'Bearer '+t},body:JSON.stringify(body)})}).then(function(r){return r.json().then(function(j){
+function callAI(body,retried){if(body&&!body.engine)body.engine=window.__fcEngine||'std';if(body&&body.task==='glam'&&!body.style)body.style=window.frameStyle==='men'?'men':'women';return hello(retried).then(function(t){return fetch(API+'/api/ai',{method:'POST',headers:{'content-type':'application/json',authorization:'Bearer '+t},body:JSON.stringify(body)})}).then(function(r){return r.json().then(function(j){
  if(r.status===401&&!retried)return callAI(body,true);
  if(!r.ok||!j.image){var e=new Error(j.error||'The AI could not finish this look. Please try again.');e.code=j.code;e.tier=j.tier;throw e}return j})})}
 // AI looks left (counted on the server)
@@ -3664,8 +3676,16 @@ function shapeLock(origC,Lo,resC,La){
  var mask=document.createElement('canvas');mask.width=W;mask.height=H;var mk=mask.getContext('2d');mk.imageSmoothingEnabled=true;mk.imageSmoothingQuality='high';mk.drawImage(m2,0,0,W,H);
  mk.globalCompositeOperation='source-in';mk.drawImage(warp,0,0);
  var out=document.createElement('canvas');out.width=W;out.height=H;var ox=out.getContext('2d');ox.imageSmoothingQuality='high';ox.drawImage(origC,0,0,W,H);ox.drawImage(mask,0,0);
- var origS=document.createElement('canvas');origS.width=W;origS.height=H;origS.getContext('2d').drawImage(origC,0,0,W,H);protectMouth(out,origS,O);
+ var origS=document.createElement('canvas');origS.width=W;origS.height=H;origS.getContext('2d').drawImage(origC,0,0,W,H);protectMouth(out,origS,O);if(window.frameStyle==='men')keepMouth(out,origS,O);
  return out}
+// men: no lip colour is ever wanted, so the real lips, teeth and smile are kept exactly from the original photo
+function keepMouth(out,origS,O){try{var FC_LIP=[61,146,91,181,84,17,314,405,321,375,291,409,270,269,267,0,37,39,40,185],W=out.width,H=out.height;
+ var mc=[(O[13][0]+O[14][0])/2,(O[13][1]+O[14][1])/2],mw=Math.hypot(O[291][0]-O[61][0],O[291][1]-O[61][1]);if(mw<8)return;
+ var pad=Math.ceil(mw*.9),x0=Math.max(0,Math.floor(mc[0]-pad)),y0=Math.max(0,Math.floor(mc[1]-pad)),bw=Math.min(W,Math.ceil(mc[0]+pad))-x0,bh=Math.min(H,Math.ceil(mc[1]+pad))-y0;if(bw<8||bh<8)return;
+ var lp=document.createElement('canvas');lp.width=bw;lp.height=bh;var l=lp.getContext('2d');try{l.filter='blur('+Math.max(1.5,mw*.035).toFixed(1)+'px)'}catch(e){}
+ l.fillStyle='#000';l.beginPath();FC_LIP.forEach(function(i,n){var q=O[i],X=mc[0]+(q[0]-mc[0])*1.12-x0,Y=mc[1]+(q[1]-mc[1])*1.25-y0;n?l.lineTo(X,Y):l.moveTo(X,Y)});l.closePath();l.fill();
+ l.filter='none';l.globalCompositeOperation='source-in';l.drawImage(origS,x0,y0,bw,bh,0,0,bw,bh);
+ out.getContext('2d').drawImage(lp,x0,y0)}catch(e){console.warn('keep mouth',e)}}
 function realEyes(origC,Lo,resC,La){var ctx=resC.getContext('2d'),W=resC.width,H=resC.height,od=origC.getContext('2d').getImageData(0,0,origC.width,origC.height),OW=origC.width,OH=origC.height,fit=0;
  /* v69: keep the AI eye (sharp, sits naturally with the new lashes and liner) and give it the person's TRUE iris colour.
     Pasting the original eye in looked soft and hazy next to the AI detail. Eye shape is still checked (fit) so a changed eye is re-made. */
@@ -3728,7 +3748,7 @@ function baButtons(L,before,after){var bp=$('luxeBAPhoto'),br=$('luxeBAReel'),no
 
 // ---------- the look ----------
 var busy=false;
-grid.addEventListener('click',function(e){var b=e.target.closest('[data-luxe]');if(!b||busy)return;var L=LOOKS.filter(function(x){return x.k===b.dataset.luxe})[0];run(L)});
+grid.addEventListener('click',function(e){var b=e.target.closest('[data-luxe]');if(!b||busy)return;var L=LOOKS.concat(MENLOOKS).filter(function(x){return x.k===b.dataset.luxe})[0];if(L)run(L)});
 async function run(L){
  if(typeof userPhoto!=='undefined'&&!userPhoto){message('Add your photo first','Upload or take a selfie, then tap a look.');return}
  if(!consent.checked){try{$('luxeConsentRow').scrollIntoView({behavior:'smooth',block:'center'})}catch(e){}message('One quick step','Please tick the consent box under the looks to use AI Luxe Looks.');return}
@@ -3759,6 +3779,8 @@ async function run(L){
    if(moved>POSE_MAX||body<BODY_MIN){sc.worst=Math.max(sc.worst,2);sc.pose=1;T('ai_look_pose_remake',{look:L.k,moved:+moved.toFixed(3),body:+body.toFixed(3)})}
    if(!best||(best.sc.pose&&!sc.pose)||(!best.sc.pose===!sc.pose&&sc.worst<best.sc.worst))best={c:resC,sc:sc,La:La};
    if(sc.worst<=1)break;
+   // men: the face shape and the real mouth are put back afterwards, so one good AI result is enough (no paid re-makes)
+   if(window.frameStyle==='men'&&!sc.pose)break;
   }
   if(cancelled)return;
   if(!best)throw new Error('The AI could not finish this look. Please try again.');
@@ -3882,41 +3904,60 @@ D.head.appendChild(st);
 // ---- luminous finish, drawn on the processed photo (so it shows in the preview, saves and every size) ----
 function blurCopy(src,k){var w=Math.max(8,Math.round(src.width/k)),h=Math.max(8,Math.round(src.height/k)),a=D.createElement('canvas');a.width=w;a.height=h;var x=a.getContext('2d');x.imageSmoothingEnabled=true;x.imageSmoothingQuality='high';x.drawImage(src,0,0,w,h);
  var b=D.createElement('canvas');b.width=Math.max(4,w>>1);b.height=Math.max(4,h>>1);var y=b.getContext('2d');y.imageSmoothingEnabled=true;y.drawImage(a,0,0,b.width,b.height);x.clearRect(0,0,w,h);x.drawImage(b,0,0,w,h);return a}
+function menCalm(c,g){try{var ctx=c.getContext('2d'),W=c.width,H=c.height;
+  var P9=beauty&&beauty.points,fo9=beauty&&beauty.faceOutline;if(!fo9||fo9.length<5)return;var x0=1,x1=0,y0=1,y1=0;fo9.forEach(function(p){x0=Math.min(x0,p.x);x1=Math.max(x1,p.x);y0=Math.min(y0,p.y);y1=Math.max(y1,p.y)});
+  var bx=Math.max(0,Math.floor(x0*W)-4),by=Math.max(0,Math.floor(y0*H)-4),bw=Math.min(W-bx,Math.ceil((x1-x0)*W)+8),bh=Math.min(H-by,Math.ceil((y1-y0)*H)+8);if(bw<8||bh<8)return;
+  var mk=D.createElement('canvas');mk.width=bw;mk.height=bh;var mx=mk.getContext('2d'),fe=Math.max(2,bw*.04);try{mx.filter='blur('+fe.toFixed(1)+'px)'}catch(e){}
+  mx.fillStyle='#fff';mx.beginPath();fo9.forEach(function(p,i){var X=p.x*W-bx,Y=p.y*H-by;i?mx.lineTo(X,Y):mx.moveTo(X,Y)});mx.closePath();mx.fill();
+  var LO9=beauty.lipOutline;if(LO9&&LO9.length>5){mx.globalCompositeOperation='destination-out';mx.beginPath();LO9.forEach(function(p,i){var X=p.x*W-bx,Y=p.y*H-by;i?mx.lineTo(X,Y):mx.moveTo(X,Y)});mx.closePath();mx.fill();mx.globalCompositeOperation='source-over'}
+  var md=mx.getImageData(0,0,bw,bh).data,img=ctx.getImageData(bx,by,bw,bh),d=img.data,k=Math.min(.55,.42*g/.56);
+  var lin=function(v){v/=255;return v<=.04045?v/12.92:Math.pow((v+.055)/1.055,2.4)},gam=function(v){v=v<=.0031308?12.92*v:1.055*Math.pow(v,1/2.4)-.055;return Math.max(0,Math.min(255,Math.round(v*255)))},LT=new Float32Array(256);for(var t=0;t<256;t++)LT[t]=lin(t);
+  var f=function(t){return t>.008856?Math.cbrt(t):7.787*t+16/116},fi=function(t){var c=t*t*t;return c>.008856?c:(t-16/116)/7.787};
+  for(var i=0;i<d.length;i+=4){var m=md[i+3]/255;if(m<.02)continue;var R=LT[d[i]],G=LT[d[i+1]],B=LT[d[i+2]];
+   var X=(R*.4124+G*.3576+B*.1805)/.95047,Y=R*.2126+G*.7152+B*.0722,Z=(R*.0193+G*.1192+B*.9505)/1.08883,fx=f(X),fy=f(Y),fz=f(Z),A=500*(fx-fy),Bb=200*(fy-fz);
+   var ex=A-13;if(ex<=0)continue;var A2=A-ex*k*m;var nfx=fy+A2/500;var X2=fi(nfx)*.95047,Y2=Y,Z2=fi(fz)*1.08883;
+   d[i]=gam(X2*3.2406+Y2*-1.5372+Z2*-.4986);d[i+1]=gam(X2*-.9689+Y2*1.8758+Z2*.0415);d[i+2]=gam(X2*.0557+Y2*-.204+Z2*1.057)}
+  ctx.putImageData(img,bx,by);
+}catch(e){}}
+window.__fcMenCalm=menCalm;
+function eyeGeo(e,W,H){var a=null,b=null,best=-1;for(var i=0;i<e.length;i++)for(var j=i+1;j<e.length;j++){var d=Math.hypot((e[i].x-e[j].x)*W,(e[i].y-e[j].y)*H);if(d>best){best=d;a=e[i];b=e[j]}}if(!a)return null;if(a.x>b.x){var t=a;a=b;b=t}
+ var cx=0,cy=0;e.forEach(function(p){cx+=p.x*W;cy+=p.y*H});cx/=e.length;cy/=e.length;var ang=Math.atan2((b.y-a.y)*H,(b.x-a.x)*W);return{cx:cx,cy:cy,w:best,ang:ang,ux:Math.cos(ang),uy:Math.sin(ang),nx:Math.sin(ang),ny:-Math.cos(ang)}}
 function glowFx(c,g,raw){try{if(!c||!c.getContext||g<=0)return;var ctx=c.getContext('2d'),W=c.width,H=c.height;
  // 1) soft bloom from the highlights only (blurred copy multiplied by itself, screened back)
  var bl=blurCopy(c,10),bc=D.createElement('canvas');bc.width=bl.width;bc.height=bl.height;bc.getContext('2d').drawImage(bl,0,0);var bx=bl.getContext('2d');bx.globalCompositeOperation='multiply';bx.drawImage(bc,0,0);bx.drawImage(bc,0,0);bx.globalCompositeOperation='source-over';
  ctx.save();ctx.globalCompositeOperation='screen';ctx.globalAlpha=Math.min(.11,.07*g);ctx.imageSmoothingEnabled=true;ctx.drawImage(bl,0,0,W,H);ctx.restore();
+ if(window.frameStyle==='men'){menCalm(c,g);return} // men: light and skin only, no makeup finish; calm flushed redness (lips untouched)
  // 2) light on the face, like a beauty dish
  var P=beauty&&beauty.points,fo=beauty&&beauty.faceOutline;
  if(P&&P.nose){var cx=P.nose.x,cy=P.nose.y,R=.16*Math.max(W,H);if(fo&&fo.length>4){var x0=1,x1=0,y0=1,y1=0;fo.forEach(function(p){x0=Math.min(x0,p.x);x1=Math.max(x1,p.x);y0=Math.min(y0,p.y);y1=Math.max(y1,p.y)});cx=(x0+x1)/2;cy=(y0+y1)/2;R=Math.max((x1-x0)*W,(y1-y0)*H)*.62}
   var gr=ctx.createRadialGradient(cx*W,cy*H,R*.1,cx*W,cy*H,R*1.15);var a1=Math.min(.36,.24*g);gr.addColorStop(0,'rgba(255,255,255,0)');gr.addColorStop(.32,'rgba(255,255,255,0)');gr.addColorStop(.62,'rgba(196,150,136,'+a1+')');gr.addColorStop(.86,'rgba(205,165,150,'+(a1*.45)+')');gr.addColorStop(1,'rgba(255,255,255,0)');
   var sc=D.createElement('canvas');sc.width=W;sc.height=H;var sx=sc.getContext('2d');sx.fillStyle=gr;sx.fillRect(0,0,W,H);
-  var fy0=(fo&&fo.length>4?y0:cy-.1)*H,fy1=(fo&&fo.length>4?y1:cy+.1)*H,top=fy0+(fy1-fy0)*.42,mk=sx.createLinearGradient(0,fy0,0,top);mk.addColorStop(0,'rgba(0,0,0,1)');mk.addColorStop(1,'rgba(0,0,0,0)');sx.globalCompositeOperation='destination-out';sx.fillStyle=mk;sx.fillRect(0,0,W,top);
+  var fy0=(fo&&fo.length>4?y0:cy-.1)*H,fy1=(fo&&fo.length>4?y1:cy+.1)*H,fh=fy1-fy0,EA=beauty&&beauty.eyeContours,ra=0;try{if(EA&&EA.length>1){var g1=eyeGeo(EA[0],W,H),g2=eyeGeo(EA[1],W,H);if(g1&&g2){var L1=g1.cx<g2.cx?g1:g2,R1=g1.cx<g2.cx?g2:g1;ra=Math.atan2(R1.cy-L1.cy,R1.cx-L1.cx)}}}catch(e){}
+  var fcx0=cx*W,fcy0=(fy0+fy1)/2,upx=Math.sin(ra),upy=-Math.cos(ra),half=fh/2,mk=sx.createLinearGradient(fcx0+upx*half*1.15,fcy0+upy*half*1.15,fcx0+upx*(half-fh*.6),fcy0+upy*(half-fh*.6));mk.addColorStop(0,'rgba(0,0,0,1)');mk.addColorStop(.35,'rgba(0,0,0,.85)');mk.addColorStop(1,'rgba(0,0,0,0)');sx.globalCompositeOperation='destination-out';sx.fillStyle=mk;sx.fillRect(0,0,W,H);
   if(fo&&fo.length>4){var fq=8,fm=D.createElement('canvas');fm.width=Math.max(8,Math.round(W/fq));fm.height=Math.max(8,Math.round(H/fq));var fmx=fm.getContext('2d'),fcx=(x0+x1)/2,fcy=(y0+y1)/2;fmx.fillStyle='#fff';fmx.beginPath();fo.forEach(function(p,i){var X=(fcx+(p.x-fcx)*1.03)*W/fq,Y=(fcy+(p.y-fcy)*1.03)*H/fq;i?fmx.lineTo(X,Y):fmx.moveTo(X,Y)});fmx.closePath();fmx.fill();
    var f2=D.createElement('canvas');f2.width=Math.max(4,fm.width>>2);f2.height=Math.max(4,fm.height>>2);var f2x=f2.getContext('2d');f2x.imageSmoothingEnabled=true;f2x.drawImage(fm,0,0,f2.width,f2.height);
    sx.globalCompositeOperation='destination-in';sx.imageSmoothingEnabled=true;sx.imageSmoothingQuality='high';sx.drawImage(f2,0,0,W,H);sx.globalCompositeOperation='source-over'}
   ctx.save();ctx.globalCompositeOperation='multiply';ctx.drawImage(sc,0,0);ctx.restore()}
  // 2a) a model-style smoky eye: soft brown-plum smoke along the upper lash line, deeper at the outer corner (nothing under the eyes)
- var EC0=beauty&&beauty.eyeContours,fcx=P&&P.nose?P.nose.x:.5;if(EC0&&EC0.length){EC0.forEach(function(e){if(!e||e.length<4)return;var x0=1,x1=0,y0=1,y1=0;e.forEach(function(p){x0=Math.min(x0,p.x);x1=Math.max(x1,p.x);y0=Math.min(y0,p.y);y1=Math.max(y1,p.y)});
-  var ew=(x1-x0)*W,eh=Math.max((y1-y0)*H,ew*.28),cx=(x0+x1)/2*W,out=((x0+x1)/2<fcx)?-1:1,ox=cx+out*ew*.22,oy=y0*H+eh*.05,a2=Math.min(.22,.155*g);
-  ctx.save();ctx.globalCompositeOperation='multiply';ctx.translate(ox,oy);ctx.scale(1,.42);var sg=ctx.createRadialGradient(0,0,0,0,0,ew*.74);var SM=window.__fcSmoke||[112,78,56];sg.addColorStop(0,'rgba('+SM+','+a2+')');sg.addColorStop(.4,'rgba('+SM.map(function(v){return Math.min(255,v+24)})+','+(a2*.62)+')');sg.addColorStop(.75,'rgba('+SM.map(function(v){return Math.min(255,v+46)})+','+(a2*.2)+')');sg.addColorStop(1,'rgba('+SM.map(function(v){return Math.min(255,v+60)})+',0)');ctx.fillStyle=sg;ctx.beginPath();ctx.arc(0,0,ew*.74,0,6.2832);ctx.fill();ctx.restore();
+ var OWN=!!(window.__keepEyes||beauty.ownEyes);var EC0=!OWN&&beauty&&beauty.eyeContours,fcx=P&&P.nose?P.nose.x:.5;if(EC0&&EC0.length){EC0.forEach(function(e){if(!e||e.length<4)return;var x0=1,x1=0,y0=1,y1=0;e.forEach(function(p){x0=Math.min(x0,p.x);x1=Math.max(x1,p.x);y0=Math.min(y0,p.y);y1=Math.max(y1,p.y)});
+  var G=eyeGeo(e,W,H);if(!G)return;var ew=G.w,out=(G.cx/W<fcx)?-1:1,ox=G.cx+G.ux*out*ew*.22+G.nx*ew*.13,oy=G.cy+G.uy*out*ew*.22+G.ny*ew*.13,a2=Math.min(.14,.10*g);
+  ctx.save();ctx.globalCompositeOperation='multiply';ctx.translate(ox,oy);ctx.rotate(G.ang);ctx.scale(1,.42);var sg=ctx.createRadialGradient(0,0,0,0,0,ew*.74);var SM=window.__fcSmoke||[112,78,56];sg.addColorStop(0,'rgba('+SM+','+a2+')');sg.addColorStop(.4,'rgba('+SM.map(function(v){return Math.min(255,v+24)})+','+(a2*.62)+')');sg.addColorStop(.75,'rgba('+SM.map(function(v){return Math.min(255,v+46)})+','+(a2*.2)+')');sg.addColorStop(1,'rgba('+SM.map(function(v){return Math.min(255,v+60)})+',0)');ctx.fillStyle=sg;ctx.beginPath();ctx.arc(0,0,ew*.74,0,6.2832);ctx.fill();ctx.restore();
   })}
  // 2a3) keep the lower lash line light: lift added darkness under each eye back toward the original, and a soft champagne sheen on the centre of the lid (no sparkle)
- var EC3=beauty&&beauty.eyeContours;if(raw&&EC3&&EC3.length){EC3.forEach(function(e){if(!e||e.length<4)return;var x0=1,x1=0,y0=1,y1=0;e.forEach(function(p){x0=Math.min(x0,p.x);x1=Math.max(x1,p.x);y0=Math.min(y0,p.y);y1=Math.max(y1,p.y)});
+ var EC3=!OWN&&beauty&&beauty.eyeContours;if(raw&&EC3&&EC3.length){EC3.forEach(function(e){if(!e||e.length<4)return;var x0=1,x1=0,y0=1,y1=0;e.forEach(function(p){x0=Math.min(x0,p.x);x1=Math.max(x1,p.x);y0=Math.min(y0,p.y);y1=Math.max(y1,p.y)});
   var ew=(x1-x0)*W;if(ew<6)return;var cx=(x0+x1)/2*W,ly=y1*H,eh=Math.max((y1-y0)*H,ew*.25);
   var t=D.createElement('canvas');t.width=W;t.height=H;var tx=t.getContext('2d');tx.drawImage(raw,0,0,W,H);tx.globalCompositeOperation='destination-in';
-  tx.save();tx.translate(cx,ly+eh*.18);tx.scale(1,.34);var lg4=tx.createRadialGradient(0,0,0,0,0,ew*.62);lg4.addColorStop(0,'rgba(0,0,0,.7)');lg4.addColorStop(.6,'rgba(0,0,0,.45)');lg4.addColorStop(1,'rgba(0,0,0,0)');tx.fillStyle=lg4;tx.beginPath();tx.arc(0,0,ew*.62,0,6.2832);tx.fill();tx.restore();
+  var G3=eyeGeo(e,W,H);tx.save();if(G3){tx.translate(G3.cx-G3.nx*ew*.17,G3.cy-G3.ny*ew*.17);tx.rotate(G3.ang)}else tx.translate(cx,ly+eh*.18);tx.scale(1,.34);var lg4=tx.createRadialGradient(0,0,0,0,0,ew*.62);lg4.addColorStop(0,'rgba(0,0,0,.7)');lg4.addColorStop(.6,'rgba(0,0,0,.45)');lg4.addColorStop(1,'rgba(0,0,0,0)');tx.fillStyle=lg4;tx.beginPath();tx.arc(0,0,ew*.62,0,6.2832);tx.fill();tx.restore();
   ctx.save();ctx.globalCompositeOperation='lighten';ctx.drawImage(t,0,0);ctx.restore();
   var sy=y0*H-eh*.35,sh=ctx.createRadialGradient(cx,sy,0,cx,sy,ew*.32);sh.addColorStop(0,'rgba(255,236,214,'+Math.min(.16,.11*g)+')');sh.addColorStop(1,'rgba(255,236,214,0)');
   ctx.save();ctx.globalCompositeOperation='screen';ctx.translate(cx,sy);ctx.scale(1,.55);ctx.translate(-cx,-sy);ctx.fillStyle=sh;ctx.beginPath();ctx.arc(cx,sy,ew*.32,0,6.2832);ctx.fill();ctx.restore()})}
  // 2b) softer inner eye corner: lift the added dark makeup near the inner corner so it fades smoothly into the lash line, plus a touch of highlighter
- var EC1=beauty&&beauty.eyeContours,nx=P&&P.nose?P.nose.x:.5;if(raw&&EC1&&EC1.length){EC1.forEach(function(e){if(!e||e.length<4)return;var x0=1,x1=0,y0=1,y1=0,inn=null,bd=1e9;e.forEach(function(p){x0=Math.min(x0,p.x);x1=Math.max(x1,p.x);y0=Math.min(y0,p.y);y1=Math.max(y1,p.y);var d=Math.abs(p.x-nx);if(d<bd){bd=d;inn=p}});
-  var ew=(x1-x0)*W;if(ew<6||!inn)return;var ix=inn.x*W,iy=inn.y*H,ox=((x0+x1)/2*W-ix)>0?1:-1,R=ew*.5;
+ var EC1=!OWN&&beauty&&beauty.eyeContours,nx=P&&P.nose?P.nose.x:.5;if(raw&&EC1&&EC1.length){EC1.forEach(function(e){if(!e||e.length<4)return;var x0=1,x1=0,y0=1,y1=0,inn=null,bd=1e9;e.forEach(function(p){x0=Math.min(x0,p.x);x1=Math.max(x1,p.x);y0=Math.min(y0,p.y);y1=Math.max(y1,p.y);var d=Math.abs(p.x-nx);if(d<bd){bd=d;inn=p}});
+  var ew=(x1-x0)*W;if(ew<6||!inn)return;var G4=eyeGeo(e,W,H),ox=((x0+x1)/2*W-inn.x*W)>0?1:-1,ix=inn.x*W+(G4?G4.nx*ew*.06+G4.ux*ox*ew*.06:0),iy=inn.y*H+(G4?G4.ny*ew*.06+G4.uy*ox*ew*.06:0),R=ew*.28;
   var t=D.createElement('canvas');t.width=W;t.height=H;var tx=t.getContext('2d');tx.drawImage(raw,0,0,W,H);tx.globalCompositeOperation='destination-in';
   var mg=tx.createRadialGradient(ix-ox*ew*.04,iy,0,ix-ox*ew*.04,iy,R);mg.addColorStop(0,'rgba(0,0,0,.92)');mg.addColorStop(.35,'rgba(0,0,0,.7)');mg.addColorStop(.75,'rgba(0,0,0,.2)');mg.addColorStop(1,'rgba(0,0,0,0)');tx.fillStyle=mg;tx.fillRect(0,0,W,H);
   ctx.save();ctx.globalCompositeOperation='lighten';ctx.drawImage(t,0,0);ctx.restore();
-  var hr=ew*.13,hl=ctx.createRadialGradient(ix-ox*ew*.03,iy,0,ix-ox*ew*.03,iy,hr);hl.addColorStop(0,'rgba(255,240,225,'+Math.min(.42,.3*g)+')');hl.addColorStop(1,'rgba(255,240,225,0)');
-  ctx.save();ctx.globalCompositeOperation='screen';ctx.fillStyle=hl;ctx.beginPath();ctx.arc(ix-ox*ew*.03,iy,hr,0,6.2832);ctx.fill();ctx.restore()})}
+  })}
  // 2c) keep the lipstick a true medium rose whatever lipstick she had on (coral, peach, nude): recolour inside the lip line only
  var LO=beauty&&beauty.lipOutline,LI=beauty&&beauty.lipInner;if(LO&&LO.length>5){var lx0=1,lx1=0,ly0=1,ly1=0;LO.forEach(function(p){lx0=Math.min(lx0,p.x);lx1=Math.max(lx1,p.x);ly0=Math.min(ly0,p.y);ly1=Math.max(ly1,p.y)});
   var pad=(lx1-lx0)*.15,bx=Math.max(0,(lx0-pad)*W),by=Math.max(0,(ly0-pad)*H),bw=Math.min(W-bx,(lx1-lx0+2*pad)*W),bh=Math.min(H-by,(ly1-ly0+2*pad)*H);
@@ -3962,22 +4003,29 @@ function sparkle(before,opt){opt=opt||{};var pick=opt.el||function(){return $('#
 
 // ---- Auto Glow: same tap, clearly more glow ----
 // bronzed luxury glam: rosy blush, highlighter, smoky brown liner, visible lashes, shimmer bronze-gold eyes, medium rosy lip with gloss
-var GLOW={smooth:38,blemish:72,scars:55,wrinkles:66,foundation:12,concealer:0,bronzer:47,contour:42,highlight:62,blush:68,eyeShadow:80,eyeLiner:64,lashes:70,mascara:64,browMakeup:24,tint:56,gloss:72,eyeBright:26,faceLight:0,hairShine:20},
+var GLOW={smooth:26,blemish:68,scars:50,wrinkles:48,foundation:10,concealer:0,bronzer:44,contour:30,highlight:58,blush:54,eyeShadow:56,eyeLiner:44,lashes:60,mascara:46,browMakeup:24,tint:56,gloss:72,eyeBright:26,faceLight:0,hairShine:20},
  GLOWSH={color:'velvetRose',blushColor:'rose',eyeColor:'bronze',eyeFinish:'matte',linerStyle:'smoky',linerColor:'brown',lashStyle:'length',glossShade:'gRose',contourShade:'cocoa',lipFinish:'shimmer'};
 function lipHue(){var L=beauty.lipOutline;if(!L||L.length<6||!source)return null;var x0=1,x1=0,y0=1,y1=0;L.forEach(function(p){x0=Math.min(x0,p.x);x1=Math.max(x1,p.x);y0=Math.min(y0,p.y);y1=Math.max(y1,p.y)});
  var c=D.createElement('canvas'),w=64,h=32;c.width=w;c.height=h;var sw=source.naturalWidth||source.width,sh=source.naturalHeight||source.height;
  c.getContext('2d').drawImage(source,(x0+(x1-x0)*.25)*sw,(y0+(y1-y0)*.2)*sh,(x1-x0)*.5*sw,(y1-y0)*.6*sh,0,0,w,h);var d=c.getContext('2d').getImageData(0,0,w,h).data,r=0,g=0,b=0,n=0;for(var i=0;i<d.length;i+=4){r+=d[i];g+=d[i+1];b+=d[i+2];n++}r/=n;g/=n;b/=n;
  var mx=Math.max(r,g,b),mn=Math.min(r,g,b);window.__fcLipRGB=[r,g,b];if(mx-mn<12)return null;var hh=mx===r?((g-b)/(mx-mn))%6:mx===g?(b-r)/(mx-mn)+2:(r-g)/(mx-mn)+4;hh*=60;if(hh<0)hh+=360;return hh}
 window.__fcLipHue=lipHue;
+function ownEyeColour(){var EC=beauty&&beauty.eyeContours;if(!EC||EC.length<2||!source)return false;var sw=source.naturalWidth||source.width,sh=source.naturalHeight||source.height,hit=0,tot=0;
+ EC.forEach(function(e){var x0=1,x1=0,y0=1,y1=0;e.forEach(function(p){x0=Math.min(x0,p.x);x1=Math.max(x1,p.x);y0=Math.min(y0,p.y);y1=Math.max(y1,p.y)});var ew=(x1-x0);
+  var bx=x0-ew*.15,by=y0-ew*.45,bw=ew*1.3,bh=(y1-y0)+ew*.6;var c=D.createElement('canvas'),cw=64,chh=Math.max(16,Math.round(64*bh*sh/(bw*sw)));c.width=cw;c.height=chh;var cx=c.getContext('2d');cx.drawImage(source,bx*sw,by*sh,bw*sw,bh*sh,0,0,cw,chh);var d=cx.getImageData(0,0,cw,chh).data;
+  for(var i=0;i<d.length;i+=4){var r=d[i]/255,g=d[i+1]/255,b=d[i+2]/255,mx=Math.max(r,g,b),mn=Math.min(r,g,b),s=mx?(mx-mn)/mx:0;if(mx<.12)continue;tot++;if(s<.28)continue;var h=mx===r?((g-b)/(mx-mn))%6:mx===g?(b-r)/(mx-mn)+2:(r-g)/(mx-mn)+4;h*=60;if(h<0)h+=360;if(h>75&&h<330)hit++}});
+ window.__fcEyeColourFrac=tot?hit/tot:0;return tot>0&&hit/tot>.035}
 var _ag=autoGlow;autoGlow=async function(){var before=snap(),r=await _ag.apply(this,arguments);
  try{if(source&&lastRecipe&&lastRecipe.type==='glow'){var men=window.frameStyle==='men',face=beauty&&beauty.points&&beauty.points.nose;
    var km=Math.max(.6,Math.min(2,(typeof strengthMult==='number'?strengthMult:.8)/.8));
-   if(face&&!men){for(var k in GLOW)beauty[k]=Math.max(0,Math.min(100,Math.round(GLOW[k]*km)));Object.assign(beauty,GLOWSH);}
+   if(face&&!men){for(var k in GLOW)beauty[k]=Math.max(0,Math.min(100,Math.round(GLOW[k]*km)));Object.assign(beauty,GLOWSH);beauty.ownEyes=0;
+     // she already wears coloured eye makeup (green, blue, purple liner or shadow): keep her eyes exactly as they are
+     try{if(ownEyeColour()){beauty.ownEyes=1;beauty.eyeShadow=0;beauty.eyeLiner=0;beauty.lashes=0;beauty.mascara=0;window.__fcOwnEyesMsg=1}}catch(e){}}
    if(men){adj.light=Math.max(adj.light||0,10);adj.highlights=Math.max(adj.highlights||0,8)}else{adj.light=0;adj.contrast=5;adj.color=0;adj.warmth=-2;adj.highlights=3;adj.softness=2}
    for(var j of['light','contrast','highlights','softness','color','warmth']){var a=$('#'+j),b=$('#'+j+'Value');if(a)a.value=adj[j];if(b)b.value=adj[j]}
    beauty.glowFx=Math.max(.5,Math.min(1.6,(typeof strengthMult==='number'?strengthMult:.9)/.8))*(men?.5:1)*(face?1:.7);
    try{syncBeauty()}catch(e){}invalidate();try{if(history.length)history[history.length-1]=capture();updateHistoryButtons()}catch(e){}
-   setTimeout(function(){sparkle(before)},60)}}catch(e){}
+   setTimeout(function(){sparkle(before)},60);if(window.__fcOwnEyesMsg){window.__fcOwnEyesMsg=0;setTimeout(function(){try{toast('Your own eye makeup is kept exactly as it is.')}catch(e){}},1600)}}}catch(e){}
  return r};
 
 // ---- the same sparkle reveal when an AI look result opens ----
@@ -4005,5 +4053,74 @@ if(!isApp){var ha=D.querySelector('.heroActions');if(ha&&!D.querySelector('.fcAp
  s.innerHTML='<svg width="20" height="26" viewBox="0 0 20 26" aria-hidden="true"><rect x="1.5" y="1" width="17" height="24" rx="4" fill="none" stroke="#e8cd85" stroke-width="1.8"/><rect x="7" y="21" width="6" height="1.6" rx=".8" fill="#e8cd85"/></svg><span>Coming soon<b>Face Couture for iPhone</b></span>';
  ha.insertAdjacentElement('afterend',s)}}
 }catch(e){console.warn('v72 glow',e)}})();
+</script>
+<script>
+/* v73: men's mode never gets women's makeup. Lipstick, gloss, blush, eyeshadow, liner, lashes and mascara are switched off
+   at render time for men (whatever look or slider set them), the Auto Glow finish is skin and light only, and only
+   grooming looks and cards are shown. */
+;(function(){try{var D=document,$=function(q){return D.querySelector(q)};
+// men: no makeup of any kind (colour cosmetics, foundation, concealer, contour, bronzer, highlighter, brow fill, tan)
+var MK=['blush','eyeShadow','eyeLiner','lashes','mascara','tint','gloss','highlight','bronzer','browMakeup','foundation','concealer','contour','tan'];
+// men: retouch is only a very subtle smoothing of wrinkles and blemishes; the looks themselves are about light and colour
+var CAP={smooth:12,wrinkles:16,blemish:45,scars:35,matte:15,eyeBright:0,teeth:6,faceLight:8,hairShine:15,eyeLift:0},TONE_A=.55;
+window.__fcMenOwn={};
+function capMen(){var c=Object.assign({},CAP);if(lastRecipe&&lastRecipe.key==='m_clear'){c.blemish=60;c.scars=45;c.smooth=14}for(var k in c)if(typeof beauty[k]==='number'&&beauty[k]>c[k])beauty[k]=c[k];MK.forEach(function(k){if(typeof beauty[k]==='number')beauty[k]=0})}
+function toneMen(){if(window.frameStyle!=='men'||typeof beauty!=='object'||!beauty)return;capMen();var own=lastRecipe&&window.__fcMenOwn[lastRecipe.key];
+ if(own&&typeof adj==='object'&&VIBES[lastRecipe.key]){var A=VIBES[lastRecipe.key].adj||{},km=Math.max(.5,Math.min(1.6,(typeof strengthMult==='number'?strengthMult:.8)/.8));['light','contrast','color','warmth','highlights','shadows','detail','vignette','fade','softness'].forEach(function(j){var el=$('#'+j),v=Math.round((A[j]||0)*(j==='color'&&A[j]<=-50?1:km));if(el)v=Math.max(+el.min,Math.min(+el.max,v));adj[j]=v;if(el)el.value=v;var o=$('#'+j+'Value');if(o)o.value=v})}
+ if(!own&&typeof adj==='object')['light','contrast','color','warmth','highlights','shadows','detail','vignette','fade','softness'].forEach(function(j){if(typeof adj[j]==='number'&&adj[j]){adj[j]=Math.round(adj[j]*TONE_A);var a=$('#'+j),b=$('#'+j+'Value');if(a)a.value=adj[j];if(b)b.value=adj[j]}});
+ try{syncBeauty()}catch(e){}try{invalidate()}catch(e){}try{if(history.length)history[history.length-1]=capture();updateHistoryButtons()}catch(e){}}
+if(typeof applyVibe==='function'){var _v73=applyVibe;applyVibe=async function(key){var r=await _v73.apply(this,arguments);try{if(beauty&&lastRecipe&&lastRecipe.key===key){beauty.fcMono=key==='m_bw'?1:0;try{invalidate()}catch(e){}}toneMen()}catch(e){}return r}}
+try{$('#reset').addEventListener('click',function(){try{beauty.fcMono=0}catch(e){}},true)}catch(e){}
+// Black & White look: a true monochrome finish on the final photo
+var _p73m=process;process=function(max,raw,photo){var r=_p73m.apply(this,arguments);try{if(r&&!raw&&(photo===undefined||photo===source)&&typeof beauty==='object'&&beauty&&beauty.fcMono){var n=D.createElement('canvas');n.width=r.width;n.height=r.height;var x=n.getContext('2d');x.drawImage(r,0,0);var im=x.getImageData(0,0,n.width,n.height),d=im.data;for(var i=0;i<d.length;i+=4){var L=.2126*d[i]+.7152*d[i+1]+.0722*d[i+2];d[i]=d[i+1]=d[i+2]=L}x.putImageData(im,0,0);return n}}catch(e){}return r};
+if(typeof process==='function'){var _p73=process;process=function(){if(window.frameStyle!=='men'||typeof beauty!=='object'||!beauty)return _p73.apply(this,arguments);var sv={};MK.forEach(function(k){sv[k]=beauty[k];beauty[k]=0});var r;try{r=_p73.apply(this,arguments)}finally{MK.forEach(function(k){beauty[k]=sv[k]})}
+ // every men's look also calms flushed redness (Auto Glow already does this in its finish)
+ try{var a=arguments;if(r&&!a[1]&&(a[2]===undefined||a[2]===source)&&!(beauty.glowFx>0)&&beauty.faceOutline&&beauty.faceOutline.length>4&&window.__fcMenCalm){var n=D.createElement('canvas');n.width=r.width;n.height=r.height;n.getContext('2d').drawImage(r,0,0);window.__fcMenCalm(n,lastRecipe&&lastRecipe.key==='m_clear'?.6:.4);return n}}catch(e){}return r}}
+// men's Auto Glow: grooming only, and a clear message
+if(typeof autoGlow==='function'){var _g73=autoGlow;autoGlow=async function(){var r=await _g73.apply(this,arguments);try{if(window.frameStyle==='men'&&lastRecipe&&lastRecipe.type==='glow'){MK.forEach(function(k){beauty[k]=0});capMen();Object.assign(adj,{light:6,contrast:5,color:-3,warmth:2,highlights:4,shadows:6,softness:2,detail:5});['light','contrast','color','warmth','highlights','shadows','softness','detail'].forEach(function(j){var a=$('#'+j),b=$('#'+j+'Value');if(a)a.value=adj[j];if(b)b.value=adj[j]});try{if(history.length)history[history.length-1]=capture();updateHistoryButtons()}catch(e){}try{syncBeauty()}catch(e){}invalidate();toast('Auto Glow applied: clearer even skin, softer under-eyes, neat brows and a healthy glow. No makeup. Tap Before / after to compare.')}}catch(e){}return r};try{$('#autoGlow').onclick=function(){autoGlow()}}catch(e){}}
+var MENOK=['sharp','matte','outdoor','moody','film'],
+ MENTXT={film:'Soft film glow, warm tones',clean:'Minimal and bright',fresh:'Clear and cheerful',golden:'Warm golden light',rested:'Awake, bright, natural'};
+var css=D.createElement('style');css.textContent=':root[data-fcstyle="men"] #vibes .vibe:not([data-menok]){display:none!important}:root[data-fcstyle="men"] #artistMode,:root[data-fcstyle="men"] label.keepEyes,:root[data-fcstyle="men"] [data-portrait="rosy"],:root[data-fcstyle="men"] #fcTools [data-wo]{display:none!important}';D.head.appendChild(css);
+var last=null;function sync(){var s=window.frameStyle||'all',men=s==='men';D.documentElement.dataset.fcstyle=s;
+ [].forEach.call(D.querySelectorAll('#vibes .vibe'),function(b){var k=b.dataset.vibe;if(MENOK.indexOf(k)>=0)b.dataset.menok='1';var sp=b.querySelector('span');if(sp&&MENTXT[k]){if(sp.dataset.wt==null)sp.dataset.wt=sp.textContent;var want=men?MENTXT[k]:sp.dataset.wt;if(sp.textContent!==want)sp.textContent=want}});
+ var nt=$('#fcEngNote');if(nt){var v=window.__fcEngine||'std',t=men?(v==='nb21'?'Couture AI: a sharper, more editorial grooming finish with extra-sharp detail.':'Glam AI: natural grooming that still looks like you.'):(v==='nb21'?'Couture AI: bolder, more dramatic glam with extra-sharp detail.':'Glam AI: soft, natural glam that still looks like you.');if(nt.textContent!==t)nt.textContent=t}
+ var ab=$('#aiGlowBtn small');if(ab){var at=men?'AI grooming, no makeup · uses 1 AI look':'Premium AI version · uses 1 AI look';if(ab.textContent!==at)ab.textContent=at}
+ var gn=$('#glowNote');if(gn){if(gn.dataset.wt==null)gn.dataset.wt=gn.textContent;var gt=men?'A groomed glow in one tap: clearer even skin, softer under-eyes, neat brows and a healthy glow. No makeup. Undo anytime.':gn.dataset.wt;if(gn.textContent!==gt)gn.textContent=gt}
+ if(last!==s)swapText(men);
+ if(last!==null&&last!==s){try{invalidate()}catch(e){}}last=s}
+var SWAP=[['Glam and Max make it bolder.','Bold and Max make it stronger.'],['Makeup · Retouch · Frames · Sizes','Grooming · Retouch · Frames · Sizes'],['face detection and makeup adjustments','face detection and grooming adjustments'],['filters, makeup tools,','filters, grooming tools,']],orig=new WeakMap();
+function swapText(men){try{var w=D.createTreeWalker(D.body,NodeFilter.SHOW_TEXT),n;while(n=w.nextNode()){var v=n.nodeValue;if(!v||v.length<8)continue;if(orig.has(n)){if(!men){n.nodeValue=orig.get(n);orig.delete(n)}continue}if(!men)continue;var t=v;SWAP.forEach(function(r){if(t.indexOf(r[0])>=0)t=t.split(r[0]).join(r[1])});if(t!==v){orig.set(n,v);n.nodeValue=t}}}catch(e){}}
+setTimeout(function(){last=null;sync()},2500);
+sync();setInterval(sync,300);D.addEventListener('click',function(e){if(e.target.closest&&e.target.closest('[data-st]'))setTimeout(sync,30)},true);
+}catch(e){console.warn('v73 men',e)}})();
+</script>
+<script>
+/* v74: men's finishes are about light and colour (studio, golden hour, cinematic, black & white...), with only a very
+   subtle clean-up of wrinkles and blemishes. No makeup of any kind. */
+;(function(){try{var D=document;if(typeof VIBES!=='object')return;
+var R={smooth:10,wrinkles:14,blemish:40,scars:30,matte:12,teeth:4},Rc={smooth:12,wrinkles:14,blemish:58,scars:45,matte:14,teeth:4};
+var M={
+ m_groomed:{n:'Freshly Groomed',t:'Subtle clean-up, natural light',g:'#d9d2c8,#8c8478',d:1,look:'natural',adj:{light:3,contrast:3,color:0,warmth:0,detail:3,softness:1},beauty:R},
+ m_clear:{n:'Clear Skin',t:'Fewer spots, calmer redness',g:'#e6e1d8,#a59e92',d:1,look:'natural',adj:{light:3,contrast:2,color:-1,warmth:0,detail:2,softness:2},beauty:Rc},
+ m_studio:{n:'Studio Portrait',t:'Soft key light, clean backdrop feel',g:'#cfd3d8,#5b6470',d:0,look:'professional',adj:{light:2,contrast:10,color:-6,warmth:-2,highlights:-6,shadows:4,detail:4,vignette:14},beauty:R},
+ m_crisp:{n:'Crisp Daylight',t:'Bright, clean and sharp',g:'#e4ecf3,#7d93a8',d:1,look:'natural',adj:{light:6,contrast:8,color:4,warmth:-4,detail:8,shadows:6},beauty:R},
+ m_golden:{n:'Golden Hour',t:'Warm low sun, healthy glow',g:'#f0c98e,#9a5b2a',d:0,look:'glow',adj:{light:4,contrast:6,color:8,warmth:18,highlights:4,vignette:8},beauty:R},
+ m_cover:{n:'Magazine Cover',t:'Crisp, cool, editorial',g:'#b9c2cc,#2f3640',d:0,look:'professional',adj:{light:1,contrast:13,color:-7,warmth:-4,detail:8,vignette:10,shadows:-4},beauty:R},
+ m_cinema:{n:'Cinematic',t:'Rich contrast, movie-still mood',g:'#2b3a44,#a0603a',d:0,look:'film',adj:{light:0,contrast:14,color:-8,warmth:6,fade:10,shadows:-10,highlights:-6,vignette:16,detail:4},beauty:R},
+ m_night:{n:'Night Out',t:'Warm evening light',g:'#3a2a22,#8a5a3a',d:0,look:'film',adj:{light:-2,contrast:10,color:2,warmth:12,vignette:14,shadows:-8,detail:3},beauty:R},
+ m_bw:{n:'Black & White',t:'Timeless classic portrait',g:'#e6e6e6,#1e1e1e',d:0,look:'professional',adj:{light:2,contrast:16,color:-50,warmth:0,detail:6,vignette:10,shadows:-2},beauty:R},
+ m_vintage:{n:'Vintage Film',t:'Faded warm film tones',g:'#d8c3a0,#6b5440',d:0,look:'film',adj:{light:2,contrast:4,color:-14,warmth:10,fade:16,vignette:10},beauty:R}
+};
+for(var k in M){M[k].sh={};M[k].men=1;VIBES[k]=M[k];window.__fcMenOwn[k]=1}
+var row=D.getElementById('finRow');if(row){var html='';for(var k2 in M){if(row.querySelector('[data-vibe="'+k2+'"]'))continue;var v=M[k2];html+='<button class="vibe'+(v.d?' dark':'')+'" data-vibe="'+k2+'" data-tag="fin" data-menfin="1" style="background:linear-gradient(135deg,'+v.g+')"><b>'+v.n+'</b> <span>'+v.t+'</span></button>'}
+ var first=row.querySelector('[data-vibe="m_clear"]');if(first)first.insertAdjacentHTML('afterend',html);else row.insertAdjacentHTML('afterbegin',html);
+ [].forEach.call(row.querySelectorAll('[data-menfin]'),function(b){var v=M[b.dataset.vibe];if(v){var bb=b.querySelector('b'),sp=b.querySelector('span');if(bb)bb.textContent=v.n;if(sp)sp.textContent=v.t;b.style.background='linear-gradient(135deg,'+v.g+')'}b.onclick=function(){applyVibe(b.dataset.vibe)}});
+ // order: the light-and-colour looks in a sensible sequence
+ ['m_groomed','m_clear','m_studio','m_crisp','m_golden','m_cover','m_cinema','m_night','m_bw','m_vintage'].reverse().forEach(function(k){var b=row.querySelector('[data-vibe="'+k+'"]');if(b)row.insertBefore(b,row.firstChild)})}
+var css=D.createElement('style');css.textContent=':root[data-fcstyle="men"] #finRow .vibe:not([data-menfin]),:root[data-fcstyle="men"] #finRow [data-vibe="m_sharp"],:root[data-fcstyle="men"] #finRow [data-vibe="m_rested"],:root[data-fcstyle="men"] #finRow [data-vibe="m_bronzed"],:root[data-fcstyle="men"] #workRow .vibe{display:none!important}';D.head.appendChild(css);
+// Women / Men is chosen first: the switch sits right under the photo's Undo / Rotate / Crop buttons
+try{var fs=D.getElementById('finSex'),sf=D.querySelector('.stage .stagefoot');if(fs&&sf){sf.insertAdjacentElement('afterend',fs);var c2=D.createElement('style');c2.textContent='.stage>#finSex{display:flex;justify-content:center;align-items:center;gap:8px;margin:12px auto 4px;width:100%}:root[data-fcstyle="men"] .range:has(#beauty-blush),:root[data-fcstyle="men"] .range:has(#beauty-eyeShadow),:root[data-fcstyle="men"] .range:has(#beauty-eyeLiner),:root[data-fcstyle="men"] .range:has(#beauty-lashes),:root[data-fcstyle="men"] .range:has(#beauty-mascara),:root[data-fcstyle="men"] .range:has(#beauty-tint),:root[data-fcstyle="men"] .range:has(#beauty-gloss),:root[data-fcstyle="men"] .range:has(#beauty-highlight),:root[data-fcstyle="men"] .range:has(#beauty-bronzer),:root[data-fcstyle="men"] .range:has(#beauty-browMakeup),:root[data-fcstyle="men"] .range:has(#beauty-foundation),:root[data-fcstyle="men"] .range:has(#beauty-concealer),:root[data-fcstyle="men"] .range:has(#beauty-contour),:root[data-fcstyle="men"] .range:has(#beauty-tan),:root[data-fcstyle="men"] .ppRow[data-k="blush"],:root[data-fcstyle="men"] .ppRow[data-k="eyeShadow"],:root[data-fcstyle="men"] .ppRow[data-k="eyeLiner"],:root[data-fcstyle="men"] .ppRow[data-k="lashes"],:root[data-fcstyle="men"] .ppRow[data-k="mascara"],:root[data-fcstyle="men"] .ppRow[data-k="tint"],:root[data-fcstyle="men"] .ppRow[data-k="gloss"],:root[data-fcstyle="men"] .ppRow[data-k="highlight"],:root[data-fcstyle="men"] .ppRow[data-k="bronzer"],:root[data-fcstyle="men"] .ppRow[data-k="browMakeup"],:root[data-fcstyle="men"] .ppRow[data-k="foundation"],:root[data-fcstyle="men"] .ppRow[data-k="concealer"],:root[data-fcstyle="men"] .ppRow[data-k="contour"],:root[data-fcstyle="men"] .ppRow[data-k="tan"]{display:none!important}';D.head.appendChild(c2)}}catch(e){}
+try{thumbKey=''}catch(e){}
+}catch(e){console.warn('v74 men light looks',e)}})();
 </script>
 </body></html>
