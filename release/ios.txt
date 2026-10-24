@@ -1,1 +1,1 @@
-iPhone build request: 1.0.0 (wow buttons first, background blur, travel backgrounds, vanish people, outfit try-on)
+iPhone build request: 1.0.0 (Upload my own outfit button in the AI tab)
