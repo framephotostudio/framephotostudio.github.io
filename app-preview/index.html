@@ -4444,4 +4444,44 @@ window.__fcTravel=travel;window.__fcVanish=vanishPeople;
  var n=0,t=setInterval(function(){if(add()||++n>40)clearInterval(t)},250);add();
 }catch(e){console.warn('v78 own outfit',e)}})();
 </script>
+<script>
+/* v79: the AI wow features up front - AI Glow, AI Outfit Change, AI Background Change: on the front page and at the top of the editor */
+;(function(){try{var D=document,W=window,want=null,wantT=0;
+function say(t){try{(W.toast||function(){})(t)}catch(e){}}
+function hasPhoto(){try{return !!(W.__luxe&&W.__luxe._photoCanvas&&typeof source!=='undefined'&&source&&typeof originalPhoto!=='undefined'&&originalPhoto)}catch(e){return false}}
+function openTab(t){var b=D.querySelector('[data-tab="'+t+'"]');if(b&&b.getAttribute('aria-selected')!=='true')b.click()}
+function openUp(el){for(var e=el;e;e=e.parentElement){if(e.tagName==='DETAILS'&&!e.open)e.open=true;if(e.hidden&&e.id!=='fcBgStr')e.hidden=false}}
+function pulse(el){if(!el)return;el.classList.remove('fcPulse');void el.offsetWidth;el.classList.add('fcPulse');setTimeout(function(){el.classList.remove('fcPulse')},4200)}
+function go(k,fromFront){
+ if(k==='glow'){var g=D.getElementById('aiGlowBtn');if(fromFront){g&&g.scrollIntoView({behavior:'smooth',block:'center'});pulse(g);say('Tap AI Glow for your premium AI makeover.')}else g&&g.click();return}
+ if(k==='outfit'){var o=D.getElementById('fcWowOutfit');if(fromFront){o&&o.scrollIntoView({behavior:'smooth',block:'center'});pulse(o);say('Now tap AI Outfit Change and choose a photo of the outfit.')}else{var tb=D.getElementById('fcTryBtn');tb&&tb.click()}return}
+ if(k==='bg'){openTab('edit');var tr=D.getElementById('fcTravel');if(!tr)return;openUp(tr);setTimeout(function(){tr.scrollIntoView({behavior:'smooth',block:'center'});pulse(tr);say('Pick a destination. Your face, pose and outfit stay exactly yours.')},150)}}
+var was=null;function cur(){try{return typeof source!=='undefined'?source:null}catch(e){return null}}
+function front(k){want=k;wantT=Date.now();was=cur();W.__glowAfterUpload=false;var f=D.getElementById('file');f&&f.click()}
+setInterval(function(){if(want&&hasPhoto()&&cur()!==was){var k=want;want=null;setTimeout(function(){go(k,true)},900)}else if(want&&Date.now()-wantT>180000)want=null},500);
+var css=D.createElement('style');css.textContent=
+'#fcWowRow{display:grid;grid-template-columns:1fr 1fr;gap:10px}'+
+'#fcWowRow button{min-height:50px;border-radius:16px;border:1px solid #c9a35a;color:#fff;font:650 14px/1.15 inherit;padding:6px 8px;background:linear-gradient(110deg,#2c1840,#4a2a55 55%,#7a5a36);box-shadow:0 6px 16px #2c18402e;cursor:pointer}'+
+'#fcWowRow button small{display:block;font-weight:500;font-size:11.5px;color:#f1d9a4;margin-top:2px}'+
+'@media(max-width:600px){#fcWow{gap:8px!important;margin-top:8px!important}#fcWow>#autoGlow,#fcWow>#aiGlowBtn{min-height:48px!important;padding-top:8px!important;padding-bottom:8px!important}#fcWowRow{gap:8px}#fcWowRow button{min-height:46px;font-size:13.5px}#fcWowRow button small{display:none}}'+
+'.fcPulse{animation:fcPulse 1.3s ease-in-out 3;border-radius:18px}@keyframes fcPulse{0%,100%{box-shadow:0 0 0 0 #c9a35a00}50%{box-shadow:0 0 0 6px #c9a35a88}}'+
+'#fcMagic{margin:14px 0 4px}#fcMagic h3{margin:0 0 8px;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:#7a5a36;font-weight:750}'+
+'#fcMagic .g{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}'+
+'#fcMagic button{display:flex;flex-direction:column;align-items:flex-start;gap:4px;text-align:left;min-height:104px;padding:12px 10px;border-radius:18px;border:1px solid #c9a35a;color:#fff;cursor:pointer;background:linear-gradient(150deg,#2c1840,#4a2a55 60%,#7a5a36);box-shadow:0 8px 20px #2c184030;font:inherit}'+
+'#fcMagic button i{font-style:normal;font-size:24px;line-height:1}#fcMagic button b{font-size:14.5px;line-height:1.15}#fcMagic button span{font-size:11.5px;line-height:1.3;color:#f1d9a4}'+
+'#fcMagic button:active,#fcWowRow button:active{transform:scale(.98)}';
+D.head.appendChild(css);
+function addWow(){var box=D.getElementById('fcWow');if(!box||!D.getElementById('aiGlowBtn')||!D.getElementById('fcTryBtn'))return false;if(D.getElementById('fcWowRow'))return true;
+ var r=D.createElement('div');r.id='fcWowRow';r.innerHTML='<button type="button" id="fcWowOutfit">&#128087; AI Outfit Change<small>Wear any dress or outfit</small></button><button type="button" id="fcWowBg">&#127757; AI Background Change<small>Santorini, Paris, beach&hellip;</small></button>';
+ box.appendChild(r);D.getElementById('fcWowOutfit').onclick=function(){go('outfit')};D.getElementById('fcWowBg').onclick=function(){go('bg')};return true}
+function addFront(){var a=D.querySelector('.heroActions');if(!a)return false;if(D.getElementById('fcMagic'))return true;
+ var m=D.createElement('div');m.id='fcMagic';m.innerHTML='<h3>&#10024; New &middot; AI magic</h3><div class="g">'+
+ '<button type="button" data-k="glow"><i>&#10024;</i><b>AI Glow Makeover</b><span>Pro glam in one tap</span></button>'+
+ '<button type="button" data-k="outfit"><i>&#128087;</i><b>AI Outfit Change</b><span>Upload any dress and wear it</span></button>'+
+ '<button type="button" data-k="bg"><i>&#127757;</i><b>AI Background Change</b><span>Santorini, Paris, the beach</span></button></div>';
+ a.insertAdjacentElement('afterend',m);m.querySelectorAll('button').forEach(function(b){b.onclick=function(){front(b.dataset.k)}});return true}
+var n=0,t=setInterval(function(){var a=addWow(),b=addFront();if((a&&b)||++n>60)clearInterval(t)},250);addWow();addFront();
+W.__fcWowGo=go;
+}catch(e){console.warn('v79 wow row',e)}})();
+</script>
 </body></html>
