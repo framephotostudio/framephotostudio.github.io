@@ -88,7 +88,7 @@ const GROOM = {
   mrested: 'a well-rested finish: fresher, brighter under-eyes with dark circles and puffiness softened, clear even skin with real texture, less redness, neat brows, a healthy awake complexion'
 };
 const MEN_KEEP = 'Keep his exact same face shape, head size, nose, eyes, eye color, lips, ears, hair, beard shape and length, skin tone, expression, pose, clothing and background. Keep his exact same facial expression and smile: the mouth open exactly as much as in the original with the same teeth showing (never close an open smile or open a closed one), and do not add or deepen creases at the mouth corners, smile lines or around the eyes. Do not slim, reshape or resize his face, jaw, cheeks or neck. No makeup of any kind: no lipstick, lip color or gloss, no eyeshadow, eyeliner or mascara, no lash changes, no blush, no visible highlighter or shimmer. Photorealistic with natural skin texture; he must look exactly like himself, just well groomed.';
-export const TRAVEL_KEYS = ['greece', 'paris', 'newyork', 'london', 'dubai', 'bali', 'maldives', 'rome', 'tokyo', 'alps', 'beach', 'sunset'];
+export const TRAVEL_KEYS = ['santorini_day', 'santorini_sunset', 'mykonos', 'beach_lux', 'paris_cafe', 'greece', 'paris', 'newyork', 'london', 'dubai', 'bali', 'maldives', 'rome', 'tokyo', 'alps', 'beach', 'sunset'];
 
 export function buildPrompt(task, o = {}) {
   const outfit = o.outfit && o.outfit !== 'keep' ? OUTFITS[o.outfit] : null;
@@ -125,6 +125,7 @@ export function buildPrompt(task, o = {}) {
       p = `Remove ${extra || 'the marked distraction'} from this photo and rebuild the background behind it naturally and seamlessly, matching texture, lighting and perspective. Keep the main person untouched.`;
       break;
     case 'tryon':
+      if (o.locked) { p = `Dress the person in this photo in the exact garment shown in the second image (${o.category || 'outfit'}): the same color, fabric, pattern, lace, cut, neckline, straps and length as the product, realistically fitted to HER body and pose with natural drape, folds, fabric texture, light and shadows matching this photo. Keep everything else exactly the same: her face, hair, skin tone, body shape and size, arms, hands, legs, feet and shoes (unless the garment covers them), jewelry, pose, camera angle, framing and the whole background. Do not slim, enlarge or reshape her body. Do not copy the model's face, body, hair, pose or background from the product photo - only the garment. Photorealistic, like a real photo of her wearing it.`; break; }
       p = `Dress this person in the clothing or accessory shown in the second image (${o.category || 'garment'}), realistically fitted to their body and pose with correct drape, fabric texture, lighting and shadows. ${o.category === 'shoes' ? 'Place the shoes on their feet.' : o.category === 'bag' ? 'Place the bag naturally in hand or on the shoulder.' : o.category === 'sunglasses' ? 'Place the sunglasses on the face without hiding identity.' : o.category === 'hat' ? 'Place the hat on the head over the hair.' : o.category === 'jewelry' ? 'Place the jewelry naturally.' : ''} Keep the rest of their outfit unless it would clash.`;
       break;
     case 'refine':
@@ -135,5 +136,6 @@ export function buildPrompt(task, o = {}) {
   if ((task === 'background' || task === 'travel') && o.locked) return p;
   if (task === 'vanish' && (o.marked || o.people)) return p;
   if (task === 'blur' && o.locked) return p;
+  if (task === 'tryon' && o.locked) return p;
   return p + ' ' + KEEP;
 }
