@@ -127,7 +127,7 @@
     if (document.getElementById('fcTools')) return;
     var panel = document.querySelector('.panel'); if (!panel) return;
     var strip = document.createElement('div'); strip.id = 'fcTools'; strip.setAttribute('aria-label', 'Quick tools');
-    TOOLS.forEach(function (x) { var b = document.createElement('button'); b.type = 'button'; b.textContent = x[0]; b.onclick = function () { goTool(x[1]); }; strip.appendChild(b); });
+    TOOLS.forEach(function (x) { var b = document.createElement('button'); b.type = 'button'; b.textContent = x[0]; if (/^(Lipstick|Gloss|Lashes|Liner|Eyeshadow|Blush)$/.test(x[0])) b.dataset.wo = '1'; b.onclick = function () { goTool(x[1]); }; strip.appendChild(b); });
     panel.insertBefore(strip, panel.firstChild);
   }
 
