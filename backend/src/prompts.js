@@ -14,6 +14,12 @@ const BACKDROPS = {
   greece: 'Santorini, Greece: white-washed walls, blue domes and the Aegean sea in soft afternoon light', paris: 'Paris with the Eiffel Tower softly blurred in the distance, golden-hour light',
   newyork: 'a New York City street with blurred skyscrapers and warm evening light', london: 'London with Big Ben softly blurred behind, overcast soft light',
   dubai: 'a Dubai skyline at dusk with the Burj Khalifa softly blurred', bali: 'a Bali rice terrace with warm tropical light', maldives: 'a Maldives beach with turquoise water and an overwater villa',
+  // curated Face Couture scenes (v1: no open prompt)
+  santorini_day: 'a bright Santorini, Greece terrace in clear midday sun: white-washed walls, a blue-domed church and the deep blue Aegean caldera behind, crisp natural daylight',
+  santorini_sunset: 'a Santorini, Greece terrace at golden sunset: white-washed houses and a blue dome glowing in warm orange light, the sea and caldera behind, soft warm sunset light',
+  mykonos: 'a Mykonos, Greece whitewashed lane with blue doors and shutters, pink bougainvillea and the blue sea in the distance, bright Mediterranean daylight',
+  beach_lux: 'a luxurious white-sand beach with turquoise water, palm trees and soft sunlight, gently blurred like a real photo',
+  paris_cafe: 'a charming Parisian cafe terrace with wicker chairs, small round tables and Haussmann buildings, softly blurred behind, warm natural light',
   rome: 'Rome with the Colosseum softly blurred in warm light', tokyo: 'a Tokyo street at night with soft neon bokeh', alps: 'snow-capped Swiss Alps with clear morning light'
 };
 // ---- Face Couture luxury beauty finishes ------------------------------------------------------------------------------
@@ -82,7 +88,7 @@ const GROOM = {
   mrested: 'a well-rested finish: fresher, brighter under-eyes with dark circles and puffiness softened, clear even skin with real texture, less redness, neat brows, a healthy awake complexion'
 };
 const MEN_KEEP = 'Keep his exact same face shape, head size, nose, eyes, eye color, lips, ears, hair, beard shape and length, skin tone, expression, pose, clothing and background. Keep his exact same facial expression and smile: the mouth open exactly as much as in the original with the same teeth showing (never close an open smile or open a closed one), and do not add or deepen creases at the mouth corners, smile lines or around the eyes. Do not slim, reshape or resize his face, jaw, cheeks or neck. No makeup of any kind: no lipstick, lip color or gloss, no eyeshadow, eyeliner or mascara, no lash changes, no blush, no visible highlighter or shimmer. Photorealistic with natural skin texture; he must look exactly like himself, just well groomed.';
-export const TRAVEL_KEYS = ['greece', 'paris', 'newyork', 'london', 'dubai', 'bali', 'maldives', 'rome', 'tokyo', 'alps', 'beach', 'sunset'];
+export const TRAVEL_KEYS = ['santorini_day', 'santorini_sunset', 'mykonos', 'beach_lux', 'paris_cafe', 'greece', 'paris', 'newyork', 'london', 'dubai', 'bali', 'maldives', 'rome', 'tokyo', 'alps', 'beach', 'sunset'];
 
 export function buildPrompt(task, o = {}) {
   const outfit = o.outfit && o.outfit !== 'keep' ? OUTFITS[o.outfit] : null;
@@ -106,15 +112,20 @@ export function buildPrompt(task, o = {}) {
       break;
     case 'background':
     case 'travel':
+      if (o.locked) { p = `Replace only the background of this photo with ${bg || 'a clean studio backdrop'}. The person must stay in exactly the same position, size, pose and framing, with the same camera angle and lens, so she lines up perfectly with the original photo. Keep the person, face, hair, outfit and accessories exactly as they are. Match the perspective and horizon to the camera height, match the light direction and color of the new scene to the light already on the person, and add a soft natural contact shadow where she stands. No extra people.`; break; }
       p = `Replace only the background with ${bg || 'a clean studio backdrop'}. Keep the person, their outfit and hair exactly as they are with clean natural edges around hair and body; match lighting direction, color temperature and shadows so the person looks truly present in the scene, with correct perspective and depth of field.`;
       break;
     case 'blur':
+      if (o.locked) { p = 'Make this look like it was shot on a professional camera with an 85mm f/1.8 portrait lens: keep the person (or people) in front perfectly sharp and exactly the same - same position, size, pose, face, hair, outfit and framing - and give everything behind them a smooth, natural, creamy background blur that increases gradually with distance, with soft round bokeh from lights. The ground and objects right next to the person stay in focus at their distance. The edges of hair and clothing must blend naturally into the blurred background, exactly like a real photo with shallow depth of field, never a cut-out. Keep the same colors, light and photo grain.'; break; }
       p = 'Keep the person exactly as they are and smoothly blur the existing background like an 85mm f/1.8 portrait lens, with clean hair edges.';
       break;
     case 'vanish':
+      if (o.people) { p = `Remove every person in the background of this photo (seated, standing or walking behind), keeping only the main ${o.people} in front exactly as they are. Rebuild the restaurant, tables, chairs, walls and lights behind where those people were so it looks like a real, empty, natural photo with the same lighting, perspective, focus and photo grain. Do not move, resize or change the main people, their faces, hair, clothes or pose, and do not change the framing.`; break; }
+      if (o.marked) { p = `In this photo the area painted solid magenta marks something to remove. Remove it completely and rebuild what was behind it so it looks like it was never there: continue the surrounding background, lines, textures, lighting, shadows and the natural photo grain seamlessly. Do not leave any magenta, smudge or blur. Change nothing outside the magenta area.`; break; }
       p = `Remove ${extra || 'the marked distraction'} from this photo and rebuild the background behind it naturally and seamlessly, matching texture, lighting and perspective. Keep the main person untouched.`;
       break;
     case 'tryon':
+      if (o.locked) { p = `Dress the person in this photo in the exact garment shown in the second image (${o.category || 'outfit'}): the same color, fabric, pattern, lace, cut, neckline, straps and length as the product, realistically fitted to HER body and pose with natural drape, folds, fabric texture, light and shadows matching this photo. Keep everything else exactly the same: her face, hair, skin tone, body shape and size, arms, hands, legs, feet and shoes (unless the garment covers them), jewelry, pose, camera angle, framing and the whole background. Do not slim, enlarge or reshape her body. Do not copy the model's face, body, hair, pose or background from the product photo - only the garment. Photorealistic, like a real photo of her wearing it.`; break; }
       p = `Dress this person in the clothing or accessory shown in the second image (${o.category || 'garment'}), realistically fitted to their body and pose with correct drape, fabric texture, lighting and shadows. ${o.category === 'shoes' ? 'Place the shoes on their feet.' : o.category === 'bag' ? 'Place the bag naturally in hand or on the shoulder.' : o.category === 'sunglasses' ? 'Place the sunglasses on the face without hiding identity.' : o.category === 'hat' ? 'Place the hat on the head over the hair.' : o.category === 'jewelry' ? 'Place the jewelry naturally.' : ''} Keep the rest of their outfit unless it would clash.`;
       break;
     case 'refine':
@@ -122,5 +133,9 @@ export function buildPrompt(task, o = {}) {
       p = `Refine this photo for ${o.platform || 'social media'}: natural professional retouch, ${outfit ? 'change the outfit to ' + outfit + ', ' : ''}${bg ? 'change the background to ' + bg + ', ' : ''}balanced flattering light.`;
   }
   if (extra && task !== 'vanish') p += ' Additional instruction: ' + extra + '.';
+  if ((task === 'background' || task === 'travel') && o.locked) return p;
+  if (task === 'vanish' && (o.marked || o.people)) return p;
+  if (task === 'blur' && o.locked) return p;
+  if (task === 'tryon' && o.locked) return p;
   return p + ' ' + KEEP;
 }
