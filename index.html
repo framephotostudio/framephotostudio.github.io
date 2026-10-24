@@ -4426,4 +4426,13 @@ window.__fcTravel=travel;window.__fcVanish=vanishPeople;
 }catch(e){console.warn('v76 travel/vanish',e)}})();
 
 </script>
+<script>
+/* v77: the wow buttons come first: Auto Glow Makeover and AI Glow sit right under the photo tools and the Women / Men switch */
+;(function(){try{var D=document;function place(){var fs=D.getElementById('finSex'),ag=D.getElementById('autoGlow');if(!fs||!ag)return false;
+ var box=D.getElementById('fcWow');if(!box){box=D.createElement('div');box.id='fcWow';fs.insertAdjacentElement('afterend',box)}
+ ['autoGlow','aiGlowBtn'].forEach(function(id){var e=D.getElementById(id);if(e&&e.parentNode!==box)box.appendChild(e)});return !!D.getElementById('aiGlowBtn')}
+ var css=D.createElement('style');css.textContent='#fcWow{display:flex;flex-direction:column;gap:10px;width:100%;max-width:560px;margin:12px auto 4px;padding:0 4px;box-sizing:border-box}#fcWow>button{width:100%;margin:0!important}body.simple #fcWow #autoGlow{display:block!important}';D.head.appendChild(css);
+ var n=0,t=setInterval(function(){if(place()||++n>40)clearInterval(t)},250);place();
+}catch(e){console.warn('v77 wow',e)}})();
+</script>
 </body></html>
