@@ -4237,31 +4237,32 @@ async function maps(){var k=photoKey();if(cache.key===k&&cache.p)return cache.p;
 window.__fcBgMaps=maps;
 
 // ---- the lens blur, applied to an already-processed canvas ----
-// per photo and size: everything that does not depend on the colours (edges, depth, how much each pixel blurs)
+// Real-camera look (v2): nothing is cut out. The whole photo is blurred by depth, she is held sharp by a soft mask,
+// so her own colours spill very slightly into the blur at the edge exactly like a real lens; the edge is feathered.
 function prep(mp,W,H){var key=W+'x'+H;if(mp.prep&&mp.prep.key===key)return mp.prep;var n=W*H;
   var al=(W===mp.W&&H===mp.H)?mp.alpha:rs(mp.alpha,mp.W,mp.H,W,H),dep=(W===mp.W&&H===mp.H)?mp.depth:rs(mp.depth,mp.W,mp.H,W,H);
-  var sm=Math.min(1,480/Math.max(W,H)),w=Math.max(8,Math.round(W*sm)),h=Math.max(8,Math.round(H*sm)),sn=w*h;
-  var als=rs(al,W,H,w,h),hard0=new Uint8Array(sn);for(var i=0;i<sn;i++)hard0[i]=als[i]>.03?1:0;var hard=dilate(hard0,w,h,2),known=new Uint8Array(sn);for(var i1=0;i1<sn;i1++)known[i1]=hard[i1]?0:1;
-  var deps=rs(dep,W,H,w,h),dc=cv(w,h),dx=dc.getContext('2d'),did=dx.createImageData(w,h),dd=did.data;for(var i2=0;i2<sn;i2++){var v=Math.round(deps[i2]*255);dd[i2*4]=dd[i2*4+1]=dd[i2*4+2]=v;dd[i2*4+3]=255}dx.putImageData(did,0,0);
-  var dfd=pushPull(dc,w,h,known).getContext('2d').getImageData(0,0,w,h).data;
-  var vals=[];for(var i3=0;i3<n;i3+=5)if(al[i3]>.6)vals.push(dep[i3]);vals.sort(function(a,b){return a-b});var df=vals.length?vals[vals.length>>1]:1;
-  var coc=new Float32Array(sn);for(var i4=0;i4<sn;i4++){var dv=dfd[i4*4]/255,c=Math.abs(dv-df);if(dv>df)c*=.6;coc[i4]=Math.min(1,c/Math.max(.25,df*.8))}coc=box(coc,w,h,2);
-  var cfull=rs(coc,w,h,W,H),sharp=new Float32Array(n),gr=new Float32Array(n);for(var i5=0;i5<n;i5++){sharp[i5]=Math.max(0,Math.min(1,1-cfull[i5]*6));gr[i5]=Math.min(1,cfull[i5]*3)}
+  var vals=[];for(var i=0;i<n;i+=5)if(al[i]>.6)vals.push(dep[i]);vals.sort(function(a,b){return a-b});var df=vals.length?vals[vals.length>>1]:1;
+  var sm=Math.min(1,560/Math.max(W,H)),w=Math.max(8,Math.round(W*sm)),h=Math.max(8,Math.round(H*sm)),sn=w*h;
+  var als=rs(al,W,H,w,h),alb=box(box(als,w,h,1),w,h,1),deps=rs(dep,W,H,w,h),coc=new Float32Array(sn);
+  for(var j=0;j<sn;j++){var c=Math.abs(deps[j]-df)/Math.max(.25,df*.8);if(deps[j]>df)c*=.2;c=Math.min(1,c);coc[j]=c*(1-alb[j])}
+  var r=Math.max(2,Math.round(w/150));coc=box(box(coc,w,h,r),w,h,r);
+  // feathered sharp mask at full size (about 1.6px)
+  var af=box(box(al,W,H,1),W,H,1);
+  var cfull=rs(coc,w,h,W,H),fade=new Float32Array(n);for(var k=0;k<n;k++)fade[k]=Math.min(1,cfull[k]*4);
   var src=pix(source,W,H),hfs=[];for(var i7=W+1;i7<n-W-1;i7+=97){var l=src[i7*4+1]*4-src[(i7-1)*4+1]-src[(i7+1)*4+1]-src[(i7-W)*4+1]-src[(i7+W)*4+1];hfs.push(Math.abs(l)/4)}hfs.sort(function(a,b){return a-b});
-  var seed=12345,rnd=function(){seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296},noise=new Float32Array(n),sd=(hfs[hfs.length>>1]||1)*.9;for(var i8=0;i8<n;i8++)noise[i8]=(rnd()+rnd()+rnd()-1.5)*1.41*sd*gr[i8];
-  mp.prep={key:key,al:al,w:w,h:h,known:known,coc:coc,sharp:sharp,noise:noise};return mp.prep}
+  var seed=12345,rnd=function(){seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296},noise=new Float32Array(n),sd=(hfs[hfs.length>>1]||1)*.8;for(var i8=0;i8<n;i8++)noise[i8]=(rnd()+rnd()+rnd()-1.5)*1.41*sd*Math.min(1,cfull[i8]*3);
+  mp.prep={key:key,af:af,w:w,h:h,coc:coc,fade:fade,noise:noise};return mp.prep}
 var GAM=new Uint8ClampedArray(4096);for(var gi=0;gi<4096;gi++)GAM[gi]=Math.round(Math.pow(gi/4095,1/2.2)*255);
 function lensBlur(canvas,mp,strength){var OW=canvas.width,OH=canvas.height,s=Math.min(1,1600/Math.max(OW,OH)),W=Math.round(OW*s),H=Math.round(OH*s),n=W*H,P=prep(mp,W,H),w=P.w,h=P.h,sn=w*h;
-  // the background with her removed (filled from the surroundings), at blur resolution
-  var fillC=pushPull(canvas,w,h,P.known),small=fillC.getContext('2d').getImageData(0,0,w,h).data,ch=[new Float32Array(sn),new Float32Array(sn),new Float32Array(sn)];
+  var small=pix(canvas,w,h),ch=[new Float32Array(sn),new Float32Array(sn),new Float32Array(sn)];
   for(var i=0;i<sn;i++){ch[0][i]=LIN[small[i*4]];ch[1][i]=LIN[small[i*4+1]];ch[2][i]=LIN[small[i*4+2]]}
-  var rmax=Math.hypot(w,h)*.022*strength/.6,ks=[0,.15,.3,.5,.75,1],lv=ks.map(function(k){return k?discBlur(ch,w,h,Math.max(1,rmax*k)):ch});
+  var rmax=Math.hypot(w,h)*.016*strength/.45,ks=[0,.2,.4,.6,.8,1],lv=ks.map(function(k){return k?discBlur(ch,w,h,Math.max(1,rmax*k)):ch});
   var bc=cv(w,h),bx=bc.getContext('2d'),bid=bx.createImageData(w,h),bd=bid.data;
-  for(var i2=0;i2<sn;i2++){var xk=P.coc[i2]*(ks.length-1),k0=Math.min(ks.length-2,Math.floor(xk)),t=xk-k0;for(var c=0;c<3;c++){var v=lv[k0][c][i2]*(1-t)+lv[k0+1][c][i2]*t;bd[i2*4+c]=GAM[Math.max(0,Math.min(4095,(v*4095)|0))]}bd[i2*4+3]=255}bx.putImageData(bid,0,0);
-  var up=pix(bc,W,H),fup=pix(fillC,W,H),src=pix(canvas,W,H),oc=cv(W,H),ox=oc.getContext('2d'),oid=ox.createImageData(W,H),od=oid.data,al=P.al,sh=P.sharp,no=P.noise;
-  for(var j=0;j<n;j++){var a=al[j],sp=sh[j],q=j*4;for(var c2=0;c2<3;c2++){var sharpBg=a>.02?fup[q+c2]:src[q+c2],b=up[q+c2]*(1-sp)+sharpBg*sp+no[j];od[q+c2]=src[q+c2]*a+b*(1-a)}od[q+3]=255}
+  for(var i2=0;i2<sn;i2++){var xk=Math.min(1,P.coc[i2])*(ks.length-1),k0=Math.min(ks.length-2,Math.floor(xk)),t=xk-k0;for(var c=0;c<3;c++){var v=lv[k0][c][i2]*(1-t)+lv[k0+1][c][i2]*t;bd[i2*4+c]=GAM[Math.max(0,Math.min(4095,(v*4095)|0))]}bd[i2*4+3]=255}bx.putImageData(bid,0,0);
+  var up=pix(bc,W,H),src=pix(canvas,W,H),oc=cv(W,H),ox=oc.getContext('2d'),oid=ox.createImageData(W,H),od=oid.data,af=P.af,fd=P.fade,no=P.noise;
+  for(var j=0;j<n;j++){var a=af[j],fa=fd[j],q=j*4;for(var c2=0;c2<3;c2++){var b=src[q+c2]*(1-fa)+up[q+c2]*fa+no[j];od[q+c2]=src[q+c2]*a+b*(1-a)}od[q+3]=255}
   ox.putImageData(oid,0,0);if(W===OW&&H===OH)return oc;var fc=cv(OW,OH),fx=fc.getContext('2d');fx.imageSmoothingQuality='high';fx.drawImage(oc,0,0,OW,OH);
-  var big=fx.getImageData(0,0,OW,OH),bg2=big.data,orig=canvas.getContext('2d').getImageData(0,0,OW,OH).data,A2=rs(al,W,H,OW,OH);for(var i9=0;i9<OW*OH;i9++){var aa=A2[i9];if(aa<=0)continue;for(var c9=0;c9<3;c9++)bg2[i9*4+c9]=orig[i9*4+c9]*aa+bg2[i9*4+c9]*(1-aa)}fx.putImageData(big,0,0);return fc}
+  var big=fx.getImageData(0,0,OW,OH),bg2=big.data,orig=canvas.getContext('2d').getImageData(0,0,OW,OH).data,A2=rs(af,W,H,OW,OH);for(var i9=0;i9<OW*OH;i9++){var aa=A2[i9];if(aa<=0)continue;for(var c9=0;c9<3;c9++)bg2[i9*4+c9]=orig[i9*4+c9]*aa+bg2[i9*4+c9]*(1-aa)}fx.putImageData(big,0,0);return fc}
 window.__fcLensBlur=lensBlur;
 
 // ---- hook into the studio: the blur is a separate layer AFTER the looks and filters ----
