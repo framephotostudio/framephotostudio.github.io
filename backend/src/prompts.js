@@ -119,6 +119,7 @@ export function buildPrompt(task, o = {}) {
       p = 'Keep the person exactly as they are and smoothly blur the existing background like an 85mm f/1.8 portrait lens, with clean hair edges.';
       break;
     case 'vanish':
+      if (o.people) { p = `Remove every person in the background of this photo (seated, standing or walking behind), keeping only the main ${o.people} in front exactly as they are. Rebuild the restaurant, tables, chairs, walls and lights behind where those people were so it looks like a real, empty, natural photo with the same lighting, perspective, focus and photo grain. Do not move, resize or change the main people, their faces, hair, clothes or pose, and do not change the framing.`; break; }
       if (o.marked) { p = `In this photo the area painted solid magenta marks something to remove. Remove it completely and rebuild what was behind it so it looks like it was never there: continue the surrounding background, lines, textures, lighting, shadows and the natural photo grain seamlessly. Do not leave any magenta, smudge or blur. Change nothing outside the magenta area.`; break; }
       p = `Remove ${extra || 'the marked distraction'} from this photo and rebuild the background behind it naturally and seamlessly, matching texture, lighting and perspective. Keep the main person untouched.`;
       break;
@@ -131,6 +132,6 @@ export function buildPrompt(task, o = {}) {
   }
   if (extra && task !== 'vanish') p += ' Additional instruction: ' + extra + '.';
   if ((task === 'background' || task === 'travel') && o.locked) return p;
-  if (task === 'vanish' && o.marked) return p;
+  if (task === 'vanish' && (o.marked || o.people)) return p;
   return p + ' ' + KEEP;
 }
