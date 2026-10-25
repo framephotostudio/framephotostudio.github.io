@@ -26,7 +26,7 @@
   }
 
   // ---------- server state ----------
-  function publish(me) { st.me = me; try { window.dispatchEvent(new CustomEvent('fc:plan', { detail: me })); } catch (e) {} }
+  function publish(me) { st.me = me; try { if (me && me.owner) { localStorage.setItem('fc-owner', '1'); window.gtag = function () {}; window.__fcOwnerNoStats = true; } } catch (e) {} try { window.dispatchEvent(new CustomEvent('fc:plan', { detail: me })); } catch (e) {} }
   function refresh() {
     if (!API || !API.url) return Promise.resolve(null);
     return API.api('/api/config').then(function (c) { st.cfg = c; return API.api('/api/me'); }).then(function (m) { publish(m); return m; }).catch(function () { return null; });
