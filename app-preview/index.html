@@ -4366,9 +4366,11 @@ async function travel(S){if(!needs()||X._isBusy())return;X._setBusy(true);T('ai_
    var j=await X._call({task:'travel',background:S.k,locked:true,image:up.toDataURL('image/jpeg',.92),width:up.width,height:up.height,consent:true,retry:t>0});
    var im=await loadI(j.image),ai=cv(im.naturalWidth,im.naturalHeight);ai.getContext('2d').drawImage(im,0,0);var La=await face(ai);if(!La)continue;
    var r=lockFace(big,Lo,ai,La),mp=null;try{mp=await window.__fcBgMaps()}catch(e){}var ref=big;if(r.crop){ref=cv(r.crop[2],r.crop[3]);ref.getContext('2d').drawImage(big,r.crop[0],r.crop[1],r.crop[2],r.crop[3],0,0,r.crop[2],r.crop[3])}
-   if(r.crop&&(r.crop[2]<big.width*.8||r.crop[3]<big.height*.8))continue;
+   var LOGG=function(o){try{(window.__fcGate=window.__fcGate||[]).push(Object.assign({k:S.k,err:+r.err.toFixed(4),scl:+r.scl.toFixed(3),crop:r.crop?[+(r.crop[2]/big.width).toFixed(2),+(r.crop[3]/big.height).toFixed(2)]:null},o))}catch(e){}};
+   if(r.crop&&(r.crop[2]<big.width*.8||r.crop[3]<big.height*.8)){LOGG({why:'crop'});continue}
    var smp=mp?sampler(mp):null,cr=r.crop,fn=smp&&(cr?function(x,y){return smp((cr[0]+x*cr[2])/big.width,(cr[1]+y*cr[3])/big.height)}:smp);
    var ch=changed(ref,r.c,fn);r.ref=ref;
+   LOGG({ch:+ch.toFixed(1)});
    if(r.err<.03&&ch>25&&Math.abs(r.scl-1)<.12)best=r}
   if(!best){X._close();X._message('Let’s try that again','This photo did not come out perfectly, so we did not use it. Try another scene or a different photo.');T('ai_travel_rejected',{scene:S.k});return}
   X._refresh();T('ai_travel_done',{scene:S.k});X._setBusy(false);X._showResult({k:'travel_'+S.k,n:S.n},best.ref||big,best.c)}
