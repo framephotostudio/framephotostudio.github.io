@@ -4563,7 +4563,7 @@ W.__fcWowGo=go;
  function hook(){var X=W.__luxe;if(!X||!X._ov||!X._ov()||X.__v83)return !!(X&&X.__v83);X.__v83=1;
   var ov=X._ov(),started=0,cancelled=0,timer=null;
   function cancel(){cancelled=Date.now();clearTimeout(timer);try{X._close()}catch(e){}try{X._setBusy(false)}catch(e){}try{D.documentElement.style.overflow=''}catch(e){}try{(W.gtag||function(){})('event','ai_cancel')}catch(e){}}
-  function late(){return cancelled&&cancelled>=started}
+  function late(){return cancelled&&cancelled>=started&&!window.__fcReopen}
   var sr=X._showResult;X._showResult=function(){if(late())return;return sr.apply(this,arguments)};
   var ms=X._message;X._message=function(){if(late()&&Date.now()-cancelled<600000&&!X._isBusy())return;return ms.apply(this,arguments)};
   new MutationObserver(function(){if(ov.hidden||!ov.querySelector('.luxeRing')){clearTimeout(timer);return}
@@ -4624,5 +4624,29 @@ W.__fcWowGo=go;
  var k=setInterval(function(){var ws=D.querySelector('.workspace');if(ws&&ws!==ws0){ws0=ws;obs.observe(ws,{attributes:true,attributeFilter:['class']});clearInterval(k)}},300);
  addEventListener('resize',place);
 }catch(e){console.warn('v86 phone full screen',e)}})();
+</script>
+<script>
+/* v87: "My AI results" - every AI result is kept on this phone (the last 12), so closing the result never loses a paid look.
+   Tap the button to reopen any of them: save it, compare it, or keep editing it. */
+;(function(){try{var D=document,W=window,LIST=[],DB=null,reopening=false;
+ function idb(){return new Promise(function(res){if(DB)return res(DB);try{var r=indexedDB.open('fc-ai-results',1);r.onupgradeneeded=function(){r.result.createObjectStore('r',{keyPath:'id'})};r.onsuccess=function(){DB=r.result;res(DB)};r.onerror=function(){res(null)}}catch(e){res(null)}})}
+ function toBlob(c,q){return new Promise(function(r){try{c.toBlob(function(b){r(b)},'image/jpeg',q||.92)}catch(e){r(null)}})}
+ function toCanvas(blob){return new Promise(function(r){var u=URL.createObjectURL(blob),im=new Image();im.onload=function(){var c=D.createElement('canvas');c.width=im.naturalWidth;c.height=im.naturalHeight;c.getContext('2d').drawImage(im,0,0);URL.revokeObjectURL(u);r(c)};im.onerror=function(){r(null)};im.src=u})}
+ async function save(L,before,after){try{var id=Date.now();var it={id:id,L:{k:L.k,n:L.n},before:before,after:after};LIST.unshift(it);LIST=LIST.slice(0,12);refresh();
+  var db=await idb();if(!db)return;var bb=await toBlob(before,.85),ab=await toBlob(after,.94);var tx=db.transaction('r','readwrite'),st=tx.objectStore('r');st.put({id:id,L:it.L,before:bb,after:ab});
+  var all=st.getAllKeys();all.onsuccess=function(){var ks=all.result.sort(function(a,b){return b-a});ks.slice(12).forEach(function(k){st.delete(k)})}}catch(e){}}
+ async function load(){try{var db=await idb();if(!db)return;var tx=db.transaction('r','readonly'),q=tx.objectStore('r').getAll();q.onsuccess=function(){var rows=(q.result||[]).sort(function(a,b){return b.id-a.id}).slice(0,12);
+   rows.forEach(function(r){if(!LIST.some(function(x){return x.id===r.id}))LIST.push({id:r.id,L:r.L,bBlob:r.before,aBlob:r.after})});LIST.sort(function(a,b){return b.id-a.id});refresh()}}catch(e){}}
+ async function open(it){var X=W.__luxe;if(!X)return;if(!it.after&&it.aBlob){it.after=await toCanvas(it.aBlob);it.before=await toCanvas(it.bBlob)}if(!it.after)return;reopening=true;W.__fcReopen=true;try{X._showResult(it.L,it.before,it.after)}finally{reopening=false;W.__fcReopen=false}}
+ function gallery(){var X=W.__luxe;if(!X||!LIST.length)return;var h='<div class="luxeRes fcResBox"><div class="luxeTop"><b>My AI results</b><button type="button" id="luxeClose" aria-label="Close">×</button></div><p class="sub" style="margin:0 0 10px">Your last AI looks, kept on this phone. Tap one to save it or keep editing.</p><div id="fcResGrid"></div></div>';
+  X._overlay(h);var g=D.getElementById('fcResGrid');LIST.forEach(function(it){var b=D.createElement('button');b.type='button';b.className='fcResItem';var img=D.createElement('img');img.alt=it.L.n||'AI result';
+   if(it.after){img.src=it.after.toDataURL('image/jpeg',.6)}else if(it.aBlob){img.src=URL.createObjectURL(it.aBlob)}var s=D.createElement('span');s.textContent=it.L.n||'AI look';b.appendChild(img);b.appendChild(s);b.onclick=function(){open(it)};g.appendChild(b)});
+  D.getElementById('luxeClose').onclick=function(){X._close()}}
+ function refresh(){var w=D.getElementById('fcWow');if(!w)return;var b=D.getElementById('fcMyRes');if(!b){b=D.createElement('button');b.type='button';b.id='fcMyRes';b.onclick=gallery;w.appendChild(b)}b.hidden=!LIST.length;b.textContent='🕘 My AI results ('+LIST.length+')'}
+ var c=D.createElement('style');c.textContent='#fcMyRes{width:100%;min-height:40px;border-radius:14px;border:1px solid #c9a35a;background:#fffaf3;color:#4a2f7a;font:650 14px/1 inherit;cursor:pointer;margin-top:2px}#fcMyRes[hidden]{display:none}.fcResBox{width:min(560px,92vw)!important;max-width:92vw;flex:0 0 auto!important}#fcResGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;max-height:62vh;overflow:auto;width:100%}.fcResItem{min-width:0;border:1px solid #c9a35a66;background:#ffffff10;border-radius:12px;padding:4px;display:flex;flex-direction:column;gap:4px;cursor:pointer;color:#fff;font:600 11px/1.2 inherit;text-align:center}.fcResItem img{display:block;width:100%;height:auto;aspect-ratio:3/4;object-fit:cover;border-radius:9px;max-height:200px}';D.head.appendChild(c);
+ function hook(){var X=W.__luxe;if(!X||!X._showResult||X.__v87)return !!(X&&X.__v87);X.__v87=1;var sr=X._showResult;
+  X._showResult=function(L,before,after){var r=sr.apply(this,arguments);if(!reopening&&after&&D.getElementById('luxeSave'))save(L,before,after);return r};return true}
+ var n=0,t=setInterval(function(){var ok=hook();refresh();if((ok&&D.getElementById('fcMyRes'))||++n>120)clearInterval(t)},250);load();
+}catch(e){console.warn('v87 my results',e)}})();
 </script>
 </body></html>
