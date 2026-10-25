@@ -4464,12 +4464,15 @@ window.__fcTravel=travel;window.__fcVanish=vanishPeople;
 function say(t){try{(W.toast||function(){})(t)}catch(e){}}
 function hasPhoto(){try{return !!(W.__luxe&&W.__luxe._photoCanvas&&typeof source!=='undefined'&&source&&typeof originalPhoto!=='undefined'&&originalPhoto)}catch(e){return false}}
 function openTab(t){var b=D.querySelector('[data-tab="'+t+'"]');if(b&&b.getAttribute('aria-selected')!=='true')b.click()}
-function openUp(el){for(var e=el;e;e=e.parentElement){if(e.tagName==='DETAILS'&&!e.open)e.open=true;if(e.hidden&&e.id!=='fcBgStr')e.hidden=false}}
+function openUp(el){for(var e=el;e;e=e.parentElement){if(e.tagName==='DETAILS'&&!e.open)e.open=true}}
+/* iPhone-safe scroll: move only the real scrolling panel, instantly (smooth scrolling can lock touch scrolling in the iPhone app) */
+function show(el){if(!el)return;var sc=null;for(var e=el.parentElement;e&&e!==D.body&&e!==D.documentElement;e=e.parentElement){var cs=getComputedStyle(e);if(/(auto|scroll)/.test(cs.overflowY)&&e.scrollHeight>e.clientHeight+2){sc=e;break}}
+ if(sc){var r=el.getBoundingClientRect(),q=sc.getBoundingClientRect();sc.scrollTop=Math.max(0,sc.scrollTop+(r.top-q.top)-Math.max(12,(q.height-r.height)/2))}var r2=el.getBoundingClientRect();if(r2.top<0||r2.bottom>innerHeight){var t=el.getBoundingClientRect().top+W.pageYOffset-Math.max(12,(innerHeight-el.offsetHeight)/2);W.scrollTo(0,Math.max(0,t))}}
 function pulse(el){if(!el)return;el.classList.remove('fcPulse');void el.offsetWidth;el.classList.add('fcPulse');setTimeout(function(){el.classList.remove('fcPulse')},4200)}
 function go(k,fromFront){
- if(k==='glow'){var g=D.getElementById('aiGlowBtn');if(fromFront){g&&g.scrollIntoView({behavior:'smooth',block:'center'});pulse(g);say('Tap AI Glow for your premium AI makeover.')}else g&&g.click();return}
- if(k==='outfit'){var o=D.getElementById('fcWowOutfit');if(fromFront){o&&o.scrollIntoView({behavior:'smooth',block:'center'});pulse(o);say('Now tap AI Outfit Change and choose a photo of the outfit.')}else{var tb=D.getElementById('fcTryBtn');tb&&tb.click()}return}
- if(k==='bg'){openTab('edit');var tr=D.getElementById('fcTravel');if(!tr)return;openUp(tr);setTimeout(function(){tr.scrollIntoView({behavior:'smooth',block:'center'});pulse(tr);say('Pick a destination. Your face, pose and outfit stay exactly yours.')},150)}}
+ if(k==='glow'){var g=D.getElementById('aiGlowBtn');if(fromFront){show(g);pulse(g);say('Tap AI Glow for your premium AI makeover.')}else g&&g.click();return}
+ if(k==='outfit'){var o=D.getElementById('fcWowOutfit');if(fromFront){show(o);pulse(o);say('Now tap AI Outfit Change and choose a photo of the outfit.')}else{var tb=D.getElementById('fcTryBtn');tb&&tb.click()}return}
+ if(k==='bg'){openTab('edit');var tr=D.getElementById('fcTravel');if(!tr)return;openUp(tr);setTimeout(function(){show(tr);pulse(tr);say('Pick a destination. Your face, pose and outfit stay exactly yours.')},150)}}
 var was=null;function cur(){try{return typeof source!=='undefined'?source:null}catch(e){return null}}
 function front(k){want=k;wantT=Date.now();was=cur();W.__glowAfterUpload=false;var f=D.getElementById('file');f&&f.click()}
 setInterval(function(){if(want&&hasPhoto()&&cur()!==was){var k=want;want=null;setTimeout(function(){go(k,true)},900)}else if(want&&Date.now()-wantT>180000)want=null},500);
