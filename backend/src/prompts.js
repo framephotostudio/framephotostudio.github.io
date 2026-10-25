@@ -20,6 +20,31 @@ const BACKDROPS = {
   mykonos: 'a Mykonos, Greece whitewashed lane with blue doors and shutters, pink bougainvillea and the blue sea in the distance, bright Mediterranean daylight',
   beach_lux: 'a luxurious white-sand beach with turquoise water, palm trees and soft sunlight, gently blurred like a real photo',
   paris_cafe: 'a charming Parisian cafe terrace with wicker chairs, small round tables and Haussmann buildings, softly blurred behind, warm natural light',
+  new_york: 'New York City on Fifth Avenue with Manhattan skyscrapers rising behind, yellow taxis softly blurred, bright natural daylight',
+  times_square: 'Times Square, New York at night: glowing billboards and city lights softly blurred behind, colorful evening light',
+  las_vegas: 'the Las Vegas Strip at night: famous casino hotels, fountains and glittering lights softly blurred behind',
+  miami: 'Ocean Drive, Miami Beach: pastel art-deco hotels, tall palm trees and blue sky, bright tropical sun',
+  los_angeles: 'Beverly Hills, Los Angeles: palm-lined Rodeo Drive with luxury boutiques, sunny California light',
+  shanghai: 'the Bund in Shanghai at night: the Pudong skyline with the Oriental Pearl Tower lit up across the river, softly blurred',
+  petra: 'Petra, Jordan: the rose-red Treasury carved into the canyon cliff behind, warm desert daylight',
+  dubai_burj: 'downtown Dubai: the Burj Khalifa rising behind with modern towers, golden late-afternoon light',
+  london: 'London: Big Ben and the Houses of Parliament behind on Westminster Bridge, soft natural daylight',
+  tokyo_night: 'Shibuya, Tokyo at night: neon signs and city lights softly blurred behind, colorful evening light',
+  eiffel: 'Paris at the Trocadero with the Eiffel Tower behind, soft golden-hour light',
+  seville: 'Plaza de Espana in Seville, Spain: the grand tiled semicircular palace, bridges and canal behind, warm sunlight',
+  amalfi: 'Positano on the Amalfi Coast, Italy: colorful cliffside houses stacked down to the turquoise sea, bright Mediterranean sun',
+  pisa: 'Pisa, Italy: the Leaning Tower and the white marble cathedral on green lawns behind, clear daylight',
+  rome_colosseum: 'Rome, Italy: the Colosseum behind on a sunny day, warm natural light',
+  istanbul: 'Istanbul, Turkey: the Blue Mosque with its domes and minarets behind, soft golden light',
+  cappadocia: 'Cappadocia, Turkey at sunrise: dozens of colorful hot-air balloons floating over the fairy-chimney valley behind, soft warm light',
+  pyramids: 'Giza, Egypt: the Great Pyramids in the desert behind, bright warm sunlight',
+  marrakech: 'a Marrakech, Morocco riad courtyard: intricate zellige tiles, carved arches, lanterns and a fountain, warm soft light',
+  maldives_villa: 'the Maldives: overwater villas on a wooden jetty over clear turquoise water, bright tropical sun',
+  fine_dining: 'an elegant fine-dining restaurant at night: candlelit tables, crystal glasses, velvet chairs and warm chandelier light, softly blurred',
+  nightclub: 'an upscale VIP nightclub: a luxurious lounge with moody purple and gold lighting, sparkling bottles and soft bokeh, nighttime',
+  rooftop: 'a chic rooftop lounge at night overlooking a glittering city skyline, string lights and warm ambient light, softly blurred',
+  yacht: 'the deck of a luxury yacht on deep blue sea, white leather seating and a sunny Mediterranean coastline behind',
+  red_carpet: 'a red-carpet gala entrance: step-and-repeat backdrop, velvet ropes and camera flashes softly blurred, glamorous evening light',
   rome: 'Rome with the Colosseum softly blurred in warm light', tokyo: 'a Tokyo street at night with soft neon bokeh', alps: 'snow-capped Swiss Alps with clear morning light'
 };
 // ---- Face Couture luxury beauty finishes ------------------------------------------------------------------------------
@@ -88,7 +113,7 @@ const GROOM = {
   mrested: 'a well-rested finish: fresher, brighter under-eyes with dark circles and puffiness softened, clear even skin with real texture, less redness, neat brows, a healthy awake complexion'
 };
 const MEN_KEEP = 'Keep his exact same face shape, head size, nose, eyes, eye color, lips, ears, hair, beard shape and length, skin tone, expression, pose, clothing and background. Keep his exact same facial expression and smile: the mouth open exactly as much as in the original with the same teeth showing (never close an open smile or open a closed one), and do not add or deepen creases at the mouth corners, smile lines or around the eyes. Do not slim, reshape or resize his face, jaw, cheeks or neck. No makeup of any kind: no lipstick, lip color or gloss, no eyeshadow, eyeliner or mascara, no lash changes, no blush, no visible highlighter or shimmer. Photorealistic with natural skin texture; he must look exactly like himself, just well groomed.';
-export const TRAVEL_KEYS = ['santorini_day', 'santorini_sunset', 'mykonos', 'beach_lux', 'paris_cafe', 'greece', 'paris', 'newyork', 'london', 'dubai', 'bali', 'maldives', 'rome', 'tokyo', 'alps', 'beach', 'sunset'];
+export const TRAVEL_KEYS = ['santorini_day', 'santorini_sunset', 'mykonos', 'beach_lux', 'paris_cafe', 'new_york', 'times_square', 'las_vegas', 'miami', 'los_angeles', 'shanghai', 'petra', 'dubai_burj', 'london', 'tokyo_night', 'eiffel', 'seville', 'amalfi', 'pisa', 'rome_colosseum', 'istanbul', 'cappadocia', 'pyramids', 'marrakech', 'maldives_villa', 'fine_dining', 'nightclub', 'rooftop', 'yacht', 'red_carpet', 'greece', 'paris', 'newyork', 'london', 'dubai', 'bali', 'maldives', 'rome', 'tokyo', 'alps', 'beach', 'sunset'];
 
 export function buildPrompt(task, o = {}) {
   const outfit = o.outfit && o.outfit !== 'keep' ? OUTFITS[o.outfit] : null;
