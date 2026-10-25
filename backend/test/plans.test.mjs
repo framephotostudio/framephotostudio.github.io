@@ -108,3 +108,9 @@ await setCfg({ pro: { paywallFrom: '2020-01-01' } });
   let st2 = []; for (let i = 0; i < 6; i++) { clearRL(); st2.push((await ai(wk.token)).status); }
   ok(st2.join() === '200,200,200,200,200,402', 'weekly plan: the 6th look this week is refused (' + st2 + ')');
   clearRL(); let rr2 = await ai(wk.token); ok(/this week/.test(rr2.j.error || ''), 'weekly message says this week (' + rr2.j.error + ')'); }
+
+// owner phone by device ID: unlimited, no passphrase
+{ clearRL(); let od = await newDevice(); env.OWNER_DEVICES = od.device;
+  let me3 = (await call('/api/me', null, od.token, 'GET')).j; ok(me3.owner === true, 'owner device ID: owner mode on without a passphrase (' + me3.owner + ')');
+  let st3 = []; for (let i = 0; i < 4; i++) { clearRL(); st3.push((await ai(od.token)).status); } ok(st3.every(x => x === 200), 'owner device: unlimited AI looks (' + st3 + ')');
+  delete env.OWNER_DEVICES; }

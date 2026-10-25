@@ -90,8 +90,16 @@ async function auth(req, env) {
   const payload = parts.slice(0, 3).join('.');
   if ((await sign(env.APP_SIGNING_SECRET || 'dev', payload)) !== parts[3]) return null;
   const rec = (await env.KV.get('dev:' + parts[0], 'json')) || { platform: parts[1], tier: 'free' };
+  // owner's own phones: always owner mode (unlimited, not counted), no passphrase needed
+  if (!rec.owner && ownerDevices(env).includes(parts[0])) {
+    rec.owner = true; rec.viewAs = 'owner'; rec.ownerSince = Date.now();
+    await env.KV.put('dev:' + parts[0], JSON.stringify(rec)); await env.KV.put('owner:' + parts[0], JSON.stringify({ since: rec.ownerSince, platform: rec.platform || parts[1] || '' }));
+  }
   return { id: parts[0], platform: parts[1], ...rec };
 }
+// Device IDs of the owner's phones (Settings -> Device ID). Also settable as the OWNER_DEVICES variable (comma separated).
+const OWNER_DEVICE_IDS = [];
+const ownerDevices = env => OWNER_DEVICE_IDS.concat(String(env.OWNER_DEVICES || '').split(',').map(x => x.trim()).filter(Boolean));
 
 // ---------- counters ----------
 async function bump(env, key, n = 1, ttl = 400 * 86400) {
