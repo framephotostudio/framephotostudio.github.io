@@ -1,1 +1,1 @@
-iPhone build request: 1.0.0 (natural background change, Clothing menu face lock, bigger photo, scrolling fix)
+iPhone build request: 1.0.0 (bigger photo in the studio)
