@@ -100,3 +100,17 @@ await setCfg({ pro: { paywallFrom: '2020-01-01' } });
   ok(!kv.get('dau:' + new Date().toISOString().slice(0, 10) + ':' + o.device), 'owner: not counted as a daily user');
   let lv = await call('/api/owner/view', { leave: true }, o.token); ok(lv.j.tier === 'free' && !lv.j.owner, 'owner: leaving owner mode makes it a normal device again');
   let other = await newDevice(); let nv = await call('/api/owner/view', { as: 'paid' }, other.token); ok(nv.status === 403, 'owner: other devices cannot use owner controls'); }
+
+// weekly plan: 5 AI looks a week, then a top-up or a polite stop
+{ clearRL(); let wk = await newDevice();
+  await hook({ type: 'INITIAL_PURCHASE', period_type: 'NORMAL', app_user_id: wk.device, product_id: 'fc_pro_weekly', price: 4.99, expiration_at_ms: Date.now() + 7 * 86400e3, store: 'APP_STORE' });
+  let me2 = (await call('/api/me', null, wk.token, 'GET')).j; ok(me2.tier === 'paid' && me2.left.total === 5, 'weekly plan: 5 AI looks this week (' + me2.tier + ', ' + me2.left.total + ')');
+  let st2 = []; for (let i = 0; i < 6; i++) { clearRL(); st2.push((await ai(wk.token)).status); }
+  ok(st2.join() === '200,200,200,200,200,402', 'weekly plan: the 6th look this week is refused (' + st2 + ')');
+  clearRL(); let rr2 = await ai(wk.token); ok(/this week/.test(rr2.j.error || ''), 'weekly message says this week (' + rr2.j.error + ')'); }
+
+// owner phone by device ID: unlimited, no passphrase
+{ clearRL(); let od = await newDevice(); env.OWNER_DEVICES = od.device;
+  let me3 = (await call('/api/me', null, od.token, 'GET')).j; ok(me3.owner === true, 'owner device ID: owner mode on without a passphrase (' + me3.owner + ')');
+  let st3 = []; for (let i = 0; i < 4; i++) { clearRL(); st3.push((await ai(od.token)).status); } ok(st3.every(x => x === 200), 'owner device: unlimited AI looks (' + st3 + ')');
+  delete env.OWNER_DEVICES; }

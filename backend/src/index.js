@@ -10,6 +10,9 @@ const json = (d, s = 200, h = {}) => new Response(JSON.stringify(d), { status: s
 const err = (m, s = 400, extra = {}) => json({ error: m, ...extra }, s);
 const month = (d = new Date()) => d.toISOString().slice(0, 7);
 const day = (d = new Date()) => d.toISOString().slice(0, 10);
+// week key: the Monday (UTC) that starts this week
+const week = (d = new Date()) => { const x = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())); x.setUTCDate(x.getUTCDate() - ((x.getUTCDay() + 6) % 7)); return 'w' + x.toISOString().slice(0, 10); };
+const isWeekly = (dev, cfg) => !!dev.plan && dev.plan === ((cfg.pro && cfg.pro.products) || {}).weekly;
 
 export default {
   async fetch(req, env, ctx) {
@@ -87,8 +90,16 @@ async function auth(req, env) {
   const payload = parts.slice(0, 3).join('.');
   if ((await sign(env.APP_SIGNING_SECRET || 'dev', payload)) !== parts[3]) return null;
   const rec = (await env.KV.get('dev:' + parts[0], 'json')) || { platform: parts[1], tier: 'free' };
+  // owner's own phones: always owner mode (unlimited, not counted), no passphrase needed
+  if (!rec.owner && ownerDevices(env).includes(parts[0])) {
+    rec.owner = true; rec.viewAs = 'owner'; rec.ownerSince = Date.now();
+    await env.KV.put('dev:' + parts[0], JSON.stringify(rec)); await env.KV.put('owner:' + parts[0], JSON.stringify({ since: rec.ownerSince, platform: rec.platform || parts[1] || '' }));
+  }
   return { id: parts[0], platform: parts[1], ...rec };
 }
+// Device IDs of the owner's phones (Settings -> Device ID). Also settable as the OWNER_DEVICES variable (comma separated).
+const OWNER_DEVICE_IDS = ['a94b490c-38cc-4b14-b5a0-9e8aedb547cc'];
+const ownerDevices = env => OWNER_DEVICE_IDS.concat(String(env.OWNER_DEVICES || '').split(',').map(x => x.trim()).filter(Boolean));
 
 // ---------- counters ----------
 async function bump(env, key, n = 1, ttl = 400 * 86400) {
@@ -116,7 +127,8 @@ function tierOf(dev, cfg) {
 }
 async function allowanceCheck(env, dev, cfg) {
   const tier = tierOf(dev, cfg);
-  const a = cfg.allowances[tier] || cfg.allowances.free;
+  const weekly = tier === 'paid' && isWeekly(dev, cfg) && cfg.allowances.weekly;
+  const a = weekly ? cfg.allowances.weekly : (cfg.allowances[tier] || cfg.allowances.free);
   let planLeft, today, monthLeft;
   if (tier === 'trial') {
     const used = +(await env.KV.get(`use:${dev.id}:trial`)) || 0;
@@ -124,11 +136,13 @@ async function allowanceCheck(env, dev, cfg) {
   } else {
     const d = +(await env.KV.get(`use:${dev.id}:${day()}`)) || 0;
     const m = +(await env.KV.get(`use:${dev.id}:${month()}`)) || 0;
-    today = Math.max(0, (a.perDay ?? 0) - d); monthLeft = Math.max(0, (a.perMonth ?? 0) - m);
+    today = Math.max(0, (a.perDay ?? 0) - d);
+    if (weekly) { const w = +(await env.KV.get(`use:${dev.id}:${week()}`)) || 0; monthLeft = Math.max(0, (a.perWeek ?? 0) - w); }
+    else monthLeft = Math.max(0, (a.perMonth ?? 0) - m);
     planLeft = Math.min(today, monthLeft);
   }
   const credits = Math.max(0, +(dev.credits || 0));
-  return { tier, ok: planLeft > 0 || credits > 0, planLeft, credits,
+  return { tier, weekly: !!weekly, ok: planLeft > 0 || credits > 0, planLeft, credits,
            left: { today: planLeft + credits, month: monthLeft + credits, plan: planLeft, credits, total: planLeft + credits }, allowance: a };
 }
 // ---------- owner mode ----------
@@ -231,7 +245,7 @@ async function generate(req, env, ctx, forcedTask) {
   if (!ownerTest && !isRetry && !al.ok) {
     const msg = al.tier === 'free' ? 'AI looks are part of Face Couture Pro.'
       : al.tier === 'trial' ? `You've used the ${al.allowance.total} AI looks in your free trial.`
-      : al.tier === 'paid' ? `You've used this month's ${al.allowance.perMonth} AI looks.`
+      : al.tier === 'paid' ? (al.weekly ? `You've used this week's ${al.allowance.perWeek} AI looks.` : `You've used this month's ${al.allowance.perMonth} AI looks.`)
       : al.left.month > 0 ? 'You\'ve used today\'s AI looks. More tomorrow.' : 'You\'ve used this month\'s AI looks.';
     return err(msg, 402, { code: al.tier === 'free' ? 'subscribe' : 'allowance', tier: al.tier, left: al.left });
   }
@@ -305,7 +319,7 @@ async function generate(req, env, ctx, forcedTask) {
   if (!isRetry && !ownerTest) {
     if (al.planLeft > 0) {
       if (al.tier === 'trial') await bump(env, `use:${dev.id}:trial`, 1, 60 * 86400);
-      else { await bump(env, `use:${dev.id}:${day()}`, 1, 2 * 86400); await bump(env, `use:${dev.id}:${month()}`, 1, 40 * 86400); }
+      else { await bump(env, `use:${dev.id}:${day()}`, 1, 2 * 86400); await bump(env, `use:${dev.id}:${month()}`, 1, 40 * 86400); await bump(env, `use:${dev.id}:${week()}`, 1, 9 * 86400); }
     } else if (al.credits > 0) { const fresh = await auth(req, env); fresh.credits = Math.max(0, (+fresh.credits || 0) - 1); await saveDev(env, fresh); usedCredit = true; }
   }
   ctx.waitUntil(Promise.all([
@@ -386,6 +400,7 @@ async function revenuecat(req, env) {
     else if (!isTopup) {
       const active = ['INITIAL_PURCHASE', 'RENEWAL', 'UNCANCELLATION', 'PRODUCT_CHANGE', 'SUBSCRIPTION_EXTENDED', 'TRANSFER'].includes(e.type);
       const gone = ['EXPIRATION', 'REFUND'].includes(e.type);
+      if (active && e.product_id) dev.plan = e.new_product_id || e.product_id;
       if (active && e.expiration_at_ms) { dev.proUntil = e.expiration_at_ms; dev.trialUntil = e.period_type === 'TRIAL' ? e.expiration_at_ms : Math.min(dev.trialUntil || 0, Date.now());
         const paidPeriod = e.period_type === 'NORMAL' && !(e.price_in_purchased_currency === 0 || e.price === 0); dev.paidUntil = paidPeriod ? e.expiration_at_ms : Math.min(dev.paidUntil || 0, Date.now()); }
       if (gone) { dev.proUntil = Math.min(dev.proUntil || 0, e.expiration_at_ms || Date.now()); dev.trialUntil = Math.min(dev.trialUntil || 0, Date.now()); dev.paidUntil = Math.min(dev.paidUntil || 0, Date.now()); }
@@ -413,7 +428,7 @@ async function syncPurchases(req, env) {
       const ent = (sub.entitlements || {})[cfg.pro.entitlement || 'pro'];
       const exp = ent && ent.expires_date ? Date.parse(ent.expires_date) : 0;
       if (exp) {
-        dev.proUntil = exp;
+        dev.proUntil = exp; if (ent.product_identifier) dev.plan = ent.product_identifier;
         const s = (sub.subscriptions || {})[ent.product_identifier] || {};
         dev.trialUntil = s.period_type === 'trial' ? exp : Math.min(dev.trialUntil || 0, Date.now());
         dev.paidUntil = s.period_type === 'normal' ? exp : Math.min(dev.paidUntil || 0, Date.now());
