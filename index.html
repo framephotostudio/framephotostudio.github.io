@@ -4544,7 +4544,7 @@ W.__fcWowGo=go;
    scrolling section right under it. The photo gets its full size back and the AI buttons are still the first thing below the photo. */
 ;(function(){try{var D=document,R=D.documentElement;
  var c=D.createElement('style');c.textContent='#fcAppTop{padding:10px 12px 4px}#fcAppTop #finSex{justify-content:center;margin:0 0 8px!important}#fcAppTop #fcWow{margin:0!important;max-width:none}';D.head.appendChild(c);
- function place(){if(!R.classList.contains('fc-app'))return false;var t=D.getElementById('fcTools'),fs=D.getElementById('finSex'),w=D.getElementById('fcWow');if(!t||!fs||!w||!D.getElementById('fcWowRow'))return false;
+ function place(){return true;if(!R.classList.contains('fc-app'))return false;var t=D.getElementById('fcTools'),fs=D.getElementById('finSex'),w=D.getElementById('fcWow');if(!t||!fs||!w||!D.getElementById('fcWowRow'))return false;
   var box=D.getElementById('fcAppTop');if(!box){box=D.createElement('div');box.id='fcAppTop';t.parentNode.insertBefore(box,t)}
   if(fs.parentNode!==box)box.appendChild(fs);if(w.parentNode!==box)box.appendChild(w);return true}
  var n=0,t=setInterval(function(){if(place()&&++n>12)clearInterval(t);else if(++n>80)clearInterval(t)},250);place();
@@ -4598,5 +4598,25 @@ W.__fcWowGo=go;
   if(e.target.closest&&e.target.closest('#fcWowOutfit,#fcOwnOutfit'))setCat('outfit')},true);
  var n=0,t=setInterval(function(){if(D.getElementById('fcTryCats')){setCat(W.__fcTryCat||'outfit');clearInterval(t)}else if(++n>80)clearInterval(t)},250);
 }catch(e){console.warn('v85 accessories',e)}})();
+</script>
+<script>
+/* v86: on phones, whenever the studio is full screen (the app, or the website's larger view), the Women / Men switch and the AI
+   buttons sit at the top of the scrolling section under the photo, so the photo keeps its full size. Back in place otherwise. */
+;(function(){try{var D=document,R=D.documentElement,home=null;
+ function want(){var ws=D.querySelector('.workspace');return R.classList.contains('fc-app')||(!!ws&&ws.classList.contains('expanded'))}
+ var rf=0;function place(){var moved=0,fs=D.getElementById('finSex'),w=D.getElementById('fcWow');if(!fs||!w||!D.getElementById('fcWowRow'))return false;
+  if(!home&&fs.parentNode&&fs.parentNode.id!=='fcAppTop')home={p:fs.parentNode,n:fs.nextSibling===w?w.nextSibling:fs.nextSibling};
+  var box=D.getElementById('fcAppTop');
+  if(want()){var panel=D.querySelector('.workspace .panel')||D.querySelector('.panel');if(!panel)return false;
+   if(!box){box=D.createElement('div');box.id='fcAppTop'}var t=D.getElementById('fcTools');var anchor=(t&&t.parentNode===panel)?t:panel.firstChild;if(box.parentNode!==panel)panel.insertBefore(box,anchor);
+   if(fs.parentNode!==box){box.appendChild(fs);moved=1}if(w.parentNode!==box){box.appendChild(w);moved=1}}
+  else if(home&&fs.parentNode&&fs.parentNode.id==='fcAppTop'){home.p.insertBefore(fs,home.n&&home.n.parentNode===home.p?home.n:null);fs.insertAdjacentElement('afterend',w);moved=1}
+  if(moved){clearTimeout(rf);rf=setTimeout(function(){try{fitPreview()}catch(e){}},60)}
+  return true}
+ var n=0,t=setInterval(function(){place();if(++n>80)clearInterval(t)},250);
+ var ws0=null,obs=new MutationObserver(function(){place()});
+ var k=setInterval(function(){var ws=D.querySelector('.workspace');if(ws&&ws!==ws0){ws0=ws;obs.observe(ws,{attributes:true,attributeFilter:['class']});clearInterval(k)}},300);
+ addEventListener('resize',place);
+}catch(e){console.warn('v86 phone full screen',e)}})();
 </script>
 </body></html>
