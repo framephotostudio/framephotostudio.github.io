@@ -6,7 +6,7 @@ Paste-ready text for App Store Connect and Google Play Console. Character limits
 
 **Name (30):** Face Couture: Glam Photo Editor
 **Subtitle (30):** Natural makeup, luxe looks
-**Promotional text (170):** New: AI Outfit Change, AI Background Change in 40+ dream destinations and glam nights out, plus one-tap AI Glow. Your face always stays yours.
+**Promotional text (170):** New: AI Outfit Change, AI Background Change in 20+ dream destinations, plus one-tap AI Glow. Your face always stays yours.
 **Keywords (100, comma-separated, no spaces):**
 `makeup,selfie,beauty,retouch,glam,outfit,try on,background,travel,lashes,skin,portrait,headshot,ai`
 **Primary category:** Photo & Video · **Secondary:** Lifestyle
@@ -49,7 +49,7 @@ Face and lip mapping runs on your phone. Your photos are never uploaded for it, 
 AI MAGIC (optional, with Face Couture Pro)
 • AI Glow Makeover: premium AI glam that keeps your real eyes, lips and smile
 • AI Outfit Change: upload a photo of any outfit and see yourself wearing it
-• AI Background Change: Santorini, Paris, Dubai, New York, Tokyo, the Maldives and many more, plus glam nights out like fine dining, a rooftop lounge and a VIP club, with your lighting matched to the scene
+• AI Background Change: Santorini, Paris, New York, Tokyo, Petra, the Pyramids and many more, plus a VIP night out, with your lighting matched to the scene
 • Keep editing: stack changes, for example a new outfit and then a new destination
 • Vanish people in the background and real-lens background blur
 Your face always stays exactly yours. AI runs only when you ask and agree; your photo is sent securely for that single edit and is never stored or used for training.
