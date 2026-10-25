@@ -4363,10 +4363,16 @@ async function faceNear(ai,Lo,big){try{var x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;Lo.forE
   var kx=ai.width/big.width,ky=ai.height/big.height,cx=(x0+x1)/2*kx,cy=(y0+y1)/2*ky,sz=Math.max((x1-x0)*kx,(y1-y0)*ky)*2.6;
   for(var t=0;t<2;t++){var s=sz*(t?1.6:1),sx=Math.max(0,cx-s/2),sy=Math.max(0,cy-s/2),k=640/s,cc=cv(640,640);cc.getContext('2d').drawImage(ai,sx,sy,s,s,0,0,640,640);
    var G=await X._landmarks(cc);if(G.length)return X._biggest(G).map(function(p){return[p[0]/k+sx,p[1]/k+sy,p[2]]})}
-  /* the AI may have moved the person a little: scan the picture in overlapping tiles */
-  var s2=Math.min(sz,ai.width,ai.height),st=Math.max(8,s2/2),n=0,yA=Math.max(0,cy-ai.height*.28),yB=Math.min(ai.height-s2,cy+ai.height*.28);
-  for(var ty=yA;ty<=yB+1&&n<240;ty+=st)for(var tx=0;tx<=ai.width-s2+1&&n<240;tx+=st){n++;var k2=640/s2,c2=cv(640,640);c2.getContext('2d').drawImage(ai,tx,ty,s2,s2,0,0,640,640);
-   var G2=await X._landmarks(c2);if(G2.length)return X._biggest(G2).map(function(p){return[p[0]/k2+tx,p[1]/k2+ty,p[2]]})}}catch(e){}return null}
+  /* the AI may have moved the person a little: scan a band around the old face position and keep the face that
+     matches hers in size and is nearest to where she was (never a stranger in the crowd) */
+  var fw0=Math.max((x1-x0)*kx,(y1-y0)*ky),s2=Math.min(sz,ai.width,ai.height),st=Math.max(8,s2/2),n=0,best=null,bs=1e9,yA=Math.max(0,cy-ai.height*.25),yB=Math.min(ai.height-s2,cy+ai.height*.25);
+  var xs=[];for(var tx=0;tx<=ai.width-s2+1;tx+=st)xs.push(tx);xs.sort(function(a,b){return Math.abs(a+s2/2-cx)-Math.abs(b+s2/2-cx)});
+  var ys=[];for(var ty=yA;ty<=yB+1;ty+=st)ys.push(ty);ys.sort(function(a,b){return Math.abs(a+s2/2-cy)-Math.abs(b+s2/2-cy)});
+  outer:for(var a=0;a<ys.length;a++)for(var b=0;b<xs.length;b++){if(++n>140)break outer;var X0=xs[b],Y0=ys[a],k2=640/s2,c2=cv(640,640);c2.getContext('2d').drawImage(ai,X0,Y0,s2,s2,0,0,640,640);
+   var G2=await X._landmarks(c2);for(var g=0;g<G2.length;g++){var L=G2[g].map(function(p){return[p[0]/k2+X0,p[1]/k2+Y0,p[2]]}),lx0=1e9,lx1=-1e9,ly0=1e9,ly1=-1e9;L.forEach(function(p){if(p[0]<lx0)lx0=p[0];if(p[0]>lx1)lx1=p[0];if(p[1]<ly0)ly0=p[1];if(p[1]>ly1)ly1=p[1]});
+    var w2=Math.max(lx1-lx0,ly1-ly0),sizeOff=Math.abs(Math.log(w2/fw0)),dist=Math.hypot((lx0+lx1)/2-cx,(ly0+ly1)/2-cy)/fw0;if(sizeOff>.4)continue;var sc=sizeOff*3+dist;if(sc<bs){bs=sc;best=L}}
+   if(best&&bs<1.2)break outer}
+  return best}catch(e){}return null}
 async function travel(S){if(!needs()||X._isBusy())return;X._setBusy(true);T('ai_travel_start',{scene:S.k});busyMsg('Taking you to '+S.n);
  try{var up=X._photoCanvas(2048),big=X._photoCanvas(4096);if(!up)throw new Error('Add your photo first.');
   var Lo=await face(big);if(!Lo){X._close();X._message('Let’s get closer','We could not see your face clearly. Try a photo where your face is bigger in the picture.');T('ai_travel_noface');return}
