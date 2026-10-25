@@ -129,6 +129,8 @@ export function buildPrompt(task, o = {}) {
       p = `Dress this person in the clothing or accessory shown in the second image (${o.category || 'garment'}), realistically fitted to their body and pose with correct drape, fabric texture, lighting and shadows. ${o.category === 'shoes' ? 'Place the shoes on their feet.' : o.category === 'bag' ? 'Place the bag naturally in hand or on the shoulder.' : o.category === 'sunglasses' ? 'Place the sunglasses on the face without hiding identity.' : o.category === 'hat' ? 'Place the hat on the head over the hair.' : o.category === 'jewelry' ? 'Place the jewelry naturally.' : ''} Keep the rest of their outfit unless it would clash.`;
       break;
     case 'refine':
+      if (o.locked && outfit) { p = `Change only the clothing: take off what the person is wearing now and dress them in ${outfit}, realistically fitted to their own body and pose with natural drape, folds, fabric texture, light and shadows matching this photo. Keep everything else exactly the same: their face, hair, skin tone, makeup, body shape and size, arms, hands, jewelry, pose, camera angle, framing and the whole background. Do not slim, enlarge or reshape their body. Do not retouch or change the face. Photorealistic, like a real photo of them wearing it.`; break; }
+    // falls through
     default:
       p = `Refine this photo for ${o.platform || 'social media'}: natural professional retouch, ${outfit ? 'change the outfit to ' + outfit + ', ' : ''}${bg ? 'change the background to ' + bg + ', ' : ''}balanced flattering light.`;
   }
@@ -137,5 +139,6 @@ export function buildPrompt(task, o = {}) {
   if (task === 'vanish' && (o.marked || o.people)) return p;
   if (task === 'blur' && o.locked) return p;
   if (task === 'tryon' && o.locked) return p;
+  if (task === 'refine' && o.locked && outfit) return p;
   return p + ' ' + KEEP;
 }
