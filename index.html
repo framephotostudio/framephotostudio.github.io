@@ -3759,7 +3759,7 @@ async function run(L){
   var up=photoCanvas(2048),big=photoCanvas(4096);if(!up)throw new Error('Add your photo first.');
   var F=await landmarks(up);
   if(cancelled)return;
-  if(F.length===0){closeOv();message('No face found','Try a clear, front-facing photo with good light.');T('ai_look_noface',{look:L.k});return}
+  if(F.length===0){closeOv();message('Let’s get closer','AI glam needs to see your face up close. Try a photo where your face is bigger, or crop in first. Nothing was used up.');T('ai_look_noface',{look:L.k});return}
   if(F.length>1){closeOv();message('Solo photos for now','AI Luxe Looks work on photos of one person for now. Group photos are coming soon. The Looks below work on group photos.');T('ai_look_group_blocked',{look:L.k,people:F.length});return}
   var Fb=await landmarks(big),Lo=biggest(Fb.length?Fb:F),origC=Fb.length?big:up,mo=measures(Lo);
   var bw=256,bh=Math.max(8,Math.round(256*origC.height/origC.width)),bodyO=await bodyMask(origC,bw,bh);
@@ -4577,6 +4577,7 @@ W.__fcWowGo=go;
    try{(W.gtag||function(){})('event','ai_keep_editing')}catch(e){}
   }catch(err){btn.disabled=false;btn.textContent='Keep editing this photo';try{W.__luxe._message('Could not open it','Tap Save photo, then + Photo and choose the saved photo.')}catch(e){}}},'image/jpeg',.95)}
  function hook(){var X=W.__luxe;if(!X||!X._showResult||X.__v84)return !!(X&&X.__v84);X.__v84=1;var sr=X._showResult;
+  W.__fcKeepEditAdd=function(after){var acts=D.querySelector('#luxeSave')&&D.querySelector('#luxeSave').parentNode;if(!acts||!after||D.getElementById('fcKeepEdit'))return;var b=D.createElement('button');b.type='button';b.id='fcKeepEdit';b.className='luxeBtn gold';b.textContent='Keep editing this photo';b.onclick=function(){useAsPhoto(after,b)};acts.insertBefore(b,acts.firstChild);var s=D.getElementById('luxeSave');if(s){s.classList.remove('gold');s.classList.add('ghost')}};
   X._showResult=function(L,before,after){var r=sr.apply(this,arguments);try{var acts=D.querySelector('#luxeSave')&&D.querySelector('#luxeSave').parentNode;if(acts&&after&&!D.getElementById('fcKeepEdit')){
    var b=D.createElement('button');b.type='button';b.id='fcKeepEdit';b.className='luxeBtn gold';b.textContent='Keep editing this photo';b.onclick=function(){useAsPhoto(after,b)};acts.insertBefore(b,acts.firstChild);
    var s=D.getElementById('luxeSave');if(s){s.classList.remove('gold');s.classList.add('ghost')}}}catch(e){}return r};return true}
@@ -4634,8 +4635,23 @@ W.__fcWowGo=go;
  function refresh(){var w=D.getElementById('fcWow');if(!w)return;var b=D.getElementById('fcMyRes');if(!b){b=D.createElement('button');b.type='button';b.id='fcMyRes';b.onclick=gallery;w.appendChild(b)}b.hidden=!LIST.length;b.textContent='🕘 My AI results ('+LIST.length+')'}
  var c=D.createElement('style');c.textContent='#fcMyRes{width:100%;min-height:40px;border-radius:14px;border:1px solid #c9a35a;background:#fffaf3;color:#4a2f7a;font:650 14px/1 inherit;cursor:pointer;margin-top:2px}#fcMyRes[hidden]{display:none}.fcResBox{width:min(560px,92vw)!important;max-width:92vw;flex:0 0 auto!important}#fcResGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;max-height:62vh;overflow:auto;width:100%}.fcResItem{min-width:0;border:1px solid #c9a35a66;background:#ffffff10;border-radius:12px;padding:4px;display:flex;flex-direction:column;gap:4px;cursor:pointer;color:#fff;font:600 11px/1.2 inherit;text-align:center}.fcResItem img{display:block;width:100%;height:auto;aspect-ratio:3/4;object-fit:cover;border-radius:9px;max-height:200px}';D.head.appendChild(c);
  function hook(){var X=W.__luxe;if(!X||!X._showResult||X.__v87)return !!(X&&X.__v87);X.__v87=1;var sr=X._showResult;
-  X._showResult=function(L,before,after){var r=sr.apply(this,arguments);if(!reopening&&after&&D.getElementById('luxeSave'))save(L,before,after);return r};return true}
+  X._showResult=function(L,before,after){var r=sr.apply(this,arguments);if(!reopening&&after&&D.getElementById('luxeSave'))save(L,before,after);return r};W.__fcSaveResult=save;return true}
  var n=0,t=setInterval(function(){var ok=hook();refresh();if((ok&&D.getElementById('fcMyRes'))||++n>120)clearInterval(t)},250);load();
 }catch(e){console.warn('v87 my results',e)}})();
+</script>
+<script>
+/* v88: AI Glow and AI Luxe looks open their result screen directly, so add "Keep editing this photo" and save to "My AI results"
+   for them too, using the result canvases on screen */
+;(function(){try{var D=document,W=window;
+ function clone(c){var o=D.createElement('canvas');o.width=c.width;o.height=c.height;o.getContext('2d').drawImage(c,0,0);return o}
+ function hook(){var X=W.__luxe;if(!X||!X._ov||!X._ov())return false;var ov=X._ov();if(ov.__v88)return true;ov.__v88=1;
+  new MutationObserver(function(){var s=D.getElementById('luxeSave'),A=D.getElementById('luxeA'),B=D.getElementById('luxeB');if(!s||!A||ov.hidden||ov.dataset.fcSeen==='1')return;ov.dataset.fcSeen='1';
+   setTimeout(function(){try{ov.dataset.fcSeen='1';if(D.getElementById('fcKeepEdit'))return; /* already handled by the normal path */
+    var after=clone(A),before=B?clone(B):clone(A),name=((ov.querySelector('.luxeTop b')||{}).textContent||'AI look'),L={k:'glam',n:name};
+    if(W.__fcKeepEditAdd)W.__fcKeepEditAdd(after);if(W.__fcSaveResult&&!W.__fcReopen)W.__fcSaveResult(L,before,after)}catch(e){}},60)}).observe(ov,{childList:true,subtree:true});
+  new MutationObserver(function(){if(!D.getElementById('luxeSave'))ov.dataset.fcSeen=''}).observe(ov,{childList:true});
+  return true}
+ var n=0,t=setInterval(function(){if(hook()||++n>120)clearInterval(t)},250);
+}catch(e){console.warn('v88',e)}})();
 </script>
 </body></html>
