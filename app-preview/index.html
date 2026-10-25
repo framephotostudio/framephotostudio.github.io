@@ -4359,19 +4359,23 @@ function needs(){if(typeof source==='undefined'||!source||typeof originalPhoto==
   if(!X._consent().checked){try{X._consentRow().scrollIntoView({behavior:'smooth',block:'center'})}catch(e){}X._message('One quick step','Please tick the consent box above to use AI.');return false}return true}
 function errMsg(err,L){X._close();if(err&&(err.code==='subscribe'||err.code==='allowance'||err.code==='ceiling')){X._handleErr(err,L);return}X._message('Let’s try that again',(err&&err.message)||'The AI could not finish. Please try again.')}
 
+async function faceNear(ai,Lo,big){try{var x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;Lo.forEach(function(p){if(p[0]<x0)x0=p[0];if(p[0]>x1)x1=p[0];if(p[1]<y0)y0=p[1];if(p[1]>y1)y1=p[1]});
+  var kx=ai.width/big.width,ky=ai.height/big.height,cx=(x0+x1)/2*kx,cy=(y0+y1)/2*ky,sz=Math.max((x1-x0)*kx,(y1-y0)*ky)*2.6;
+  for(var t=0;t<2;t++){var s=sz*(t?1.6:1),sx=Math.max(0,cx-s/2),sy=Math.max(0,cy-s/2),k=640/s,cc=cv(640,640);cc.getContext('2d').drawImage(ai,sx,sy,s,s,0,0,640,640);
+   var G=await X._landmarks(cc);if(G.length)return X._biggest(G).map(function(p){return[p[0]/k+sx,p[1]/k+sy,p[2]]})}}catch(e){}return null}
 async function travel(S){if(!needs()||X._isBusy())return;X._setBusy(true);T('ai_travel_start',{scene:S.k});busyMsg('Taking you to '+S.n);
  try{var up=X._photoCanvas(2048),big=X._photoCanvas(4096);if(!up)throw new Error('Add your photo first.');
   var Lo=await face(big);if(!Lo){X._close();X._message('Let’s get closer','We could not see your face clearly. Try a photo where your face is bigger in the picture.');T('ai_travel_noface');return}
   var best=null;for(var t=0;t<2&&!best;t++){if(t){var s=D.getElementById('luxeSub');if(s)s.textContent='Perfecting the details…'}
    var j=await X._call({task:'travel',background:S.k,locked:true,image:up.toDataURL('image/jpeg',.92),width:up.width,height:up.height,consent:true,retry:t>0});
-   var im=await loadI(j.image),ai=cv(im.naturalWidth,im.naturalHeight);ai.getContext('2d').drawImage(im,0,0);var La=await face(ai);if(!La)continue;
+   var im=await loadI(j.image),kk=Math.max(1,Math.min(3,big.width/im.naturalWidth)),ai=cv(Math.round(im.naturalWidth*kk),Math.round(im.naturalHeight*kk)),aix=ai.getContext('2d');aix.imageSmoothingQuality='high';aix.drawImage(im,0,0,ai.width,ai.height);var La=await face(ai)||await faceNear(ai,Lo,big);if(!La){try{(window.__fcGate=window.__fcGate||[]).push({k:S.k,why:'noface'})}catch(e){}continue}
    var r=lockFace(big,Lo,ai,La),mp=null;try{mp=await window.__fcBgMaps()}catch(e){}var ref=big;if(r.crop){ref=cv(r.crop[2],r.crop[3]);ref.getContext('2d').drawImage(big,r.crop[0],r.crop[1],r.crop[2],r.crop[3],0,0,r.crop[2],r.crop[3])}
    var LOGG=function(o){try{(window.__fcGate=window.__fcGate||[]).push(Object.assign({k:S.k,err:+r.err.toFixed(4),scl:+r.scl.toFixed(3),crop:r.crop?[+(r.crop[2]/big.width).toFixed(2),+(r.crop[3]/big.height).toFixed(2)]:null},o))}catch(e){}};
    if(r.crop&&(r.crop[2]<big.width*.8||r.crop[3]<big.height*.8)){LOGG({why:'crop'});continue}
    var smp=mp?sampler(mp):null,cr=r.crop,fn=smp&&(cr?function(x,y){return smp((cr[0]+x*cr[2])/big.width,(cr[1]+y*cr[3])/big.height)}:smp);
    var ch=changed(ref,r.c,fn);r.ref=ref;
    LOGG({ch:+ch.toFixed(1)});
-   if(r.err<.03&&ch>25&&Math.abs(r.scl-1)<.12)best=r}
+   if(r.err<.03&&ch>18&&Math.abs(r.scl-1)<.12)best=r}
   if(!best){X._close();X._message('Let’s try that again','This photo did not come out perfectly, so we did not use it. Try another scene or a different photo.');T('ai_travel_rejected',{scene:S.k});return}
   X._refresh();T('ai_travel_done',{scene:S.k});X._setBusy(false);X._showResult({k:'travel_'+S.k,n:S.n},best.ref||big,best.c)}
  catch(err){errMsg(err,{k:'travel',n:S.n});T('ai_travel_error',{scene:S.k,code:err&&err.code||'client'})}finally{X._setBusy(false)}}
