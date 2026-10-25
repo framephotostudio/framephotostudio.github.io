@@ -2508,7 +2508,7 @@ window.__lipGuard={map:lipMap,base:_lc};
 var CREAM='#f8f1ea',PLUM='#2b1636',GOLD='#c9a24a',SITE='facecouture.app';
 function rr(x,X,Y,W,H,r){x.beginPath();x.moveTo(X+r,Y);x.arcTo(X+W,Y,X+W,Y+H,r);x.arcTo(X+W,Y+H,X,Y+H,r);x.arcTo(X,Y+H,X,Y,r);x.arcTo(X,Y,X+W,Y,r);x.closePath()}
 function cropBox(img,hb,pw,ph){var iw=img.width,ih=img.height,ar=pw/ph,cw,ch,cx=.5*iw,cy=.45*ih;
-if(hb){var fw=(hb.x1-hb.x0)*iw,fh=(hb.y1-hb.y0)*ih;cx=(hb.x0+hb.x1)/2*iw;cy=(hb.y0+hb.y1)/2*ih;cw=Math.max(fw/.8,fh/.62*ar);ch=cw/ar}else{cw=iw;ch=cw/ar}
+if(hb&&hb.full){cx=hb.fx*iw;cw=iw;ch=cw/ar}else if(hb){var fw=(hb.x1-hb.x0)*iw,fh=(hb.y1-hb.y0)*ih;cx=(hb.x0+hb.x1)/2*iw;cy=(hb.y0+hb.y1)/2*ih;cw=Math.max(fw/.8,fh/.62*ar);ch=cw/ar}else{cw=iw;ch=cw/ar}
 if(cw>iw){cw=iw;ch=cw/ar}if(ch>ih){ch=ih;cw=ch*ar}
 var x=Math.max(0,Math.min(iw-cw,cx-cw/2)),y=Math.max(0,Math.min(ih-ch,cy-ch*.47));return[x,y,cw,ch]}
 function panel(x,img,hb,X,Y,W,H,label){var b=cropBox(img,hb,W,H);x.save();rr(x,X,Y,W,H,22);x.clip();x.drawImage(img,b[0],b[1],b[2],b[3],X,Y,W,H);x.restore();
@@ -2517,7 +2517,7 @@ x.font='700 26px "Helvetica Neue",Arial,system-ui,sans-serif';var t=label.split(
 x.fillStyle='rgba(248,241,234,.94)';rr(x,px,py,pw,phh,25);x.fill();x.lineWidth=1.5;x.strokeStyle=GOLD;x.stroke();x.fillStyle=PLUM;x.textBaseline='middle';x.textAlign='center';x.fillText(t,X+W/2,py+phh/2+1)}
 async function makeCard(bIn,aIn){
 var W=1080,H=1350,c=document.createElement('canvas');c.width=W;c.height=H;var x=c.getContext('2d');
-var ai=!!(bIn&&aIn),after=ai?aIn:process(2000,false,originalPhoto),before=ai?bIn:process(2000,true,originalPhoto),hb=null;try{hb=headBox()}catch(e){hb=null}
+var ai=!!(bIn&&aIn),after=ai?aIn:process(2000,false,originalPhoto),before=ai?bIn:process(2000,true,originalPhoto),hb=null;try{hb=headBox();if(ai&&window.__baFull)hb=hb?{full:1,fx:(hb.x0+hb.x1)/2}:{full:1,fx:.5}}catch(e){hb=ai&&window.__baFull?{full:1,fx:.5}:null}
 var g=x.createLinearGradient(0,0,0,H);g.addColorStop(0,'#fbf6f0');g.addColorStop(1,'#f3e7dc');x.fillStyle=g;x.fillRect(0,0,W,H);
 var M=36,G=18,FOOT=200,pw=(W-2*M-G)/2,ph=H-M-FOOT;
 var bare=ai?null:window.__bareImg;if(bare)panel(x,bare,null,M,M,pw,ph,'NO MAKEUP');else panel(x,before,hb,M,M,pw,ph,'BEFORE');panel(x,after,hb,M+pw+G,M,pw,ph,bare?'FINISHED LOOK':'AFTER');
@@ -3729,7 +3729,7 @@ function showResult(L,before,after){
   if(!(window.FCNative&&window.FCNative.isNative))T('save_image',{via:'ai_luxe',look:L.k});try{toast('Saved. Your '+L.n+' photo is ready to share.')}catch(e){}},'image/jpeg',.95)}
  baButtons(L,B,after)}
 /* before & after: the same post (1080x1350) and reveal reel (9:16) as the Makeup Artist ones, with the original photo as BEFORE */
-function baButtons(L,before,after){var bp=$('luxeBAPhoto'),br=$('luxeBAReel'),note=$('luxeBANote');
+function baButtons(L,before,after){window.__baFull=/^(tryon|outfit|travel|vanish|blur|bg)/.test(L&&L.k||'');var bp=$('luxeBAPhoto'),br=$('luxeBAReel'),note=$('luxeBANote');
  if(!window.__baPromo)bp.hidden=true;if(!window.__reelFile||!window.MediaRecorder)br.hidden=true;
  function say(t){note.textContent=t||'';note.hidden=!t}
  async function give(file,label,kind){var r=typeof deliverFiles==='function'?await deliverFiles([file],label):'none';
@@ -4391,6 +4391,20 @@ async function tryOn(file){if(!needs()||X._isBusy())return;X._setBusy(true);T('a
   X._refresh();T('ai_tryon_done');X._setBusy(false);X._showResult({k:'tryon',n:'Outfit try-on'},best.ref,best.c)}
  catch(err){errMsg(err,{k:'tryon',n:'Outfit try-on'});T('ai_tryon_error',{code:err&&err.code||'client'})}finally{X._setBusy(false)}}
 window.__fcTryOn=tryOn;
+/* v80: the Clothing menu (blazer, lace top...) now uses the same face lock as the outfit upload, so the face never changes */
+async function presetOutfit(key,label){if(!needs()||X._isBusy())return;X._setBusy(true);T('ai_outfit_preset_start',{outfit:key});busyMsg('Dressing you');
+ try{var up=X._photoCanvas(2048),big=X._photoCanvas(4096);var Lo=await face(big);if(!Lo){X._close();X._message('Let’s get closer','We could not see your face clearly. Try a photo where your face is bigger in the picture.');return}
+  var best=null;for(var t=0;t<2&&!best;t++){if(t){var s2=D.getElementById('luxeSub');if(s2)s2.textContent='Perfecting the fit…'}
+   var j=await X._call({task:'refine',outfit:key,locked:true,engine:'nb21',image:up.toDataURL('image/jpeg',.92),width:up.width,height:up.height,consent:true,retry:t>0});
+   var im=await loadI(j.image),ai=cv(im.naturalWidth,im.naturalHeight);ai.getContext('2d').drawImage(im,0,0);var La=await face(ai);if(!La)continue;
+   var r=lockFace(big,Lo,ai,La);if(r.crop&&(r.crop[2]<big.width*.85||r.crop[3]<big.height*.85))continue;var ref=big;if(r.crop){ref=cv(r.crop[2],r.crop[3]);ref.getContext('2d').drawImage(big,r.crop[0],r.crop[1],r.crop[2],r.crop[3],0,0,r.crop[2],r.crop[3])}
+   if(r.err<.03&&Math.abs(r.scl-1)<.1&&changed(ref,r.c,null)>4){r.ref=ref;best=r}}
+  if(!best){X._close();X._message('Let’s try that again','The new outfit did not come out perfectly, so we did not use it. Try a photo where more of your outfit shows.');T('ai_outfit_preset_rejected');return}
+  X._refresh();T('ai_outfit_preset_done');X._setBusy(false);X._showResult({k:'outfit',n:label||'New outfit'},best.ref,best.c)}
+ catch(err){errMsg(err,{k:'outfit',n:'New outfit'});T('ai_outfit_preset_error',{code:err&&err.code||'client'})}finally{X._setBusy(false)}}
+window.__fcPresetOutfit=presetOutfit;
+D.addEventListener('click',function(e){var g=e.target&&e.target.closest&&e.target.closest('#generate');if(!g)return;var o=D.getElementById('outfit'),tk=D.getElementById('aiTask');
+ if(!o||o.disabled||o.value==='keep'||(tk&&tk.value!=='refine'))return;e.preventDefault();e.stopImmediatePropagation();presetOutfit(o.value,o.options[o.selectedIndex].text)},true);
 // ---- outfit colour integrity: the dress in the result must be the same colour as the uploaded outfit photo ----
 function toLab(r,g,b){var f=function(v){v/=255;return v<=.04045?v/12.92:Math.pow((v+.055)/1.055,2.4)},R=f(r),G=f(g),B=f(b),X=(R*.4124+G*.3576+B*.1805)/.95047,Y=R*.2126+G*.7152+B*.0722,Z=(R*.0193+G*.1192+B*.9505)/1.08883,q=function(t){return t>.008856?Math.cbrt(t):7.787*t+16/116};return[116*q(Y)-16,500*(q(X)-q(Y)),200*(q(Y)-q(Z))]}
 function fromLab(L,a,b){var fy=(L+16)/116,fx=fy+a/500,fz=fy-b/200,c=function(t){var q=t*t*t;return q>.008856?q:(t-16/116)/7.787},X=c(fx)*.95047,Y=c(fy),Z=c(fz)*1.08883,g=function(v){v=v<=.0031308?12.92*v:1.055*Math.pow(v,1/2.4)-.055;return Math.max(0,Math.min(255,Math.round(v*255)))};return[g(X*3.2406+Y*-1.5372+Z*-.4986),g(X*-.9689+Y*1.8758+Z*.0415),g(X*.0557+Y*-.204+Z*1.057)]}
