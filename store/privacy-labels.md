@@ -16,7 +16,7 @@ These match what the app actually does. Change them only if the app changes.
 | Crash data | No (unless you add a crash reporter) | — | — | — |
 | Contact info, Health, Financial, Contacts, Browsing history, Search history, Sensitive info | Not collected | — | — | — |
 
-**Face data note for App Review (Review Notes field):** "Face and lip landmarks are computed on-device with MediaPipe/ONNX to position makeup. No face data leaves the device, is stored, or is shared. Optional AI Looks send the chosen photo to OpenAI's image API only for the requested edit, after explicit consent (checkbox), and the result is returned; we do not retain the photo. No account is required."
+**Face data note for App Review (Review Notes field):** "Face and lip landmarks are computed on-device with MediaPipe/ONNX to position makeup. No face data leaves the device, is stored, or is shared. Optional AI features send the chosen photo to Google's Gemini image API only for the requested edit, after explicit consent (checkbox), and the result is returned; we do not retain the photo. No account is required."
 
 **Tracking:** No. The app does not request App Tracking Transparency because it does not track across apps or sites.
 
