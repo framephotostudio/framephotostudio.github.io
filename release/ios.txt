@@ -1,1 +1,1 @@
-iPhone build request: 1.0.0 (AI Outfit Change and AI Background Change up front, AI magic tiles on the home screen)
+iPhone build request: 1.0.0 (natural background change, Clothing menu face lock, bigger photo, scrolling fix)

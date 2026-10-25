@@ -112,7 +112,7 @@ export function buildPrompt(task, o = {}) {
       break;
     case 'background':
     case 'travel':
-      if (o.locked) { p = `Replace only the background of this photo with ${bg || 'a clean studio backdrop'}. The person must stay in exactly the same position, size, pose and framing, with the same camera angle and lens, so they line up perfectly with the original photo. Keep the person, face, hair, outfit and accessories exactly as they are. Match the perspective and horizon to the camera height, match the light direction and color of the new scene to the light already on the person, and add a soft natural contact shadow where they stand. No extra people.`; break; }
+      if (o.locked) { p = `Place this person in ${bg || 'a clean studio backdrop'}, as if the photo was really taken there. The person stays in exactly the same position, size, pose and framing, with the same camera angle and lens, so they line up perfectly with the original photo; keep their face, hair style, outfit and accessories exactly as they are. Remove every trace of the old background, including the bits between hair strands, between the arms and body and along every edge: no outline, halo, glow, fringe, smudge or blur around the hair, body, arms or clothing. Hair edges must be fine natural strands over the new scene. Relight the person to match the new scene: the same light direction, colour and warmth as the scene (for example a warm golden glow on skin, hair and clothes at sunset), with matching shadows on them and a soft natural contact shadow where they stand. The background has the natural depth of field of a phone photo. Match the perspective and horizon to the camera height. No extra people. Photorealistic.`; break; }
       p = `Replace only the background with ${bg || 'a clean studio backdrop'}. Keep the person, their outfit and hair exactly as they are with clean natural edges around hair and body; match lighting direction, color temperature and shadows so the person looks truly present in the scene, with correct perspective and depth of field.`;
       break;
     case 'blur':
@@ -129,6 +129,8 @@ export function buildPrompt(task, o = {}) {
       p = `Dress this person in the clothing or accessory shown in the second image (${o.category || 'garment'}), realistically fitted to their body and pose with correct drape, fabric texture, lighting and shadows. ${o.category === 'shoes' ? 'Place the shoes on their feet.' : o.category === 'bag' ? 'Place the bag naturally in hand or on the shoulder.' : o.category === 'sunglasses' ? 'Place the sunglasses on the face without hiding identity.' : o.category === 'hat' ? 'Place the hat on the head over the hair.' : o.category === 'jewelry' ? 'Place the jewelry naturally.' : ''} Keep the rest of their outfit unless it would clash.`;
       break;
     case 'refine':
+      if (o.locked && outfit) { p = `Change only the clothing: take off what the person is wearing now and dress them in ${outfit}, realistically fitted to their own body and pose with natural drape, folds, fabric texture, light and shadows matching this photo. Keep everything else exactly the same: their face, hair, skin tone, makeup, body shape and size, arms, hands, jewelry, pose, camera angle, framing and the whole background. Do not slim, enlarge or reshape their body. Do not retouch or change the face. Photorealistic, like a real photo of them wearing it.`; break; }
+    // falls through
     default:
       p = `Refine this photo for ${o.platform || 'social media'}: natural professional retouch, ${outfit ? 'change the outfit to ' + outfit + ', ' : ''}${bg ? 'change the background to ' + bg + ', ' : ''}balanced flattering light.`;
   }
@@ -137,5 +139,6 @@ export function buildPrompt(task, o = {}) {
   if (task === 'vanish' && (o.marked || o.people)) return p;
   if (task === 'blur' && o.locked) return p;
   if (task === 'tryon' && o.locked) return p;
+  if (task === 'refine' && o.locked && outfit) return p;
   return p + ' ' + KEEP;
 }
