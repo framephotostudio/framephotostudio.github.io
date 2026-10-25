@@ -4673,11 +4673,11 @@ W.__fcWowGo=go;
   D.getElementById('luxeClose').onclick=function(){X._close()}}
  function add(){var r1=D.getElementById('fcWowRow');if(!r1||!D.getElementById('fcVanishBtn')||!D.getElementById('fcBlurBtn'))return false;if(D.getElementById('fcWowRow2'))return true;
   var r=D.createElement('div');r.id='fcWowRow2';
-  r.innerHTML='<button type="button" id="fcWowAcc">&#128141; <b>AI Accessories</b><small>Jewelry, bags, watches</small></button>'+
-   '<button type="button" id="fcWowShoes">&#128096; <b>AI Shoes</b><small>Try on any shoes</small></button>'+
-   '<button type="button" id="fcWowVanish">&#129668; <b>Vanish</b><small>Remove people behind you</small></button>'+
-   '<button type="button" id="fcWowBlur">&#127787;&#65039; <b>Blur Background</b><small>Free, made on your phone</small></button>';
-  r1.insertAdjacentElement('afterend',r);
+  r.innerHTML='<button type="button" id="fcWowAcc"><span>&#128141; <b>AI Accessories</b></span><small>Jewelry, bags, watches</small></button>'+
+   '<button type="button" id="fcWowShoes"><span>&#128096; <b>AI Shoes</b></span><small>Try on any shoes</small></button>'+
+   '<button type="button" id="fcWowVanish"><span>&#129668; <b>Vanish</b></span><small>Remove people behind you</small></button>'+
+   '<button type="button" id="fcWowBlur"><span>&#127787;&#65039; <b>Blur Background</b></span><small>Free, made on your phone</small></button>';
+  r1.appendChild(r);
   D.getElementById('fcWowVanish').onclick=function(){var v=D.getElementById('fcVanishBtn');v&&v.click()};
   D.getElementById('fcWowBlur').onclick=blur;var a=D.getElementById('fcWowAcc');if(a)a.onclick=acc;D.getElementById('fcWowShoes').onclick=function(){pick('shoes')};return true}
  W.__fcPickTry=function(k){if(k==='acc')acc();else pick(k)};
@@ -4689,5 +4689,15 @@ W.__fcWowGo=go;
  var n=0,t=setInterval(function(){if(add()||++n>120)clearInterval(t)},250);
  D.addEventListener('click',function(e){if(e.target.closest&&e.target.closest('#fcBlurBtn'))setTimeout(sync,250)},true);setInterval(sync,1000);
 }catch(e){console.warn('v89 more buttons',e)}})();
+</script>
+<script>
+/* v90: every AI feature button the same size and the same color, all in two rows (4 + 3) */
+;(function(){var c=document.createElement('style');c.textContent=
+'#fcWowRow{display:flex!important;flex-wrap:wrap;justify-content:center;gap:7px!important}#fcWowRow2{display:contents!important}'+
+'#fcWowRow>button,#fcWowRow2>button,#fcWowRow>#aiGlowBtn{flex:0 0 calc((100% - 21px)/4)!important;width:auto!important;height:64px!important;min-height:0!important;margin:0!important;border-radius:16px!important;border:1px solid #c9a35a!important;color:#fff!important;background:linear-gradient(110deg,#2c1840,#4a2a55 55%,#7a5a36)!important;box-shadow:0 6px 16px #2c18402e!important;font:600 12.5px/1.12 inherit!important;padding:4px 4px!important;display:flex!important;flex-direction:column;align-items:center;justify-content:center;text-align:center;box-sizing:border-box;overflow:hidden}'+
+'#fcWowRow button span,#fcWowRow #aiGlowBtn span{font:600 12.5px/1.12 inherit!important;color:#fff!important}#fcWowRow button b{font:inherit!important;color:inherit!important}#fcWowRow button small{display:none!important}'+
+'#fcWowRow2>button.on{box-shadow:inset 0 0 0 2px #f1d9a4,0 6px 16px #2c18402e!important}'+
+'@media(min-width:900px){#fcWowRow>button,#fcWowRow2>button,#fcWowRow>#aiGlowBtn{height:70px!important;font-size:13.5px!important}#fcWowRow button span,#fcWowRow #aiGlowBtn span{font-size:13.5px!important}}';
+document.head.appendChild(c)})();
 </script>
 </body></html>
