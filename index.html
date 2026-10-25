@@ -4530,4 +4530,24 @@ W.__fcWowGo=go;
  var n=0,t=setInterval(function(){if(place()&&++n>12)clearInterval(t);else if(++n>80)clearInterval(t)},250);place();
 }catch(e){console.warn('v82 app top',e)}})();
 </script>
+<script>
+/* v83: the AI "working" screen can always be cancelled: a Cancel button, and a friendly note after 90 seconds. A cancelled job never pops up later. */
+;(function(){try{var D=document,W=window;
+ var c=D.createElement('style');c.textContent='.fcCancel{margin-top:18px;border:1px solid #c9a35a;background:#fffaf3;color:#4a2f7a;border-radius:999px;padding:10px 26px;font:650 15px/1 inherit;cursor:pointer}.fcSlow{margin-top:10px;font-size:13px;color:#7a5a36;max-width:280px;text-align:center}';D.head.appendChild(c);
+ function hook(){var X=W.__luxe;if(!X||!X._ov||!X._ov()||X.__v83)return !!(X&&X.__v83);X.__v83=1;
+  var ov=X._ov(),started=0,cancelled=0,timer=null;
+  function cancel(){cancelled=Date.now();clearTimeout(timer);try{X._close()}catch(e){}try{X._setBusy(false)}catch(e){}try{D.documentElement.style.overflow=''}catch(e){}try{(W.gtag||function(){})('event','ai_cancel')}catch(e){}}
+  function late(){return cancelled&&cancelled>=started}
+  var sr=X._showResult;X._showResult=function(){if(late())return;return sr.apply(this,arguments)};
+  var ms=X._message;X._message=function(){if(late()&&Date.now()-cancelled<600000&&!X._isBusy())return;return ms.apply(this,arguments)};
+  new MutationObserver(function(){if(ov.hidden||!ov.querySelector('.luxeRing')){clearTimeout(timer);return}
+   if(ov.querySelector('.fcCancel'))return;started=Date.now();cancelled=0;
+   var b=D.createElement('button');b.type='button';b.className='fcCancel';b.textContent='Cancel';b.onclick=cancel;
+   var box=ov.querySelector('.luxeRing').parentNode;box.appendChild(b);
+   clearTimeout(timer);timer=setTimeout(function(){if(ov.hidden||!ov.querySelector('.luxeRing'))return;var p=D.createElement('p');p.className='fcSlow';p.textContent='This is taking longer than usual. Your connection may be slow. You can keep waiting or tap Cancel and try again.';box.insertBefore(p,b)},90000)
+  }).observe(ov,{childList:true,subtree:true,attributes:true,attributeFilter:['hidden']});
+  return true}
+ var n=0,t=setInterval(function(){if(hook()||++n>120)clearInterval(t)},250);
+}catch(e){console.warn('v83 cancel',e)}})();
+</script>
 </body></html>
