@@ -14,7 +14,7 @@ async function call(text, b64, mime, w, h, model, extra) {
 }
 for (const J of JSON.parse(fs.readFileSync(JOBS, 'utf8'))) {
   const file = path.join(IN, J.image), b64 = fs.readFileSync(file).toString('base64'), mime = /png$/i.test(file) ? 'image/png' : 'image/jpeg';
-  const T = J.req.task || 'glam', prompt = buildPrompt(T, J.req), extra = J.garment ? fs.readFileSync(path.join(IN, J.garment)).toString('base64') : null; const t0 = Date.now();
+  const T = J.req.task || 'glam', prompt = J.prompt || buildPrompt(T, J.req), extra = J.garment ? fs.readFileSync(path.join(IN, J.garment)).toString('base64') : null; const t0 = Date.now();
   const M = J.model || MODEL;
   let r = await call(prompt, b64, mime, J.req.width, J.req.height, M, extra), used = 'full';
   if (!r.img && r.status === 200 && T === 'glam') { r = await call(simplePrompt('glam', J.req), b64, mime, J.req.width, J.req.height, M); used = 'simple'; }
