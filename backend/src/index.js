@@ -98,7 +98,7 @@ async function auth(req, env) {
   return { id: parts[0], platform: parts[1], ...rec };
 }
 // Device IDs of the owner's phones (Settings -> Device ID). Also settable as the OWNER_DEVICES variable (comma separated).
-const OWNER_DEVICE_IDS = [];
+const OWNER_DEVICE_IDS = ['a94b490c-38cc-4b14-b5a0-9e8aedb547cc'];
 const ownerDevices = env => OWNER_DEVICE_IDS.concat(String(env.OWNER_DEVICES || '').split(',').map(x => x.trim()).filter(Boolean));
 
 // ---------- counters ----------
