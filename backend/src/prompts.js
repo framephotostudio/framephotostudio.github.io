@@ -20,6 +20,40 @@ const BACKDROPS = {
   mykonos: 'a Mykonos, Greece whitewashed lane with blue doors and shutters, pink bougainvillea and the blue sea in the distance, bright Mediterranean daylight',
   beach_lux: 'a luxurious white-sand beach with turquoise water, palm trees and soft sunlight, gently blurred like a real photo',
   paris_cafe: 'a charming Parisian cafe terrace with wicker chairs, small round tables and Haussmann buildings, softly blurred behind, warm natural light',
+  new_york: 'New York City on Fifth Avenue with Manhattan skyscrapers rising behind, yellow taxis softly blurred, bright natural daylight',
+  times_square: 'Times Square, New York at night: glowing billboards and city lights softly blurred behind, colorful evening light',
+  las_vegas: 'the Las Vegas Strip at night: famous casino hotels, fountains and glittering lights softly blurred behind',
+  miami: 'Ocean Drive, Miami Beach: pastel art-deco hotels, tall palm trees and blue sky, bright tropical sun',
+  los_angeles: 'Beverly Hills, Los Angeles: palm-lined Rodeo Drive with luxury boutiques, sunny California light',
+  shanghai: 'the Bund in Shanghai at night: the Pudong skyline with the Oriental Pearl Tower lit up across the river, softly blurred',
+  petra: 'Petra, Jordan: the rose-red Treasury carved into the canyon cliff behind, warm desert daylight',
+  dubai_burj: 'downtown Dubai: the Burj Khalifa rising behind with modern towers, golden late-afternoon light',
+  london: 'London: Big Ben and the Houses of Parliament behind on Westminster Bridge, soft natural daylight',
+  tokyo_night: 'Shibuya, Tokyo at night: neon signs and city lights softly blurred behind, colorful evening light',
+  eiffel: 'Paris at the Trocadero with the Eiffel Tower behind, soft golden-hour light',
+  seville: 'Plaza de Espana in Seville, Spain: the grand tiled semicircular palace, bridges and canal behind, warm sunlight',
+  amalfi: 'Positano on the Amalfi Coast, Italy: colorful cliffside houses stacked down to the turquoise sea, bright Mediterranean sun',
+  pisa: 'Pisa, Italy: the Leaning Tower and the white marble cathedral on green lawns behind, clear daylight',
+  rome_colosseum: 'Rome, Italy: the Colosseum behind on a sunny day, warm natural light',
+  istanbul: 'Istanbul, Turkey: the Blue Mosque with its domes and minarets behind, soft golden light',
+  cappadocia: 'Cappadocia, Turkey at sunrise: dozens of colorful hot-air balloons floating over the fairy-chimney valley behind, soft warm light',
+  pyramids: 'Giza, Egypt: the Great Pyramids in the desert behind, bright warm sunlight',
+  marrakech: 'a Marrakech, Morocco riad courtyard: intricate zellige tiles, carved arches, lanterns and a fountain, warm soft light',
+  maldives_villa: 'the Maldives: overwater villas on a wooden jetty over clear turquoise water, bright tropical sun',
+  fine_dining: 'an elegant fine-dining restaurant at night: candlelit tables, crystal glasses, velvet chairs and warm chandelier light, softly blurred',
+  nightclub: 'an upscale VIP nightclub: a luxurious lounge with moody purple and gold lighting, sparkling bottles and soft bokeh, nighttime',
+  rooftop: 'a chic rooftop lounge at night overlooking a glittering city skyline, string lights and warm ambient light, softly blurred',
+  yacht: 'the deck of a luxury yacht on deep blue sea, white leather seating and a sunny Mediterranean coastline behind',
+  red_carpet: 'a red-carpet gala entrance: step-and-repeat backdrop, velvet ropes and camera flashes softly blurred, glamorous evening light',
+  lebanon: 'Beirut, Lebanon: the famous Raouche Pigeon Rocks rising from the turquoise Mediterranean behind, with the seaside Corniche, bright natural sunlight',
+  lisbon: 'Lisbon, Portugal: a hilly Alfama street with a yellow vintage tram, pastel tiled facades and terracotta rooftops behind, warm sunlight',
+  cartagena: 'Cartagena, Colombia: the colorful colonial old town with bright painted walls, flower-draped wooden balconies and cobblestones behind, warm Caribbean sun',
+  mexico_city: 'Mexico City: the Palacio de Bellas Artes with its golden domes and gardens behind, bright natural daylight',
+  cancun: 'Cancun, Mexico: a powdery white-sand beach with brilliant turquoise Caribbean water and palm trees behind, bright tropical sun',
+  cabo: 'Cabo San Lucas, Mexico: the famous El Arco rock arch rising from the deep blue sea behind, golden sunlight',
+  tulum: 'Tulum, Mexico: the ancient Mayan cliff-top ruins above a white beach and turquoise Caribbean sea behind, bright sun',
+  niagara: 'Niagara Falls: the thundering horseshoe falls with mist and a soft rainbow behind, bright natural daylight',
+  banff: 'Banff, Canada: Moraine Lake\'s vivid turquoise water with the jagged snow-dusted Rocky Mountain peaks and pine forest behind, crisp clear daylight',
   rome: 'Rome with the Colosseum softly blurred in warm light', tokyo: 'a Tokyo street at night with soft neon bokeh', alps: 'snow-capped Swiss Alps with clear morning light'
 };
 // ---- Face Couture luxury beauty finishes ------------------------------------------------------------------------------
@@ -88,7 +122,7 @@ const GROOM = {
   mrested: 'a well-rested finish: fresher, brighter under-eyes with dark circles and puffiness softened, clear even skin with real texture, less redness, neat brows, a healthy awake complexion'
 };
 const MEN_KEEP = 'Keep his exact same face shape, head size, nose, eyes, eye color, lips, ears, hair, beard shape and length, skin tone, expression, pose, clothing and background. Keep his exact same facial expression and smile: the mouth open exactly as much as in the original with the same teeth showing (never close an open smile or open a closed one), and do not add or deepen creases at the mouth corners, smile lines or around the eyes. Do not slim, reshape or resize his face, jaw, cheeks or neck. No makeup of any kind: no lipstick, lip color or gloss, no eyeshadow, eyeliner or mascara, no lash changes, no blush, no visible highlighter or shimmer. Photorealistic with natural skin texture; he must look exactly like himself, just well groomed.';
-export const TRAVEL_KEYS = ['santorini_day', 'santorini_sunset', 'mykonos', 'beach_lux', 'paris_cafe', 'greece', 'paris', 'newyork', 'london', 'dubai', 'bali', 'maldives', 'rome', 'tokyo', 'alps', 'beach', 'sunset'];
+export const TRAVEL_KEYS = ['lebanon', 'lisbon', 'cartagena', 'mexico_city', 'cancun', 'cabo', 'tulum', 'niagara', 'banff', 'santorini_day', 'santorini_sunset', 'mykonos', 'beach_lux', 'paris_cafe', 'new_york', 'times_square', 'las_vegas', 'miami', 'los_angeles', 'shanghai', 'petra', 'dubai_burj', 'london', 'tokyo_night', 'eiffel', 'seville', 'amalfi', 'pisa', 'rome_colosseum', 'istanbul', 'cappadocia', 'pyramids', 'marrakech', 'maldives_villa', 'fine_dining', 'nightclub', 'rooftop', 'yacht', 'red_carpet', 'greece', 'paris', 'newyork', 'london', 'dubai', 'bali', 'maldives', 'rome', 'tokyo', 'alps', 'beach', 'sunset'];
 
 export function buildPrompt(task, o = {}) {
   const outfit = o.outfit && o.outfit !== 'keep' ? OUTFITS[o.outfit] : null;
@@ -112,8 +146,7 @@ export function buildPrompt(task, o = {}) {
       break;
     case 'background':
     case 'travel':
-      if (o.locked && o.blend) { p = `Place this person in ${bg || 'a clean studio backdrop'}, as if the photo was really taken there. The person stays in exactly the same position, size, pose and framing, with the same camera angle and lens, so they line up perfectly with the original photo; keep their face, hair style, outfit and accessories exactly as they are. Remove every trace of the old background, including the bits between hair strands, between the arms and body and along every edge: no outline, halo, glow, fringe, smudge or blur around the hair, body, arms or clothing. Hair edges must be fine natural strands over the new scene. Relight the person to match the new scene: the same light direction, colour and warmth as the scene (for example a warm golden glow on skin, hair and clothes at sunset), with matching shadows on them and a soft natural contact shadow where they stand. The background has the natural depth of field of a phone photo. Match the perspective and horizon to the camera height. No extra people. Photorealistic.`; break; }
-      if (o.locked) { p = `Replace only the background of this photo with ${bg || 'a clean studio backdrop'}. The person must stay in exactly the same position, size, pose and framing, with the same camera angle and lens, so they line up perfectly with the original photo. Keep the person, face, hair, outfit and accessories exactly as they are. Match the perspective and horizon to the camera height, match the light direction and color of the new scene to the light already on the person, and add a soft natural contact shadow where they stand. No extra people.`; break; }
+      if (o.locked) { p = `Place this person in ${bg || 'a clean studio backdrop'}, as if the photo was really taken there. The person stays in exactly the same position, size, pose and framing, with the same camera angle and lens, so they line up perfectly with the original photo; keep their face, hair style, outfit and accessories exactly as they are. Remove every trace of the old background, including the bits between hair strands, between the arms and body and along every edge: no outline, halo, glow, fringe, smudge or blur around the hair, body, arms or clothing. Hair edges must be fine natural strands over the new scene. Relight the person to match the new scene: the same light direction, colour and warmth as the scene (for example a warm golden glow on skin, hair and clothes at sunset), with matching shadows on them and a soft natural contact shadow where they stand. The background has the natural depth of field of a phone photo. Match the perspective and horizon to the camera height. No extra people. Photorealistic.`; break; }
       p = `Replace only the background with ${bg || 'a clean studio backdrop'}. Keep the person, their outfit and hair exactly as they are with clean natural edges around hair and body; match lighting direction, color temperature and shadows so the person looks truly present in the scene, with correct perspective and depth of field.`;
       break;
     case 'blur':
