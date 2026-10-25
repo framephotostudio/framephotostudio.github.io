@@ -4550,4 +4550,22 @@ W.__fcWowGo=go;
  var n=0,t=setInterval(function(){if(hook()||++n>120)clearInterval(t)},250);
 }catch(e){console.warn('v83 cancel',e)}})();
 </script>
+<script>
+/* v84: "Keep editing this photo" on every AI result - the result becomes the working photo, so the next change (background, glow, outfit) builds on it */
+;(function(){try{var D=document,W=window;
+ var c=D.createElement('style');c.textContent='#fcKeepEdit{flex-basis:100%;order:-1}';D.head.appendChild(c);
+ function useAsPhoto(cv,btn){btn.disabled=true;btn.textContent='Opening…';cv.toBlob(function(blob){try{
+   var f=new File([blob],'FaceCouture-edit.jpg',{type:'image/jpeg'}),dt=new DataTransfer();dt.items.add(f);var inp=D.getElementById('file');
+   W.__glowAfterUpload=false;inp.files=dt.files;inp.dispatchEvent(new Event('change',{bubbles:true}));
+   try{W.__luxe._close()}catch(e){}try{W.__luxe._setBusy(false)}catch(e){}try{D.documentElement.style.overflow=''}catch(e){}
+   setTimeout(function(){try{(W.toast||function(){})('Your new photo is ready. Choose your next change.')}catch(e){}var w=D.getElementById('fcWow');if(w){var sc=null;for(var e=w.parentElement;e&&e!==D.body;e=e.parentElement){var cs=getComputedStyle(e);if(/(auto|scroll)/.test(cs.overflowY)&&e.scrollHeight>e.clientHeight+2){sc=e;break}}if(sc)sc.scrollTop=0;else W.scrollTo(0,0)}},700);
+   try{(W.gtag||function(){})('event','ai_keep_editing')}catch(e){}
+  }catch(err){btn.disabled=false;btn.textContent='Keep editing this photo';try{W.__luxe._message('Could not open it','Tap Save photo, then + Photo and choose the saved photo.')}catch(e){}}},'image/jpeg',.95)}
+ function hook(){var X=W.__luxe;if(!X||!X._showResult||X.__v84)return !!(X&&X.__v84);X.__v84=1;var sr=X._showResult;
+  X._showResult=function(L,before,after){var r=sr.apply(this,arguments);try{var acts=D.querySelector('#luxeSave')&&D.querySelector('#luxeSave').parentNode;if(acts&&after&&!D.getElementById('fcKeepEdit')){
+   var b=D.createElement('button');b.type='button';b.id='fcKeepEdit';b.className='luxeBtn gold';b.textContent='Keep editing this photo';b.onclick=function(){useAsPhoto(after,b)};acts.insertBefore(b,acts.firstChild);
+   var s=D.getElementById('luxeSave');if(s){s.classList.remove('gold');s.classList.add('ghost')}}}catch(e){}return r};return true}
+ var n=0,t=setInterval(function(){if(hook()||++n>120)clearInterval(t)},250);
+}catch(e){console.warn('v84 keep editing',e)}})();
+</script>
 </body></html>
