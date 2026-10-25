@@ -4491,7 +4491,7 @@ var css=D.createElement('style');css.textContent=
 '#fcMagic button:active,#fcWowRow button:active{transform:scale(.98)}';
 D.head.appendChild(css);
 function addWow(){var box=D.getElementById('fcWow');if(!box||!D.getElementById('aiGlowBtn')||!D.getElementById('fcTryBtn'))return false;if(D.getElementById('fcWowRow'))return true;
- var r=D.createElement('div');r.id='fcWowRow';r.innerHTML='<button type="button" id="fcWowOutfit">&#128087; AI Outfit Change<small>Wear any dress or outfit</small></button><button type="button" id="fcWowBg">&#127757; AI Background Change<small>Santorini, Paris, beach&hellip;</small></button>';
+ var r=D.createElement('div');r.id='fcWowRow';r.innerHTML='<button type="button" id="fcWowOutfit">&#128087; AI Outfit Change<small>Wear any outfit</small></button><button type="button" id="fcWowBg">&#127757; AI Background Change<small>Santorini, Paris, beach&hellip;</small></button>';
  box.appendChild(r);D.getElementById('fcWowOutfit').onclick=function(){go('outfit')};D.getElementById('fcWowBg').onclick=function(){go('bg')};return true}
 function addFront(){var a=D.querySelector('.heroActions');if(!a)return false;if(D.getElementById('fcMagic'))return true;
  var m=D.createElement('div');m.id='fcMagic';m.innerHTML='<h3>&#10024; New &middot; AI magic</h3><div class="g">'+
@@ -4502,5 +4502,21 @@ function addFront(){var a=D.querySelector('.heroActions');if(!a)return false;if(
 var n=0,t=setInterval(function(){var a=addWow(),b=addFront();if((a&&b)||++n>60)clearInterval(t)},250);addWow();addFront();
 W.__fcWowGo=go;
 }catch(e){console.warn('v79 wow row',e)}})();
+</script>
+<script>
+/* v81: give the photo its space back on phones - AI Glow, AI Outfit Change and AI Background Change share one row; tighter Women / Men row */
+;(function(){try{var D=document;
+ var css=D.createElement('style');css.textContent=
+ '#fcWowRow{grid-template-columns:repeat(3,1fr)!important}'+
+ '#fcWowRow>#aiGlowBtn{width:auto!important;margin:0!important;min-height:58px;border-radius:16px!important;border:1px solid #c9a35a;color:#fff;font:650 15px/1.15 inherit;padding:8px 12px!important;background:linear-gradient(110deg,#2c1840,#4a2a55 55%,#7a5a36)!important;box-shadow:0 6px 16px #2c18402e;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:2px}'+
+ '#fcWowRow>#aiGlowBtn span{font:650 15px/1.15 inherit;color:#fff}#fcWowRow>#aiGlowBtn small{display:block;font-weight:500;font-size:11.5px;color:#f1d9a4;margin:2px 0 0!important}'+
+ '@media(max-width:600px){#finSex{margin:0 0 6px!important;gap:6px!important}#finSex button{padding:6px 14px!important;font-size:13px!important;min-height:0!important}'+
+ '#fcWow{gap:6px!important;margin-top:4px!important}#fcWow>#autoGlow{min-height:42px!important;padding-top:6px!important;padding-bottom:6px!important;font-size:15px!important}'+
+ '#fcWowRow{gap:6px!important}#fcWowRow>button,#fcWowRow>#aiGlowBtn{min-height:44px!important;font-size:12.5px!important;padding:4px 6px!important;line-height:1.12!important}'+
+ '#fcWowRow>#aiGlowBtn span{font-size:12.5px!important}#fcWowRow>#aiGlowBtn small{display:none!important}}';
+ D.head.appendChild(css);
+ function go(){var r=D.getElementById('fcWowRow'),g=D.getElementById('aiGlowBtn');if(!r||!g)return false;if(g.parentNode!==r)r.insertBefore(g,r.firstChild);return true}
+ var n=0,t=setInterval(function(){if(go()&&++n>8)clearInterval(t);else if(n>60)clearInterval(t)},250);go();
+}catch(e){console.warn('v81 compact',e)}})();
 </script>
 </body></html>
