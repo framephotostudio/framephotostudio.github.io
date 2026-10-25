@@ -1,1 +1,1 @@
-iPhone build request: 1.0.0 (bigger photo in the studio)
+iPhone build request: 1.0.0 (bigger photo, Cancel on the AI working screen)
