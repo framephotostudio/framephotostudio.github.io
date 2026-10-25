@@ -6,8 +6,8 @@ export const DEFAULT_CONFIG = {
   // it only makes the already-reviewed purchase flow visible.
   // ONE SWITCH: paywallFrom = the date the paywall turns on (YYYY-MM-DD, e.g. 30 days after launch).
   // Before that date (or while it is empty) the app is completely free: no paywall, everything unlocked.
-  pro: { paywallFrom: '', trialDays: 7, priceMonth: '$8.99', priceYear: '$36.99', entitlement: 'pro',
-         products: { yearly: 'fc_pro_yearly', monthly: 'fc_pro_monthly' },
+  pro: { paywallFrom: '', trialDays: 7, priceWeek: '$4.99', priceMonth: '$9.99', priceYear: '$49.99', entitlement: 'pro',
+         products: { yearly: 'fc_pro_yearly', monthly: 'fc_pro_monthly', weekly: 'fc_pro_weekly' },
          topups: { fc_ai_20: { looks: 20, price: '$4.99' }, fc_ai_40: { looks: 40, price: '$8.99', badge: 'Best value' } } },
   // AI allowances per user, counted only on SUCCESSFUL generations.
   // launch = free launch period, 2 weeks (everyone), trial = 7-day trial (total), paid = subscribers (per calendar month),
@@ -17,6 +17,7 @@ export const DEFAULT_CONFIG = {
     launch: { perDay: 2, perMonth: 10 },
     trial: { total: 2 },
     paid:  { perDay: 15, perMonth: 15 },
+    weekly: { perDay: 5, perWeek: 5 },   // weekly plan: 5 AI looks per week (week starts Monday, UTC)
     free:  { perDay: 0, perMonth: 0 },
     promo: { perDay: 10, perMonth: 60 },
     anonymousWeb: { perDay: 1, perMonth: 3 }
