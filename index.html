@@ -4519,4 +4519,15 @@ W.__fcWowGo=go;
  var n=0,t=setInterval(function(){if(go()&&++n>8)clearInterval(t);else if(n>60)clearInterval(t)},250);go();
 }catch(e){console.warn('v81 compact',e)}})();
 </script>
+<script>
+/* v82: in the iPhone app the photo area has a fixed height, so the Women / Men switch and the AI buttons move to the top of the
+   scrolling section right under it. The photo gets its full size back and the AI buttons are still the first thing below the photo. */
+;(function(){try{var D=document,R=D.documentElement;
+ var c=D.createElement('style');c.textContent='#fcAppTop{padding:10px 12px 4px}#fcAppTop #finSex{justify-content:center;margin:0 0 8px!important}#fcAppTop #fcWow{margin:0!important;max-width:none}';D.head.appendChild(c);
+ function place(){if(!R.classList.contains('fc-app'))return false;var t=D.getElementById('fcTools'),fs=D.getElementById('finSex'),w=D.getElementById('fcWow');if(!t||!fs||!w||!D.getElementById('fcWowRow'))return false;
+  var box=D.getElementById('fcAppTop');if(!box){box=D.createElement('div');box.id='fcAppTop';t.parentNode.insertBefore(box,t)}
+  if(fs.parentNode!==box)box.appendChild(fs);if(w.parentNode!==box)box.appendChild(w);return true}
+ var n=0,t=setInterval(function(){if(place()&&++n>12)clearInterval(t);else if(++n>80)clearInterval(t)},250);place();
+}catch(e){console.warn('v82 app top',e)}})();
+</script>
 </body></html>
