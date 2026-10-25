@@ -6,9 +6,9 @@ Paste-ready text for App Store Connect and Google Play Console. Character limits
 
 **Name (30):** Face Couture: Glam Photo Editor
 **Subtitle (30):** Natural makeup, luxe looks
-**Promotional text (170):** New this season: Halloween Couture looks, Makeup Artist Mode and one-tap Glam. Your photos never leave your phone.
+**Promotional text (170):** New: AI Outfit Change, AI Background Change in 20+ dream destinations, plus one-tap AI Glow. Your face always stays yours.
 **Keywords (100, comma-separated, no spaces):**
-`makeup,selfie,beauty,retouch,glam,lipstick,lashes,facetune,photo editor,skin,portrait,linkedin,headshot,filter`
+`makeup,selfie,beauty,retouch,glam,outfit,try on,background,travel,lashes,skin,portrait,headshot,ai`
 **Primary category:** Photo & Video · **Secondary:** Lifestyle
 **Age rating:** 4+ (no objectionable content; AI features are user-initiated photo edits)
 **Support URL:** https://facecouture.app/support.html
@@ -23,7 +23,7 @@ Upload a selfie, choose a Look, save. Every finish was tuned by hand to read lik
 
 LOOKS THAT MEAN WHAT THEY SAY
 • Natural Glow, Clean Girl, Fresh & Bright — the everyday glow
-• Hollywood, Red Carpet, Runway Drama — smoky eyes, winged liner, a proper red or a glossy wine lip
+• Satin Glam, Hollywood, Red Carpet, Runway Drama — smoky eyes, winged liner, a proper red or a glossy wine lip
 • Golden Hour, Sunlit Glow, Gilded Glam — bronzed, rosy, nude-brown luxury
 • Royal Couture — princess, queen, fairy and witch looks all year
 • Seasonal collections appear automatically: Halloween, Thanksgiving, Christmas and New Year's
@@ -46,12 +46,25 @@ READY TO POST
 PRIVATE BY DESIGN
 Face and lip mapping runs on your phone. Your photos are never uploaded for it, there is no account, and hidden location data is removed from everything you save. Beauty tools work offline.
 
-AI LOOKS (optional)
-When connected, AI Glam, studio headshots, travel backgrounds, outfit try-on, Vanish (remove distractions) and instant background blur are available. They run only when you ask and agree, your photo is sent securely for that single edit and is never stored or used for training.
+AI MAGIC (optional, with Face Couture Pro)
+• AI Glow Makeover: premium AI glam that keeps your real eyes, lips and smile
+• AI Outfit Change: upload a photo of any outfit and see yourself wearing it
+• AI Background Change: Santorini, Paris, New York, Tokyo, Petra, the Pyramids and many more, plus a VIP night out, with your lighting matched to the scene
+• Keep editing: stack changes, for example a new outfit and then a new destination
+• Vanish people in the background and real-lens background blur
+Your face always stays exactly yours. AI runs only when you ask and agree; your photo is sent securely for that single edit and is never stored or used for training.
+
+FACE COUTURE PRO
+• Yearly: 7-day free trial, then $49.99 a year (15 AI looks a month)
+• Monthly: $9.99 a month (15 AI looks a month)
+• Weekly: $4.99 a week (5 AI looks a week)
+• Extra AI looks for members: 20 for $4.99 or 40 for $8.99
+Payment is charged to your Apple ID. Subscriptions renew automatically unless cancelled at least 24 hours before the end of the current period. Manage or cancel anytime in your App Store account settings.
+Terms of Use: https://facecouture.app/terms.html · Privacy Policy: https://facecouture.app/privacy.html
 
 Face Couture by Always Luxe. Couture beauty for every photo.
 
-**What's New (first release):** Welcome to Face Couture. Natural glam looks, Makeup Artist Mode, seasonal collections and every social size, all on your phone.
+**What's New (first release):** Welcome to Face Couture. Natural glam looks, AI Glow, AI Outfit Change, AI Background Change, Makeup Artist Mode and every social size.
 
 ## Google Play
 

@@ -8,7 +8,7 @@
   var isNative = !!(Cap && Cap.isNativePlatform && Cap.isNativePlatform());
   var RC = P.Purchases, platform = (API && API.platform) || 'web';
   var rcKey = isNative ? (platform === 'ios' ? CFG.revenueCatIOS : CFG.revenueCatAndroid) : '';
-  var DEF = { priceYear: '$36.99', priceMonth: '$8.99', trialDays: 7, products: { yearly: 'fc_pro_yearly', monthly: 'fc_pro_monthly' },
+  var DEF = { priceYear: '$49.99', priceMonth: '$9.99', priceWeek: '$4.99', trialDays: 7, products: { yearly: 'fc_pro_yearly', monthly: 'fc_pro_monthly', weekly: 'fc_pro_weekly' },
               topups: { fc_ai_20: { looks: 20, price: '$4.99' }, fc_ai_40: { looks: 40, price: '$8.99', badge: 'Best value' } }, entitlement: 'pro' };
   var st = { cfg: null, me: null, ready: false, pkgs: null, tops: null, sel: 'yearly', busy: false };
   var store = window.FCPlanTestStore || null; // test hook (local tests only)
@@ -49,7 +49,7 @@
     return RC.getOfferings().then(function (o) {
       var cur = o.current || {}, all = cur.availablePackages || [];
       var by = function (re) { return all.filter(function (p) { return re.test(p.identifier) || re.test((p.product || {}).identifier || ''); })[0]; };
-      st.pkgs = { yearly: cur.annual || by(/annual|year/i), monthly: cur.monthly || by(/month/i) }; return st.pkgs;
+      st.pkgs = { yearly: cur.annual || by(/annual|year/i), monthly: cur.monthly || by(/month/i), weekly: cur.weekly || by(/week/i) }; return st.pkgs;
     }).catch(function () { return null; });
   }
   function loadTopups() {
@@ -70,7 +70,7 @@
       var pkg = p && p[which]; if (!pkg) throw new Error('unavailable');
       return store ? store.buy(pkg) : RC.purchasePackage({ aPackage: pkg });
     }).then(function () { return sync(); }).then(function (m) {
-      T(which === 'yearly' ? 'trial_started' : 'subscribe_monthly', { plan: which });
+      T(which === 'yearly' ? 'trial_started' : 'subscribe_' + which, { plan: which });
       close(); toast(m && m.tier === 'trial' ? 'Welcome to Face Couture Pro. Your 7 days free have started.' : 'Welcome to Face Couture Pro.');
     }).catch(function (e) { if (!cancelled(e)) toast(e && e.message === 'unavailable' ? 'This plan is not available right now. Please try again later.' : 'The purchase did not go through. You were not charged.'); })
       .then(function () { st.busy = false; setBusy(false); });
@@ -118,13 +118,13 @@
     you: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V5a1 1 0 0 1 1-1h4M15 4h4a1 1 0 0 1 1 1v4M20 15v4a1 1 0 0 1-1 1h-4M9 20H5a1 1 0 0 1-1-1v-4" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><rect x="8.5" y="7.5" width="7" height="9" rx="1.2" fill="currentColor" opacity=".85"/></svg>'
   };
   function paywallHTML(p, pk) {
-    var y = pk && pk.yearly && pk.yearly.product, m = pk && pk.monthly && pk.monthly.product;
-    var yPrice = (y && y.priceString) || p.priceYear, mPrice = (m && m.priceString) || p.priceMonth, pm = perMonth(pk && pk.yearly, p.priceYear);
+    var y = pk && pk.yearly && pk.yearly.product, m = pk && pk.monthly && pk.monthly.product, wk = pk && pk.weekly && pk.weekly.product;
+    var yPrice = (y && y.priceString) || p.priceYear, mPrice = (m && m.priceString) || p.priceMonth, wPrice = (wk && wk.priceString) || p.priceWeek || '$4.99', pm = perMonth(pk && pk.yearly, p.priceYear);
     var trial = !(y && y.introPrice === null && y.introPrice !== undefined);
     var yn = (y && y.price) || num(p.priceYear), mn = (m && m.price) || num(p.priceMonth), save = yn && mn ? Math.floor((1 - yn / (mn * 12)) * 100) : 0;
-    var ai = (st.cfg && st.cfg.allowances) || {}, aiPaid = (ai.paid && ai.paid.perMonth) || 15, aiTrial = (ai.trial && ai.trial.total) || 2;
+    var ai = (st.cfg && st.cfg.allowances) || {}, aiPaid = (ai.paid && ai.paid.perMonth) || 15, aiTrial = (ai.trial && ai.trial.total) || 2; var aiWeek = (ai.weekly && ai.weekly.perWeek) || 5;
     var store_ = platform === 'ios' ? 'Apple ID' : 'Google Play account', where = platform === 'ios' ? 'App Store' : 'Google Play';
-    var yr = st.sel === 'yearly', hi = heroImgs();
+    var yr = st.sel === 'yearly', wkSel = st.sel === 'weekly', hi = heroImgs();
     return '<div class="fcpCard pw">' +
       '<div class="fcpTopBar"><button class="fcpX" aria-label="Close">×</button><button type="button" class="fcpRestoreTop" id="fcpRestoreTop">Restore</button></div>' +
       (hi ? '<div class="fcpShow" aria-hidden="true"><img src="' + hi[0] + '" alt=""><img class="aft" src="' + hi[1] + '" alt=""><span class="fcpTag l">BEFORE</span><span class="fcpTag r">AFTER</span><i class="fcpLine"></i></div>' : '<div class="fcpShow empty"></div>') +
@@ -141,13 +141,16 @@
           (save >= 10 ? '<span class="fcpBadge">SAVE ' + save + '%</span>' : '') +
           '<span class="rd"></span><span class="nm"><span class="fcpName">Yearly</span><span class="fcpSub">' + (trial ? '7-day free trial' : 'Best value') + '</span></span>' +
           '<span class="pr"><span class="fcpPrice">' + esc(yPrice) + '<small>/year</small></span>' + (pm ? '<span class="fcpPer">' + esc(pm) + '/month</span>' : '') + '</span></button>' +
-        '<button type="button" class="fcpPlan month' + (!yr ? ' on' : '') + '" data-plan="monthly" role="radio" aria-checked="' + !yr + '">' +
+        '<button type="button" class="fcpPlan month' + (st.sel === 'monthly' ? ' on' : '') + '" data-plan="monthly" role="radio" aria-checked="' + (st.sel === 'monthly') + '">' +
           '<span class="rd"></span><span class="nm"><span class="fcpName">Monthly</span><span class="fcpSub">Cancel anytime</span></span>' +
           '<span class="pr"><span class="fcpPrice">' + esc(mPrice) + '<small>/month</small></span></span></button>' +
+        '<button type="button" class="fcpPlan week' + (wkSel ? ' on' : '') + '" data-plan="weekly" role="radio" aria-checked="' + wkSel + '">' +
+          '<span class="rd"></span><span class="nm"><span class="fcpName">Weekly</span><span class="fcpSub">' + aiWeek + ' AI looks a week</span></span>' +
+          '<span class="pr"><span class="fcpPrice">' + esc(wPrice) + '<small>/week</small></span></span></button>' +
       '</div>' +
       '<button type="button" class="fcpCta" id="fcpGo">' + (yr ? (trial ? 'Start 7-Day Free Trial' : 'Continue') : 'Continue') + '</button>' +
       '<p class="fcpSure">' + (yr && trial ? '<span>✓ No payment due today</span><span>✓ Cancel anytime</span>' : '<span>✓ Cancel anytime</span>') + '</p>' +
-      '<p class="fcpFine">' + (yr ? (trial ? '' + aiTrial + ' AI looks included in your 7 days free, then ' + esc(yPrice) + ' a year. ' : esc(yPrice) + ' a year. ') : esc(mPrice) + ' a month. ') +
+      '<p class="fcpFine">' + (yr ? (trial ? '' + aiTrial + ' AI looks included in your 7 days free, then ' + esc(yPrice) + ' a year. ' : esc(yPrice) + ' a year. ') : wkSel ? esc(wPrice) + ' a week, ' + aiWeek + ' AI looks a week. ' : esc(mPrice) + ' a month. ') +
       'Payment is charged to your ' + store_ + (yr && trial ? ' when the free trial ends' : ' when you confirm') + '. Your subscription renews automatically unless you cancel at least 24 hours before the end of the ' + (yr && trial ? 'trial or ' : '') + 'current period. Manage or cancel anytime in your ' + where + ' settings.</p>' +
       '<div class="fcpLinks"><button type="button" id="fcpTerms">Terms of Use</button><span>·</span><button type="button" id="fcpPrivacy">Privacy Policy</button><span>·</span><button type="button" id="fcpRestore">Restore Purchases</button><span>·</span><button type="button" id="fcpCode">Have a code?</button></div>' +
       '</div></div>';
