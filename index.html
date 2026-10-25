@@ -4364,8 +4364,8 @@ async function faceNear(ai,Lo,big){try{var x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;Lo.forE
   for(var t=0;t<2;t++){var s=sz*(t?1.6:1),sx=Math.max(0,cx-s/2),sy=Math.max(0,cy-s/2),k=640/s,cc=cv(640,640);cc.getContext('2d').drawImage(ai,sx,sy,s,s,0,0,640,640);
    var G=await X._landmarks(cc);if(G.length)return X._biggest(G).map(function(p){return[p[0]/k+sx,p[1]/k+sy,p[2]]})}
   /* the AI may have moved the person a little: scan the picture in overlapping tiles */
-  var s2=Math.min(sz,ai.width,ai.height),st=Math.max(8,s2/3),n=0;
-  for(var ty=0;ty<=ai.height-s2+1&&n<60;ty+=st)for(var tx=0;tx<=ai.width-s2+1&&n<60;tx+=st){n++;var k2=640/s2,c2=cv(640,640);c2.getContext('2d').drawImage(ai,tx,ty,s2,s2,0,0,640,640);
+  var s2=Math.min(sz,ai.width,ai.height),st=Math.max(8,s2/2),n=0,yA=Math.max(0,cy-ai.height*.28),yB=Math.min(ai.height-s2,cy+ai.height*.28);
+  for(var ty=yA;ty<=yB+1&&n<240;ty+=st)for(var tx=0;tx<=ai.width-s2+1&&n<240;tx+=st){n++;var k2=640/s2,c2=cv(640,640);c2.getContext('2d').drawImage(ai,tx,ty,s2,s2,0,0,640,640);
    var G2=await X._landmarks(c2);if(G2.length)return X._biggest(G2).map(function(p){return[p[0]/k2+tx,p[1]/k2+ty,p[2]]})}}catch(e){}return null}
 async function travel(S){if(!needs()||X._isBusy())return;X._setBusy(true);T('ai_travel_start',{scene:S.k});busyMsg('Taking you to '+S.n);
  try{var up=X._photoCanvas(2048),big=X._photoCanvas(4096);if(!up)throw new Error('Add your photo first.');
