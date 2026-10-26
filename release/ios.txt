@@ -1,1 +1,1 @@
-iPhone build request: 1.0.0 (feedback link on AI results and errors)
+iPhone build request: 1.0.0 (AI Studio layout, AI makeup on the real face)
