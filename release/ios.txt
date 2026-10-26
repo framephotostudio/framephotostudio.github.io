@@ -1,1 +1,1 @@
-iPhone build request: 1.0.0 (bigger photo, undo row, continue last edit, artist bar)
+iPhone build request: 1.0.0 (no feedback link, single Cancel)
