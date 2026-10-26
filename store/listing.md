@@ -46,16 +46,19 @@ READY TO POST
 PRIVATE BY DESIGN
 Face and lip mapping runs on your phone. Your photos are never uploaded for it, there is no account, and hidden location data is removed from everything you save. Beauty tools work offline.
 
-AI MAGIC (optional, with Face Couture Pro)
-• AI Glow Makeover: premium AI glam that keeps your real eyes, lips and smile
+AI STUDIO
+• AI Glow: premium AI glam that keeps your real face, eye color, lips and smile
+• AI Looks: Satin Glam, Full Glam, Red Carpet, Clean Girl, Bridal Glow and more, made by AI on your own photo
 • AI Outfit Change: upload a photo of any outfit and see yourself wearing it
-• AI Background Change: Santorini, Paris, New York, Tokyo, Petra, the Pyramids and many more, plus a VIP night out, with your lighting matched to the scene
+• AI Accessories and AI Shoes: try on necklaces, earrings, bracelets, watches, bags and shoes
+• AI Background Change: Santorini, Paris, New York, Tokyo, Petra, the Pyramids and 20+ more, with your lighting matched to the scene
+• Vanish people in the background, plus free real-lens background blur
 • Keep editing: stack changes, for example a new outfit and then a new destination
-• Vanish people in the background and real-lens background blur
 Your face always stays exactly yours. AI runs only when you ask and agree; your photo is sent securely for that single edit and is never stored or used for training.
 
 FREE AT LAUNCH
 Everything in Face Couture is free while we launch, including AI looks: up to 2 AI looks a day for every member.
+
 Terms of Use: https://facecouture.app/terms.html · Privacy Policy: https://facecouture.app/privacy.html
 
 Face Couture by Always Luxe. Couture beauty for every photo.
