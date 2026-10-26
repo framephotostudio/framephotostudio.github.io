@@ -138,6 +138,7 @@ export function buildPrompt(task, o = {}) {
       p = men
         ? `Retouch this man like a high-end magazine grooming artist. The result must look noticeably more polished than the original: ${L}. No visible makeup, no lipstick, no eye makeup. Keep the background, clothing and lighting unchanged.`
         : `MOST IMPORTANT: her eyes must stay exactly the same shape and size as in the original photo - the same outline, the same corners, the same openness and the same eye color. Makeup goes around the eyes; it never changes the eyes. Exceptional professional makeup and beauty retouching for ${o.target ? 'only ' + String(o.target).slice(0, 120) + ' (edit her face only; leave every other person in the photo exactly as they are, completely untouched)' : o.who ? String(o.who).slice(0, 120) + ' (apply the full finish consistently to every one of them, adapted to each person\'s own features and skin tone)' : 'the woman in this photo'}. ${L.look}${o.eyes ? ' Eyes: ' + o.eyes + '.' : ''}${o.lip ? ' Lips: ' + o.lip + '.' : ''} ${LASHES} ${EYES} ${STANDARD}`;
+      if (!men) p += ' LASHES AND LINER: clearly fuller, longer lashes on both the upper and lower lash lines - lush and glamorous but every lash separated and realistic, never clumpy, spidery or fake strips - plus a fine, precise eyeliner traced tight along the upper lash line (thin and elegant, no thick or heavy line). Keep her exact natural eye color.';
       return p + ' ' + (men ? MEN_KEEP : PRESERVE);
     }
     case 'enhance':
