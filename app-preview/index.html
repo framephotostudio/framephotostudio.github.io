@@ -4879,7 +4879,7 @@ W.__fcHybrid=function(origC,Lo,resC,La,men){var t0=performance.now();if(!origC||
  var P=function(ix){return ix.map(function(i){return LoC[i]})},fea=Math.max(3,fw/45);
  var face=maskOf(cw,ch,function(x){poly(x,scl(P(OVAL),.97,.97))},fea*2.5),lips=maskOf(cw,ch,function(x){poly(x,P(LIPS))},Math.max(2,fw/140)),
   eyes=maskOf(cw,ch,function(x){[[EYEL,BROWL],[EYER,BROWR]].forEach(function(e){poly(x,hull(scl(P(e[0]),1.35,1.9).concat(scl(P(e[1]),1,.9))))})},fea*1.6),
-  opn=maskOf(cw,ch,function(x){poly(x,scl(P(EYEL),.8,.55));poly(x,scl(P(EYER),.8,.55))},Math.max(1.5,fw/220));
+  opn=maskOf(cw,ch,function(x){[[EYEL,468],[EYER,473]].forEach(function(e){var E=P(e[0]);poly(x,scl(E,.97,.88));if(LoC.length>e[1]+4){var c=LoC[e[1]],r=0;for(var q=1;q<5;q++)r+=Math.hypot(LoC[e[1]+q][0]-c[0],LoC[e[1]+q][1]-c[1]);r=r/4*1.08;x.save();x.beginPath();scl(E,1.05,1).forEach(function(p,i){i?x.lineTo(p[0],p[1]):x.moveTo(p[0],p[1])});x.closePath();x.clip();x.beginPath();x.arc(c[0],c[1],r,0,Math.PI*2);x.fill();x.restore()}})},Math.max(1,fw/260));
  /* 3) colour from the AI, texture from the real photo */
  var sig=fw/55,Olo=lowFreq(O,sig),Alo=lowFreq(A,sig),od=ox.getImageData(0,0,cw,ch),ad=ax.getImageData(0,0,cw,ch).data,Od=od.data,n=cw*ch;
  var cast=[0,0,0],cn=0;for(i=0;i<n;i++){var pl=face[i]*(1-Math.min(1,(eyes?eyes[i]:0)+(lips?lips[i]:0)));if(pl>.6){for(var c=0;c<3;c++)cast[c]+=Alo[i*3+c]-Olo[i*3+c];cn++}}if(cn)for(c=0;c<3;c++)cast[c]/=cn;
