@@ -54,12 +54,8 @@ AI MAGIC (optional, with Face Couture Pro)
 • Vanish people in the background and real-lens background blur
 Your face always stays exactly yours. AI runs only when you ask and agree; your photo is sent securely for that single edit and is never stored or used for training.
 
-FACE COUTURE PRO
-• Yearly: 7-day free trial, then $49.99 a year (15 AI looks a month)
-• Monthly: $9.99 a month (15 AI looks a month)
-• Weekly: $4.99 a week (5 AI looks a week)
-• Extra AI looks for members: 20 for $4.99 or 40 for $8.99
-Payment is charged to your Apple ID. Subscriptions renew automatically unless cancelled at least 24 hours before the end of the current period. Manage or cancel anytime in your App Store account settings.
+FREE AT LAUNCH
+Everything in Face Couture is free while we launch, including AI looks: up to 2 AI looks a day for every member.
 Terms of Use: https://facecouture.app/terms.html · Privacy Policy: https://facecouture.app/privacy.html
 
 Face Couture by Always Luxe. Couture beauty for every photo.
@@ -97,3 +93,15 @@ Use one address everywhere (stores require a working, monitored email). Suggeste
 ## Review prompt
 
 The app asks for a rating through the native in-app review sheet only after the third successful save, never conditionally on satisfaction and never with an incentive (store policy compliant).
+
+
+## Save for version 1.1 (when payments are switched on with RevenueCat)
+
+Replace the FREE AT LAUNCH section above with:
+
+FACE COUTURE PRO
+• Yearly: 7-day free trial, then $49.99 a year (15 AI looks a month)
+• Monthly: $9.99 a month (15 AI looks a month)
+• Weekly: $4.99 a week (5 AI looks a week)
+• Extra AI looks for members: 20 for $4.99 or 40 for $8.99
+Payment is charged to your Apple ID. Subscriptions renew automatically unless cancelled at least 24 hours before the end of the current period. Manage or cancel anytime in your App Store account settings.
