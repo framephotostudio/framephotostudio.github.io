@@ -4748,4 +4748,73 @@ a.addEventListener('click',function(){try{W.gtag&&W.gtag('event','feedback_tap',
 acts.parentNode.insertBefore(a,acts.nextSibling)}
 new MutationObserver(function(){add()}).observe(D.body,{childList:true,subtree:true});W.__fcFbHref=href}catch(e){}})();
 </script>
+<script>/* v95: simpler choices - no AI model switch (one default model), "Make it bolder" on glam results,
+   "AI Luxe Looks" -> "AI Looks", Makeup Artist Mode moves into Beauty Lab */
+(function(){try{var D=document,W=window;
+var st=D.createElement('style');st.textContent='#fcEng,#fcEngNote{display:none!important}'+
+ '#fcBolder{display:block;margin:10px auto 0;padding:11px 18px;border-radius:999px;border:1.5px solid #c9a24a;background:linear-gradient(135deg,#3a1d44,#5a2c4f);color:#f3dfb2;font-weight:600;font-size:15px}'+
+ '#fcBolder small{display:block;font-size:11.5px;font-weight:500;opacity:.8;margin-top:2px}'+
+ '#beauty #artistMode{margin:6px 0 16px}';D.head.appendChild(st);
+/* one AI model for everyone (the standard one); "Make it bolder" uses the bold model for that single request */
+function std(){W.__fcEngine='std';try{localStorage.setItem('fc-ai-engine','std')}catch(e){}}std();
+var of=W.fetch;W.fetch=function(u){var r=of.apply(this,arguments);try{if(W.__fcBoldOnce&&String(u).indexOf('/api/ai')>-1){W.__fcBoldOnce=false;std()}}catch(e){}return r};
+function hookRun(){var L=W.__luxe;if(!L||!L.run||L.run.__fc95)return;var orig=L.run;L.run=function(look){W.__fcLastLook=look;W.__fcLastBold=!!W.__fcBoldOnce;return orig.apply(this,arguments)};L.run.__fc95=1}
+function bolder(){var ov=D.querySelector('.luxeOv');if(!ov)return;ov=[].filter.call(D.querySelectorAll('.luxeOv'),function(o){return o.querySelector('#luxeSave')})[0];if(!ov||ov.querySelector('#fcBolder')||!W.__fcLastLook||W.__fcLastBold)return;
+ var acts=ov.querySelector('.luxeActs');if(!acts)return;var men=W.frameStyle==='men';
+ var b=D.createElement('button');b.type='button';b.id='fcBolder';b.innerHTML=(men?'Make it sharper':'Make it bolder')+'<small>Stronger, more dramatic version · uses 1 AI look</small>';
+ b.onclick=function(){var look=W.__fcLastLook;try{W.fcTrack&&W.fcTrack('ai_bolder',{look:look&&look.k})}catch(e){}
+  try{W.__luxe._close()}catch(e){var c=D.getElementById('luxeClose');c&&c.click()}
+  setTimeout(function(){W.__fcEngine='nb21';W.__fcBoldOnce=true;W.__luxe.run(look);setTimeout(function(){if(W.__fcBoldOnce&&!(W.__luxe._isBusy&&W.__luxe._isBusy())){W.__fcBoldOnce=false;std()}},4000)},250)};
+ acts.parentNode.insertBefore(b,acts.nextSibling)}
+function names(){var h=D.getElementById('luxeTitle');if(h&&h.firstChild&&/AI Luxe Looks/.test(h.firstChild.nodeValue||''))h.firstChild.nodeValue='AI Looks ';
+ var g=D.getElementById('luxeGrid');if(g&&/AI Luxe Looks/.test(g.getAttribute('aria-label')||''))g.setAttribute('aria-label','AI Looks');
+ var am=D.getElementById('artistMode'),bp=D.getElementById('beauty');if(am&&bp&&am.parentNode!==bp){var h2=bp.querySelector('h2 + .sub')||bp.querySelector('h2');h2?h2.insertAdjacentElement('afterend',am):bp.insertBefore(am,bp.firstChild)}}
+function tick(){hookRun();names();bolder()}tick();setInterval(tick,600);new MutationObserver(function(){bolder()}).observe(D.body,{childList:true,subtree:true});
+}catch(e){console.warn('v95',e)}})();
+</script>
+<script>/* v96: "AI Studio" holds every AI feature (AI Glow, Outfit, Background, Accessories, Shoes, Vanish, AI Looks);
+   free on-phone tools (Auto Glow, Blur Background) live in the Studio tab. Nothing mixed. */
+(function(){try{var D=document,W=window;
+var st=D.createElement('style');st.textContent=
+ '#fcWow.fcAIS{border:1.5px solid #d9bf86;border-radius:20px;padding:12px 12px 10px;background:linear-gradient(160deg,#fffaf2,#f7eefa);margin:8px 0 12px}'+
+ '#fcAISHead{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:0 2px 10px}'+
+ '#fcAISHead b{font-size:17px;color:#3a1d44;letter-spacing:-.2px}#fcAISHead span{font-size:12px;color:#7a6a80}'+
+ '#fcWow.fcAIS #luxe{margin:10px 0 2px}#fcWow.fcAIS #luxe[hidden]{display:none!important}'+
+ '#fcFreeHead{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:2px 2px 8px}#fcFreeHead b{font-size:16px;color:#3a1d44}#fcFreeHead span{font-size:12px;color:#7a6a80}'+
+ '#edit #fcWowBlur{width:100%;margin:6px 0 10px;min-height:52px;border-radius:14px;border:1px solid #e3cf9f;background:#fffaf3;color:#3a1d44;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;flex:none;height:auto}'+
+ '#edit #fcWowBlur small{color:#7a6a80}#edit #fcWowBlur.on{background:#f3e6c6}'+
+ '#edit #autoGlow{margin-top:4px}#fcWow.fcAIS #fcBg{margin:12px 0 2px;border-top:1px solid #ecdcc0;padding-top:10px}#fcWow.fcAIS #fcBg[hidden]{display:none!important}';D.head.appendChild(st);
+function el(id){return D.getElementById(id)}
+function lay(){var w=el('fcWow'),row=el('fcWowRow'),ed=el('edit');if(!w||!row||!ed)return;
+ if(!w.classList.contains('fcAIS'))w.classList.add('fcAIS');
+ if(!el('fcAISHead')){var h=D.createElement('div');h.id='fcAISHead';h.innerHTML='<b>&#10024; AI Studio</b><span>Premium AI &middot; each uses 1 AI look</span>';w.insertBefore(h,w.firstChild)}
+ else if(w.firstChild!==el('fcAISHead'))w.insertBefore(el('fcAISHead'),w.firstChild);
+ /* free tools out of the AI box, into the Studio tab */
+ if(!el('fcFreeHead')){var f=D.createElement('div');f.id='fcFreeHead';f.innerHTML='<b>Free tools</b><span>Instant, made on your phone</span>';ed.insertBefore(f,ed.firstChild)}
+ var fh=el('fcFreeHead'),ag=el('autoGlow'),gn=el('glowNote'),bl=el('fcWowBlur'),po=el('polish');
+ if(ag&&ag.parentNode!==ed){fh.insertAdjacentElement('afterend',ag)}else if(ag&&ag.previousElementSibling!==fh&&ag.previousElementSibling&&ag.previousElementSibling.id!=='fcFreeHead'){fh.insertAdjacentElement('afterend',ag)}
+ if(gn&&ag&&gn.previousElementSibling!==ag)ag.insertAdjacentElement('afterend',gn);
+ if(bl&&bl.parentNode!==ed){(gn||ag||fh).insertAdjacentElement('afterend',bl)}
+ /* AI Looks button + the looks grid inside the AI box */
+ var r2=el('fcWowRow2')||row;
+ if(!el('fcWowLooks')){var b=D.createElement('button');b.type='button';b.id='fcWowLooks';b.className=(el('fcWowVanish')||{}).className||'';b.innerHTML='<span>&#128132; <b>AI Looks</b></span><small>Satin Glam, Red Carpet and more</small>';
+  b.onclick=function(){var lx=el('luxe');if(!lx)return;lx.hidden=!lx.hidden;b.classList.toggle('on',!lx.hidden);if(!lx.hidden)setTimeout(function(){try{lx.scrollIntoView({block:'nearest'})}catch(e){}},60)};r2.appendChild(b)}
+ var lx=el('luxe');if(lx&&lx.parentNode!==w){if(lx.hidden===undefined||!lx.dataset.fc96){lx.hidden=true;lx.dataset.fc96=1}var my=el('fcMyRes');my&&my.parentNode===w?w.insertBefore(lx,my):w.appendChild(lx)}
+ /* AI panels (travel, vanish, try-on) live inside AI Studio and open from their buttons; the free blur slider stays with Free tools */
+ var bg=el('fcBg');if(bg&&bg.parentNode!==w){bg.hidden=true;var lx2=el('luxe');lx2&&lx2.parentNode===w?w.insertBefore(bg,lx2):w.appendChild(bg)}
+ if(bg){var h3b=bg.querySelector('h3');if(h3b&&h3b.textContent!=='Travel, Vanish & try-on')h3b.textContent='Travel, Vanish & try-on';var pb=h3b&&h3b.nextElementSibling;if(pb&&pb.tagName==='P')pb.style.display='none';
+  var br=el('fcBlurBtn');var brow=br&&br.closest('.row');if(brow&&brow.parentNode===bg){brow.style.display='none';ed.insertBefore(brow,(el('fcWowBlur')||fh).nextSibling)}
+  var bs=el('fcBgStr');if(bs&&bs.parentNode!==ed){ed.insertBefore(bs,(el('fcWowBlur')||fh).nextSibling)}}
+ var vp=el('vanishPanel');if(vp&&bg&&vp.parentNode!==bg)bg.appendChild(vp);
+ /* AI Looks sits right after AI Glow */
+ var lb=el('fcWowLooks'),gb2=el('aiGlowBtn');if(lb&&gb2&&gb2.nextElementSibling!==lb)gb2.insertAdjacentElement('afterend',lb);
+ /* front page: same words as inside */
+ var fm=el('fcMagic');if(fm){var h3=fm.querySelector('h3');if(h3&&!/AI Studio/.test(h3.textContent))h3.innerHTML='&#10024; AI Studio';var gb=fm.querySelector('[data-k="glow"] b');if(gb&&gb.textContent!=='AI Glow')gb.textContent='AI Glow'}
+}
+
+D.addEventListener('click',function(e){try{var t=e.target.closest&&e.target.closest('#fcWowOutfit,#fcWowBg,#fcWowAcc,#fcWowShoes,#fcWowVanish,#fcMagic [data-k]');if(!t)return;var k=t.dataset&&t.dataset.k;if(k==='glow')return;var b=el('fcBg'),l=el('luxe');if(b)b.hidden=false;if(l)l.hidden=true;var lb=el('fcWowLooks');lb&&lb.classList.remove('on')}catch(x){}},true);
+D.addEventListener('click',function(e){try{if(e.target.closest&&e.target.closest('#fcWowLooks')){var b=el('fcBg');if(b)b.hidden=true}}catch(x){}},true);
+lay();setInterval(lay,700);
+}catch(e){console.warn('v96',e)}})();
+</script>
 </body></html>
