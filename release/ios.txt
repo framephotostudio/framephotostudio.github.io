@@ -1,1 +1,1 @@
-iPhone build request: 1.0.0 (brighter FC icon)
+iPhone build request: 1.0.0 (no feedback link, single Cancel)
