@@ -4896,4 +4896,16 @@ W.__fcHybrid=function(origC,Lo,resC,La,men){var t0=performance.now();if(!origC||
  W.__fcHybridLast={ms:Math.round(performance.now()-t0),w:W0,h:H0,crop:[cw,ch],men:!!men};return out};
 }catch(e){console.warn('v97',e)}})();
 </script>
+<script>/* v98: launch polish - the old "AI looks" tab (replaced by AI Studio) is hidden; after choosing a photo the page
+   moves to the photo so customers see it right away (instant scroll, iPhone-safe). */
+(function(){try{var D=document,W=window;
+var st=D.createElement('style');st.textContent='[data-tab="ai"]{display:none!important}';D.head.appendChild(st);
+function stage(){return D.querySelector('.stage')||D.querySelector('.photo')}
+function go(){var t0=Date.now(),was=D.body.classList.contains('ownPhoto')?(W.__fcPhotoKey||''):'';
+ (function wait(){var s=stage();var on=D.body.classList.contains('ownPhoto');
+  if(on&&s&&s.offsetParent){setTimeout(function(){var r=s.getBoundingClientRect();if(r.top>120||r.bottom<80){try{W.scrollTo({top:Math.max(0,W.scrollY+r.top-8),behavior:'instant'})}catch(e){W.scrollTo(0,Math.max(0,W.scrollY+r.top-8))}}},250);return}
+  if(Date.now()-t0<9000)setTimeout(wait,200)})()}
+['file','cameraFile'].forEach(function(id){var i=D.getElementById(id);if(i)i.addEventListener('change',function(){go()})});
+}catch(e){console.warn('v98',e)}})();
+</script>
 </body></html>
