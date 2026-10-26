@@ -1,1 +1,1 @@
-iPhone build request: 1.0.0 (new FC logo app icon with plum F, new opening screen)
+iPhone build request: 1.0.0 (feedback link on AI results and errors)
