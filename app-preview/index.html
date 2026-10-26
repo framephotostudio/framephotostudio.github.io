@@ -3771,11 +3771,13 @@ async function run(L){
   for(var attempt=0;attempt<3;attempt++){
    if(cancelled)return;
    if(attempt){var s=$('luxeSub');if(s)s.textContent='Perfecting the details…'}
-   var j=await callAI({task:'glam',intensity:L.k,image:image,width:up.width,height:up.height,consent:true,retry:attempt>0});
+   var j=await callAI({task:'glam',intensity:L.k,image:image,width:up.width,height:up.height,consent:true,retry:attempt>0,engine:(window.__fcHybridOn!==false&&window.__fcHybrid)?'nb21':undefined});
    if(cancelled)return;
    var resImg=await loadImg(j.image),resC=canvasOf(resImg),FA=await landmarks(resC);
    if(!FA.length)continue;
    var La=biggest(FA),mr=measures(La),sc=score(mo,mr),fit=realEyes(origC,Lo,resC,La);
+   /* v97: hybrid - AI makeup on the real face, full resolution; one AI look is enough */
+   if(window.__fcHybridOn!==false&&window.__fcHybrid){try{var hc=window.__fcHybrid(origC,Lo,resC,La,window.frameStyle==='men');if(hc){T('ai_look_done',{look:L.k,attempts:attempt+1,passed:1,hybrid:1,ms:(window.__fcHybridLast||{}).ms});refreshLeft();busy=false;showResult(L,origC,hc);return}}catch(e){console.warn('hybrid',e);T('ai_look_hybrid_error',{look:L.k})}}
    if(fit>.10)sc.worst=Math.max(sc.worst,2);
    var moved=poseCheck(Lo,origC.width,origC.height,La,resC.width,resC.height),body=bodyO?bodyOverlap(bodyO,await bodyMask(resC,bw,bh)):1;
    // the AI sometimes zooms or shifts the whole photo: put its face back onto the original first, then check again
@@ -4747,5 +4749,151 @@ var a=D.createElement('a');a.className='fcFb';a.href=href(err?'AI error':'AI res
 a.addEventListener('click',function(){try{W.gtag&&W.gtag('event','feedback_tap',{where:err?'error':'result'})}catch(e){}});
 acts.parentNode.insertBefore(a,acts.nextSibling)}
 new MutationObserver(function(){add()}).observe(D.body,{childList:true,subtree:true});W.__fcFbHref=href}catch(e){}})();
+</script>
+<script>/* v95: simpler choices - no AI model switch (one default model), "Make it bolder" on glam results,
+   "AI Luxe Looks" -> "AI Looks", Makeup Artist Mode moves into Beauty Lab */
+(function(){try{var D=document,W=window;
+var st=D.createElement('style');st.textContent='#fcEng,#fcEngNote{display:none!important}'+
+ '#fcBolder{display:block;margin:10px auto 0;padding:11px 18px;border-radius:999px;border:1.5px solid #c9a24a;background:linear-gradient(135deg,#3a1d44,#5a2c4f);color:#f3dfb2;font-weight:600;font-size:15px}'+
+ '#fcBolder small{display:block;font-size:11.5px;font-weight:500;opacity:.8;margin-top:2px}'+
+ '#beauty #artistMode{margin:6px 0 16px}';D.head.appendChild(st);
+/* one AI model for everyone (the standard one); "Make it bolder" uses the bold model for that single request */
+function std(){W.__fcEngine='std';try{localStorage.setItem('fc-ai-engine','std')}catch(e){}}std();
+var of=W.fetch;W.fetch=function(u){var r=of.apply(this,arguments);try{if(W.__fcBoldOnce&&String(u).indexOf('/api/ai')>-1){W.__fcBoldOnce=false;std()}}catch(e){}return r};
+function hookRun(){var L=W.__luxe;if(!L||!L.run||L.run.__fc95)return;var orig=L.run;L.run=function(look){W.__fcLastLook=look;W.__fcLastBold=!!W.__fcBoldOnce;return orig.apply(this,arguments)};L.run.__fc95=1}
+function bolder(){var ov=D.querySelector('.luxeOv');if(!ov)return;ov=[].filter.call(D.querySelectorAll('.luxeOv'),function(o){return o.querySelector('#luxeSave')})[0];if(!ov||ov.querySelector('#fcBolder')||!W.__fcLastLook||W.__fcLastBold)return;
+ var acts=ov.querySelector('.luxeActs');if(!acts)return;var men=W.frameStyle==='men';
+ var b=D.createElement('button');b.type='button';b.id='fcBolder';b.innerHTML=(men?'Make it sharper':'Make it bolder')+'<small>Stronger, more dramatic version · uses 1 AI look</small>';
+ b.onclick=function(){var look=W.__fcLastLook;try{W.fcTrack&&W.fcTrack('ai_bolder',{look:look&&look.k})}catch(e){}
+  try{W.__luxe._close()}catch(e){var c=D.getElementById('luxeClose');c&&c.click()}
+  setTimeout(function(){W.__fcEngine='nb21';W.__fcBoldOnce=true;W.__luxe.run(look);setTimeout(function(){if(W.__fcBoldOnce&&!(W.__luxe._isBusy&&W.__luxe._isBusy())){W.__fcBoldOnce=false;std()}},4000)},250)};
+ acts.parentNode.insertBefore(b,acts.nextSibling)}
+function names(){var h=D.getElementById('luxeTitle');if(h&&h.firstChild&&/AI Luxe Looks/.test(h.firstChild.nodeValue||''))h.firstChild.nodeValue='AI Looks ';
+ var g=D.getElementById('luxeGrid');if(g&&/AI Luxe Looks/.test(g.getAttribute('aria-label')||''))g.setAttribute('aria-label','AI Looks');
+ var am=D.getElementById('artistMode'),bp=D.getElementById('beauty');if(am&&bp&&am.parentNode!==bp){var h2=bp.querySelector('h2 + .sub')||bp.querySelector('h2');h2?h2.insertAdjacentElement('afterend',am):bp.insertBefore(am,bp.firstChild)}}
+function tick(){hookRun();names();bolder()}tick();setInterval(tick,600);new MutationObserver(function(){bolder()}).observe(D.body,{childList:true,subtree:true});
+}catch(e){console.warn('v95',e)}})();
+</script>
+<script>/* v96: "AI Studio" holds every AI feature (AI Glow, Outfit, Background, Accessories, Shoes, Vanish, AI Looks);
+   free on-phone tools (Auto Glow, Blur Background) live in the Studio tab. Nothing mixed. */
+(function(){try{var D=document,W=window;
+var st=D.createElement('style');st.textContent=
+ '#fcWow.fcAIS{border:1.5px solid #d9bf86;border-radius:20px;padding:12px 12px 10px;background:linear-gradient(160deg,#fffaf2,#f7eefa);margin:8px 0 12px}'+
+ '#fcAISHead{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:0 2px 10px}'+
+ '#fcAISHead b{font-size:17px;color:#3a1d44;letter-spacing:-.2px}#fcAISHead span{font-size:12px;color:#7a6a80}'+
+ '#fcWow.fcAIS #luxe{margin:10px 0 2px}#fcWow.fcAIS #luxe[hidden]{display:none!important}'+
+ '#fcFreeHead{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:2px 2px 8px}#fcFreeHead b{font-size:16px;color:#3a1d44}#fcFreeHead span{font-size:12px;color:#7a6a80}'+
+ '#edit #fcWowBlur{width:100%;margin:6px 0 10px;min-height:52px;border-radius:14px;border:1px solid #e3cf9f;background:#fffaf3;color:#3a1d44;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;flex:none;height:auto}'+
+ '#edit #fcWowBlur small{color:#7a6a80}#edit #fcWowBlur.on{background:#f3e6c6}'+
+ '#edit #autoGlow{margin-top:4px}#fcWow.fcAIS #fcBg{margin:12px 0 2px;border-top:1px solid #ecdcc0;padding-top:10px}#fcWow.fcAIS #fcBg[hidden]{display:none!important}';D.head.appendChild(st);
+function el(id){return D.getElementById(id)}
+function lay(){var w=el('fcWow'),row=el('fcWowRow'),ed=el('edit');if(!w||!row||!ed)return;
+ if(!w.classList.contains('fcAIS'))w.classList.add('fcAIS');
+ if(!el('fcAISHead')){var h=D.createElement('div');h.id='fcAISHead';h.innerHTML='<b>&#10024; AI Studio</b><span>Premium AI &middot; each uses 1 AI look</span>';w.insertBefore(h,w.firstChild)}
+ else if(w.firstChild!==el('fcAISHead'))w.insertBefore(el('fcAISHead'),w.firstChild);
+ /* free tools out of the AI box, into the Studio tab */
+ if(!el('fcFreeHead')){var f=D.createElement('div');f.id='fcFreeHead';f.innerHTML='<b>Free tools</b><span>Instant, made on your phone</span>';ed.insertBefore(f,ed.firstChild)}
+ var fh=el('fcFreeHead'),ag=el('autoGlow'),gn=el('glowNote'),bl=el('fcWowBlur'),po=el('polish');
+ if(ag&&ag.parentNode!==ed){fh.insertAdjacentElement('afterend',ag)}else if(ag&&ag.previousElementSibling!==fh&&ag.previousElementSibling&&ag.previousElementSibling.id!=='fcFreeHead'){fh.insertAdjacentElement('afterend',ag)}
+ if(gn&&ag&&gn.previousElementSibling!==ag)ag.insertAdjacentElement('afterend',gn);
+ if(bl&&bl.parentNode!==ed){(gn||ag||fh).insertAdjacentElement('afterend',bl)}
+ /* AI Looks button + the looks grid inside the AI box */
+ var r2=el('fcWowRow2')||row;
+ if(!el('fcWowLooks')){var b=D.createElement('button');b.type='button';b.id='fcWowLooks';b.className=(el('fcWowVanish')||{}).className||'';b.innerHTML='<span>&#128132; <b>AI Looks</b></span><small>Satin Glam, Red Carpet and more</small>';
+  b.onclick=function(){var lx=el('luxe');if(!lx)return;lx.hidden=!lx.hidden;b.classList.toggle('on',!lx.hidden);if(!lx.hidden)setTimeout(function(){try{lx.scrollIntoView({block:'nearest'})}catch(e){}},60)};r2.appendChild(b)}
+ var lx=el('luxe');if(lx&&lx.parentNode!==w){if(lx.hidden===undefined||!lx.dataset.fc96){lx.hidden=true;lx.dataset.fc96=1}var my=el('fcMyRes');my&&my.parentNode===w?w.insertBefore(lx,my):w.appendChild(lx)}
+ /* AI panels (travel, vanish, try-on) live inside AI Studio and open from their buttons; the free blur slider stays with Free tools */
+ var bg=el('fcBg');if(bg&&bg.parentNode!==w){bg.hidden=true;var lx2=el('luxe');lx2&&lx2.parentNode===w?w.insertBefore(bg,lx2):w.appendChild(bg)}
+ if(bg){var h3b=bg.querySelector('h3');if(h3b&&h3b.textContent!=='Travel, Vanish & try-on')h3b.textContent='Travel, Vanish & try-on';var pb=h3b&&h3b.nextElementSibling;if(pb&&pb.tagName==='P')pb.style.display='none';
+  var br=el('fcBlurBtn');var brow=br&&br.closest('.row');if(brow&&brow.parentNode===bg){brow.style.display='none';ed.insertBefore(brow,(el('fcWowBlur')||fh).nextSibling)}
+  var bs=el('fcBgStr');if(bs&&bs.parentNode!==ed){ed.insertBefore(bs,(el('fcWowBlur')||fh).nextSibling)}}
+ var vp=el('vanishPanel');if(vp&&bg&&vp.parentNode!==bg)bg.appendChild(vp);
+ /* AI Looks sits right after AI Glow */
+ var lb=el('fcWowLooks'),gb2=el('aiGlowBtn');if(lb&&gb2&&gb2.nextElementSibling!==lb)gb2.insertAdjacentElement('afterend',lb);
+ /* front page: same words as inside */
+ var fm=el('fcMagic');if(fm){var h3=fm.querySelector('h3');if(h3&&!/AI Studio/.test(h3.textContent))h3.innerHTML='&#10024; AI Studio';var gb=fm.querySelector('[data-k="glow"] b');if(gb&&gb.textContent!=='AI Glow')gb.textContent='AI Glow'}
+}
+
+D.addEventListener('click',function(e){try{var t=e.target.closest&&e.target.closest('#fcWowOutfit,#fcWowBg,#fcWowAcc,#fcWowShoes,#fcWowVanish,#fcMagic [data-k]');if(!t)return;var k=t.dataset&&t.dataset.k;if(k==='glow')return;var b=el('fcBg'),l=el('luxe');if(b)b.hidden=false;if(l)l.hidden=true;var lb=el('fcWowLooks');lb&&lb.classList.remove('on')}catch(x){}},true);
+D.addEventListener('click',function(e){try{if(e.target.closest&&e.target.closest('#fcWowLooks')){var b=el('fcBg');if(b)b.hidden=true}}catch(x){}},true);
+lay();setInterval(lay,700);
+}catch(e){console.warn('v96',e)}})();
+</script>
+<script>/* v97: AI makeup "hybrid" - the AI is only the makeup artist. Its result is warped onto the person's REAL face
+   (468 face points), and only the makeup/colour is taken: original features, skin texture, hair, background and full
+   resolution stay. Used by AI Glow and AI Looks (women and men; men get grooming tone only, no makeup detail).
+   window.__fcHybridOn=false switches back to the previous behaviour. */
+(function(){try{var W=window,D=document;
+var st=D.createElement('style');st.textContent='#fcBolder{display:none!important}';D.head.appendChild(st);
+var OVAL=[10,338,297,332,284,251,389,356,454,323,361,288,397,365,379,378,400,377,152,148,176,149,150,136,172,58,132,93,234,127,162,21,54,103,67,109],
+LIPS=[61,185,40,39,37,0,267,269,270,409,291,375,321,405,314,17,84,181,91,146],
+EYEL=[33,246,161,160,159,158,157,173,133,155,154,153,145,144,163,7],EYER=[362,398,384,385,386,387,388,466,263,249,390,373,374,380,381,382],
+BROWL=[70,63,105,66,107,55,65,52,53,46],BROWR=[300,293,334,296,336,285,295,282,283,276];
+/* points used for the warp mesh: every outline that matters plus an even spread over the rest of the face */
+var KEY=(function(){var s={};[OVAL,LIPS,EYEL,EYER,BROWL,BROWR,[1,2,4,5,6,19,94,98,327,168,197,195,48,278,64,294,13,14,78,308,82,312,87,317]].forEach(function(a){a.forEach(function(i){s[i]=1})});for(var i=0;i<468;i+=5)s[i]=1;return Object.keys(s).map(Number)})();
+function simil(src,dst){var n=src.length,sx=0,sy=0,dx=0,dy=0,i;for(i=0;i<n;i++){sx+=src[i][0];sy+=src[i][1];dx+=dst[i][0];dy+=dst[i][1]}sx/=n;sy/=n;dx/=n;dy/=n;var a=0,b=0,d=0;for(i=0;i<n;i++){var x=src[i][0]-sx,y=src[i][1]-sy,u=dst[i][0]-dx,v=dst[i][1]-dy;a+=x*u+y*v;b+=x*v-y*u;d+=x*x+y*y}a/=d;b/=d;return {a:a,b:b,tx:dx-(a*sx-b*sy),ty:dy-(b*sx+a*sy)}}
+function app(M,p){return [M.a*p[0]-M.b*p[1]+M.tx,M.b*p[0]+M.a*p[1]+M.ty]}
+function inv(M){var d=M.a*M.a+M.b*M.b,a=M.a/d,b=-M.b/d;return {a:a,b:b,tx:-(a*M.tx-b*M.ty),ty:-(b*M.tx+a*M.ty)}}
+/* Bowyer-Watson Delaunay triangulation */
+function delaunay(P){var n=P.length,minx=1e9,miny=1e9,maxx=-1e9,maxy=-1e9;P.forEach(function(p){minx=Math.min(minx,p[0]);miny=Math.min(miny,p[1]);maxx=Math.max(maxx,p[0]);maxy=Math.max(maxy,p[1])});
+ var dm=Math.max(maxx-minx,maxy-miny)*20,mx=(minx+maxx)/2,my=(miny+maxy)/2,pts=P.concat([[mx-dm,my-dm],[mx,my+dm],[mx+dm,my-dm]]),T=[[n,n+1,n+2]];
+ function cc(t){var a=pts[t[0]],b=pts[t[1]],c=pts[t[2]],d=2*(a[0]*(b[1]-c[1])+b[0]*(c[1]-a[1])+c[0]*(a[1]-b[1]));if(Math.abs(d)<1e-12)return [0,0,1e30];var a2=a[0]*a[0]+a[1]*a[1],b2=b[0]*b[0]+b[1]*b[1],c2=c[0]*c[0]+c[1]*c[1],ux=(a2*(b[1]-c[1])+b2*(c[1]-a[1])+c2*(a[1]-b[1]))/d,uy=(a2*(c[0]-b[0])+b2*(a[0]-c[0])+c2*(b[0]-a[0]))/d;return [ux,uy,(a[0]-ux)*(a[0]-ux)+(a[1]-uy)*(a[1]-uy)]}
+ var C=T.map(cc);for(var i=0;i<n;i++){var p=pts[i],bad=[],keep=[],kc=[];for(var t=0;t<T.length;t++){var c=C[t];if((p[0]-c[0])*(p[0]-c[0])+(p[1]-c[1])*(p[1]-c[1])<c[2])bad.push(T[t]);else{keep.push(T[t]);kc.push(c)}}
+  var E={};bad.forEach(function(t){[[t[0],t[1]],[t[1],t[2]],[t[2],t[0]]].forEach(function(e){var k=Math.min(e[0],e[1])+'_'+Math.max(e[0],e[1]);E[k]=E[k]?null:e})});
+  for(var k in E)if(E[k]){var nt=[E[k][0],E[k][1],i];keep.push(nt);kc.push(cc(nt))}T=keep;C=kc}
+ return T.filter(function(t){return t[0]<n&&t[1]<n&&t[2]<n})}
+/* draw one triangle of src (s0,s1,s2) onto ctx at (d0,d1,d2) */
+function tri(ctx,img,s,d){var x0=s[0][0],y0=s[0][1],x1=s[1][0],y1=s[1][1],x2=s[2][0],y2=s[2][1],u0=d[0][0],v0=d[0][1],u1=d[1][0],v1=d[1][1],u2=d[2][0],v2=d[2][1];
+ var den=x0*(y1-y2)+x1*(y2-y0)+x2*(y0-y1);if(Math.abs(den)<1e-9)return;
+ var a=(u0*(y1-y2)+u1*(y2-y0)+u2*(y0-y1))/den,c=(u0*(x2-x1)+u1*(x0-x2)+u2*(x1-x0))/den,e=(u0*(x1*y2-x2*y1)+u1*(x2*y0-x0*y2)+u2*(x0*y1-x1*y0))/den,
+     b=(v0*(y1-y2)+v1*(y2-y0)+v2*(y0-y1))/den,dd=(v0*(x2-x1)+v1*(x0-x2)+v2*(x1-x0))/den,f=(v0*(x1*y2-x2*y1)+v1*(x2*y0-x0*y2)+v2*(x0*y1-x1*y0))/den;
+ var cx=(u0+u1+u2)/3,cy=(v0+v1+v2)/3,g=function(u,v){var dx=u-cx,dy=v-cy,l=Math.hypot(dx,dy)||1;return [u+dx/l*.8,v+dy/l*.8]};
+ ctx.save();ctx.beginPath();var q=g(u0,v0);ctx.moveTo(q[0],q[1]);q=g(u1,v1);ctx.lineTo(q[0],q[1]);q=g(u2,v2);ctx.lineTo(q[0],q[1]);ctx.closePath();ctx.clip();ctx.setTransform(a,b,c,dd,e,f);ctx.drawImage(img,0,0);ctx.restore()}
+function cv(w,h){var c=D.createElement('canvas');c.width=w;c.height=h;return c}
+function poly(ctx,P){ctx.beginPath();P.forEach(function(p,i){i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1])});ctx.closePath();ctx.fill()}
+function scl(P,fx,fy){var cx=0,cy=0;P.forEach(function(p){cx+=p[0];cy+=p[1]});cx/=P.length;cy/=P.length;return P.map(function(p){return [cx+(p[0]-cx)*fx,cy+(p[1]-cy)*fy]})}
+function hull(P){P=P.slice().sort(function(a,b){return a[0]-b[0]||a[1]-b[1]});var cr=function(o,a,b){return (a[0]-o[0])*(b[1]-o[1])-(a[1]-o[1])*(b[0]-o[0])},lo=[],up=[];P.forEach(function(p){while(lo.length>1&&cr(lo[lo.length-2],lo[lo.length-1],p)<=0)lo.pop();lo.push(p)});for(var i=P.length-1;i>=0;i--){var p=P[i];while(up.length>1&&cr(up[up.length-2],up[up.length-1],p)<=0)up.pop();up.push(p)}return lo.slice(0,-1).concat(up.slice(0,-1))}
+/* smooth version of an RGBA canvas: shrink, box-blur 3x, grow back (fast on phones) */
+function boxH(a,w,h,r,ch){var o=new Float32Array(a.length),n=2*r+1;for(var y=0;y<h;y++)for(var c=0;c<ch;c++){var s=0,row=y*w;for(var x=-r;x<=r;x++)s+=a[(row+Math.min(w-1,Math.max(0,x)))*ch+c];for(x=0;x<w;x++){o[(row+x)*ch+c]=s/n;s+=a[(row+Math.min(w-1,x+r+1))*ch+c]-a[(row+Math.max(0,x-r))*ch+c]}}return o}
+function boxV(a,w,h,r,ch){var o=new Float32Array(a.length),n=2*r+1;for(var x=0;x<w;x++)for(var c=0;c<ch;c++){var s=0;for(var y=-r;y<=r;y++)s+=a[(Math.min(h-1,Math.max(0,y))*w+x)*ch+c];for(y=0;y<h;y++){o[(y*w+x)*ch+c]=s/n;s+=a[(Math.min(h-1,y+r+1)*w+x)*ch+c]-a[(Math.max(0,y-r)*w+x)*ch+c]}}return o}
+function gblur(a,w,h,sig,ch){var r=Math.max(1,Math.round(sig*.9));for(var i=0;i<3;i++){a=boxH(a,w,h,r,ch);a=boxV(a,w,h,r,ch)}return a}
+function lowFreq(canvas,sig){var w=canvas.width,h=canvas.height,k=Math.max(1,Math.floor(sig/3)),sw=Math.max(1,Math.round(w/k)),sh=Math.max(1,Math.round(h/k)),s=cv(sw,sh),sx=s.getContext('2d');sx.imageSmoothingQuality='high';sx.drawImage(canvas,0,0,sw,sh);
+ var d=sx.getImageData(0,0,sw,sh),f=new Float32Array(sw*sh*3);for(var i=0,j=0;i<d.data.length;i+=4,j+=3){f[j]=d.data[i];f[j+1]=d.data[i+1];f[j+2]=d.data[i+2]}f=gblur(f,sw,sh,sig/k,3);
+ for(i=0,j=0;i<d.data.length;i+=4,j+=3){d.data[i]=f[j];d.data[i+1]=f[j+1];d.data[i+2]=f[j+2];d.data[i+3]=255}sx.putImageData(d,0,0);var b=cv(w,h),bx=b.getContext('2d');bx.imageSmoothingQuality='high';bx.drawImage(s,0,0,w,h);var o=bx.getImageData(0,0,w,h).data,F=new Float32Array(w*h*3);for(i=0,j=0;i<o.length;i+=4,j+=3){F[j]=o[i];F[j+1]=o[i+1];F[j+2]=o[i+2]}return F}
+function maskOf(w,h,draw,sig){var c=cv(w,h),x=c.getContext('2d');x.fillStyle='#fff';draw(x);var d=x.getImageData(0,0,w,h).data,m=new Float32Array(w*h);for(var i=0;i<m.length;i++)m[i]=d[i*4+3]/255;return sig>0?gblur(m,w,h,sig,1):m}
+
+W.__fcHybrid=function(origC,Lo,resC,La,men){var t0=performance.now();if(!origC||!resC||!Lo||!La||Lo.length<468||La.length<468)return null;
+ var W0=origC.width,H0=origC.height,xs=OVAL.map(function(i){return Lo[i][0]}),fw=Math.max.apply(null,xs)-Math.min.apply(null,xs);if(fw<60)return null;
+ var minx=1e9,miny=1e9,maxx=-1e9,maxy=-1e9;for(var i=0;i<468;i++){minx=Math.min(minx,Lo[i][0]);maxx=Math.max(maxx,Lo[i][0]);miny=Math.min(miny,Lo[i][1]);maxy=Math.max(maxy,Lo[i][1])}
+ var x0=Math.max(0,Math.floor(minx-fw*.5)),y0=Math.max(0,Math.floor(miny-fw*.35)),x1=Math.min(W0,Math.ceil(maxx+fw*.5)),y1=Math.min(H0,Math.ceil(maxy+fw*1.6)),cw=x1-x0,ch=y1-y0;
+ var o=function(p){return [p[0]-x0,p[1]-y0]},LoC=Lo.map(o);
+ /* 1) AI image warped so every AI feature sits on the original feature */
+ var M=simil(La.slice(0,468),Lo.slice(0,468)),Mi=inv(M);
+ var ring=[[0,0],[cw/2,0],[cw-1,0],[cw-1,ch/2],[cw-1,ch-1],[cw/2,ch-1],[0,ch-1],[0,ch/2]];
+ var dst=KEY.map(function(i){return LoC[i]}).concat(ring),src=KEY.map(function(i){return La[i]}).concat(ring.map(function(p){return app(Mi,[p[0]+x0,p[1]+y0])}));
+ var A=cv(cw,ch),ax=A.getContext('2d');ax.imageSmoothingQuality='high';
+ ax.save();ax.setTransform(M.a,M.b,-M.b,M.a,M.tx-x0,M.ty-y0);ax.drawImage(resC,0,0);ax.restore(); /* base: similarity-aligned */
+ delaunay(dst).forEach(function(t){tri(ax,resC,[src[t[0]],src[t[1]],src[t[2]]],[dst[t[0]],dst[t[1]],dst[t[2]]])});
+ var O=cv(cw,ch),ox=O.getContext('2d');ox.drawImage(origC,x0,y0,cw,ch,0,0,cw,ch);
+ /* 2) masks on the ORIGINAL face */
+ var P=function(ix){return ix.map(function(i){return LoC[i]})},fea=Math.max(3,fw/45);
+ var face=maskOf(cw,ch,function(x){poly(x,scl(P(OVAL),.97,.97))},fea*2.5),lips=maskOf(cw,ch,function(x){poly(x,P(LIPS))},Math.max(2,fw/140)),
+  eyes=maskOf(cw,ch,function(x){[[EYEL,BROWL],[EYER,BROWR]].forEach(function(e){poly(x,hull(scl(P(e[0]),1.35,1.9).concat(scl(P(e[1]),1,.9))))})},fea*1.6),
+  opn=maskOf(cw,ch,function(x){poly(x,scl(P(EYEL),.8,.55));poly(x,scl(P(EYER),.8,.55))},Math.max(1.5,fw/220));
+ /* 3) colour from the AI, texture from the real photo */
+ var sig=fw/55,Olo=lowFreq(O,sig),Alo=lowFreq(A,sig),od=ox.getImageData(0,0,cw,ch),ad=ax.getImageData(0,0,cw,ch).data,Od=od.data,n=cw*ch;
+ var cast=[0,0,0],cn=0;for(i=0;i<n;i++){var pl=face[i]*(1-Math.min(1,(eyes?eyes[i]:0)+(lips?lips[i]:0)));if(pl>.6){for(var c=0;c<3;c++)cast[c]+=Alo[i*3+c]-Olo[i*3+c];cn++}}if(cn)for(c=0;c<3;c++)cast[c]/=cn;
+ /* skin around the face (neck, ears, chest) gets the same overall tone so there is no line at the jaw */
+ var cr=[],cb=[];for(i=0;i<n;i+=7){var pl2=face[i]*(1-Math.min(1,(eyes?eyes[i]:0)+(lips?lips[i]:0)));if(pl2>.6){var R=Od[i*4],G=Od[i*4+1],B=Od[i*4+2];cr.push(.5*R-.4187*G-.0813*B);cb.push(-.1687*R-.3313*G+.5*B)}}
+ cr.sort(function(a,b){return a-b});cb.sort(function(a,b){return a-b});var mcr=cr[cr.length>>1]||0,mcb=cb[cb.length>>1]||0;
+ var cxF=0,cyF=0;OVAL.forEach(function(k){cxF+=LoC[k][0];cyF+=LoC[k][1]});cxF/=OVAL.length;cyF/=OVAL.length;
+ var near=maskOf(cw,ch,function(x){x.beginPath();x.ellipse(cxF,cyF+fw*.9,fw*1.3,fw*1.7,0,0,Math.PI*2);x.fill()},fw/6),edgeF=fw*.15;
+ var around=new Float32Array(n);for(var y=0;y<ch;y++)for(var x=0;x<cw;x++){i=y*cw+x;var R2=Od[i*4],G2=Od[i*4+1],B2=Od[i*4+2],dcr=.5*R2-.4187*G2-.0813*B2-mcr,dcb=-.1687*R2-.3313*G2+.5*B2-mcb,dist=Math.hypot(dcr,dcb),sk=Math.max(0,Math.min(1,1-(dist-6)/10)),ef=Math.min(1,Math.min(x,y,cw-1-x,ch-1-y)/edgeF);around[i]=sk*near[i]*(1-face[i])*ef}
+ around=gblur(around,cw,ch,Math.max(2,fw/60),1);
+ var TK=.6;for(i=0;i<n;i++){var f=face[i],mk=men?0:Math.max(0,Math.min(1,Math.max(eyes[i],lips[i])-opn[i])),op=men?Math.max(opn[i],eyes[i],lips[i]):opn[i];
+  for(c=0;c<3;c++){var ov=Od[i*4+c],av=ad[i*4+c],ol=Olo[i*3+c],al=Alo[i*3+c],skin=al+(ov-ol)*TK+(av-al)*(1-TK),fo=skin*(1-mk)+av*mk;fo=fo*(1-op)+ov*op;var v=ov*(1-f)+fo*f+cast[c]*around[i];Od[i*4+c]=v<0?0:v>255?255:v}}
+ var out=cv(W0,H0),tx=out.getContext('2d');tx.drawImage(origC,0,0);tx.putImageData(od,x0,y0);
+ W.__fcHybridLast={ms:Math.round(performance.now()-t0),w:W0,h:H0,crop:[cw,ch],men:!!men};return out};
+}catch(e){console.warn('v97',e)}})();
 </script>
 </body></html>
