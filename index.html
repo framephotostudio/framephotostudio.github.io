@@ -4704,4 +4704,20 @@ W.__fcWowGo=go;
 '@media(min-width:900px){#fcWowRow>button,#fcWowRow2>button,#fcWowRow>#aiGlowBtn{height:70px!important;font-size:13.5px!important}#fcWowRow button span,#fcWowRow #aiGlowBtn span{font-size:13.5px!important}}';
 document.head.appendChild(c)})();
 </script>
+<script>
+/* v91: home page AI tiles - slim, light buttons that match the other home buttons, placed under the before/after photo */
+;(function(){try{var D=document;
+ var c=D.createElement('style');c.textContent=
+ '#fcMagic{margin:14px 0 6px!important;grid-column:1/-1}#fcMagic h3{margin:0 0 8px!important;font-size:12.5px!important}'+
+ '#fcMagic .g{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important}'+
+ '#fcMagic button{min-height:0!important;height:50px;flex-direction:row!important;align-items:center!important;justify-content:flex-start;gap:8px!important;padding:6px 12px!important;border-radius:999px!important;background:#fffaf3!important;border:1px solid #e3cf9f!important;color:#3a2350!important;box-shadow:0 2px 8px #2c184012!important;text-align:left}'+
+ '#fcMagic button i{font-size:18px!important;flex:0 0 auto}#fcMagic button b{font-size:13.5px!important;line-height:1.15!important;color:#3a2350!important;font-weight:650}#fcMagic button span{display:none!important}'+
+ '#fcMagic .g button:last-child{grid-column:span 2;justify-content:center}'+
+ '@media(min-width:761px){.intro.heroNew{flex-wrap:wrap!important}.intro.heroNew>#fcMagic{flex:0 0 100%!important;width:100%!important;max-width:none!important;order:99;grid-column:1/-1!important}}'+
+ '@media(min-width:900px){#fcMagic .g{grid-template-columns:repeat(5,minmax(0,1fr))!important}#fcMagic .g button:last-child{grid-column:auto;justify-content:flex-start}#fcMagic button{height:52px}}';
+ D.head.appendChild(c);
+ function move(){var m=D.getElementById('fcMagic'),f=D.querySelector('.intro .heroBA');if(!m||!f)return false;if(f.nextElementSibling!==m)f.insertAdjacentElement('afterend',m);return true}
+ var n=0,t=setInterval(function(){if(move()&&++n>4)clearInterval(t);else if(++n>60)clearInterval(t)},250);
+}catch(e){console.warn('v91',e)}})();
+</script>
 </body></html>
