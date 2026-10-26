@@ -4735,4 +4735,17 @@ header .brand{margin:0 auto;display:flex;justify-content:center}
 header #openPro{position:absolute;right:max(16px,3vw);top:50%;transform:translateY(-50%)}
 .brand .logoSvg,.logoSvg{height:auto!important;width:min(720px,60vw)!important;max-width:60vw!important}
 @media(max-width:760px){header{padding:12px 10px!important}.brand .logoSvg,.logoSvg{width:min(92vw,420px)!important;max-width:92vw!important}}
-</style></body></html>
+</style><script>/* v94: "Something wrong? Tell us" feedback link on AI results and AI error screens */
+(function(){try{var D=document,W=window,MAIL='hello@facecouture.app';
+var st=D.createElement('style');st.textContent='.fcFb{display:block;margin:12px auto 0;text-align:center;font-size:13px;color:#e9d6b4;text-decoration:underline;text-underline-offset:3px;opacity:.9}.fcFb:active{opacity:.6}';D.head.appendChild(st);
+function href(kind){var app=D.documentElement.classList.contains('fc-app')||/capacitor/i.test(location.protocol)||!!(W.Capacitor&&W.Capacitor.isNativePlatform&&W.Capacitor.isNativePlatform());
+var body='Tell us what happened (you can attach a screenshot):\n\n\n---\n'+(app?'iPhone app':'Website')+' · '+kind+' · '+(navigator.userAgent.match(/(iPhone OS|Android|Mac OS X|Windows NT) [\d_.]+/)||[''])[0];
+return 'mailto:'+MAIL+'?subject='+encodeURIComponent('Face Couture feedback')+'&body='+encodeURIComponent(body)}
+function add(){D.querySelectorAll('.luxeOv').forEach(add1)}function add1(ov){if(ov.querySelector('.fcFb'))return;var acts=ov.querySelector('.luxeActs');if(!acts)return;
+var err=/try that again|could not|busy|went wrong|error/i.test((ov.querySelector('h4')||{}).textContent||'');
+var a=D.createElement('a');a.className='fcFb';a.href=href(err?'AI error':'AI result');a.textContent=err?'Something wrong? Tell us':'Not happy with this result? Tell us';
+a.addEventListener('click',function(){try{W.gtag&&W.gtag('event','feedback_tap',{where:err?'error':'result'})}catch(e){}});
+acts.parentNode.insertBefore(a,acts.nextSibling)}
+new MutationObserver(function(){add()}).observe(D.body,{childList:true,subtree:true});W.__fcFbHref=href}catch(e){}})();
+</script>
+</body></html>
