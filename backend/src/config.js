@@ -14,7 +14,7 @@ export const DEFAULT_CONFIG = {
   // free = app users without a plan after the free launch (on-device looks stay unlimited), web = the website.
   // Top-up packs add AI looks on top of any plan and never expire.
   allowances: {
-    launch: { perDay: 2, perMonth: 10 },
+    launch: { perDay: 10, perMonth: 40 }, // raised during Apple review (was 2 a day / 10 a month)
     trial: { total: 2 },
     paid:  { perDay: 15, perMonth: 15 },
     weekly: { perDay: 5, perWeek: 5 },   // weekly plan: 5 AI looks per week (week starts Monday, UTC)
