@@ -22,14 +22,15 @@ const ok = (c, m) => { console.log((c ? 'PASS ' : 'FAIL ') + m); if (!c) process
 const newDevice = async (platform = 'ios') => (await call('/api/hello', { platform })).j;
 const clearRL = () => { for (const k of [...kv.keys()]) if (k.startsWith('rl:')) kv.delete(k); };
 
-// 1. launch month: paywall off, 2 a day
+// 1. launch month: paywall off, a daily limit (from the config)
+const { DEFAULT_CONFIG } = await import('../src/config.js'); const LD = DEFAULT_CONFIG.allowances.launch.perDay;
 let d = await newDevice(); let me = (await call('/api/me', null, d.token, 'GET')).j;
-ok(me.tier === 'launch' && me.paywall === false && me.left.total === 2, 'launch month: no paywall, 2 AI looks today (' + me.tier + ', ' + me.left.total + ')');
-let r1 = await ai(d.token); clearRL(); let r2 = await ai(d.token); clearRL(); let r3 = await ai(d.token);
-ok(r1.status === 200 && r2.status === 200 && r3.status === 402, 'launch: third look today is refused (' + [r1.status, r2.status, r3.status] + ')');
+ok(me.tier === 'launch' && me.paywall === false && me.left.total === LD, 'launch month: no paywall, ' + LD + ' AI looks today (' + me.tier + ', ' + me.left.total + ')');
+const st = []; for (let i = 0; i <= LD; i++) { clearRL(); st.push((await ai(d.token)).status); }
+ok(st.slice(0, LD).every(x => x === 200) && st[LD] === 402, 'launch: look ' + (LD + 1) + ' today is refused (' + st.join(',') + ')');
 // 2. a quality re-make is free
 clearRL(); let d2 = await newDevice(); await ai(d2.token); clearRL(); let rr = await ai(d2.token, { retry: true });
-me = (await call('/api/me', null, d2.token, 'GET')).j; ok(rr.status === 200 && me.left.total === 1, 'quality re-make does not use an AI look (' + me.left.total + ' left)');
+me = (await call('/api/me', null, d2.token, 'GET')).j; ok(rr.status === 200 && me.left.total === LD - 1, 'quality re-make does not use an AI look (' + me.left.total + ' left)');
 // 3. paywall date passed: app users without a plan get 0 AI looks, website keeps its small allowance
 await setCfg({ pro: { paywallFrom: '2020-01-01' } }); clearRL();
 let d3 = await newDevice(); me = (await call('/api/me', null, d3.token, 'GET')).j; let r = await ai(d3.token);

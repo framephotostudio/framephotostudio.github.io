@@ -9,7 +9,7 @@ These match what the app actually does. Change them only if the app changes.
 | Data type | Collected? | Linked to identity? | Used for tracking? | Purpose |
 |---|---|---|---|---|
 | Photos or Videos | Yes — only when the user chooses an AI Look and agrees; sent to the AI provider for that one edit, not stored by us | No | No | App Functionality |
-| Purchases (purchase history) | Yes — via App Store / RevenueCat to grant Pro | No (device-level ID only) | No | App Functionality |
+| Purchases (purchase history) | **Version 1.0 (free): No — leave unticked.** From 1.1 with payments: Yes — via App Store / RevenueCat to grant Pro | No (device-level ID only) | No | App Functionality |
 | Product Interaction (taps on looks, saves, shares) | Yes — counts only, no photos, sent to Google Analytics | No | No | Analytics |
 | Device ID (a random install ID we create, not the advertising ID) | Yes | No | No | Analytics; App Functionality (AI allowance, fraud prevention) |
 | Coarse Location (country from IP, no GPS) | Yes | No | No | Analytics |
