@@ -4958,4 +4958,30 @@ function sync(){var a=D.querySelector('.tabs [data-tab].active, [data-tab].activ
 D.addEventListener('click',function(e){if(e.target.closest&&e.target.closest('[data-tab]'))setTimeout(sync,30)},true);setInterval(sync,700);sync();
 }catch(e){console.warn('v103',e)}})();
 </script>
+<script>/* v104: men see grooming only (no makeup tools or makeup icons); tabs fit on every screen; quick tools only on the Studio tab; one Women/Men switch per screen */
+(function(){try{var D=document,R=D.documentElement;
+var MK=['foundation','concealer','bronzer','contour','highlight','eyeShadow','eyeLiner','lashes','mascara','browMakeup','tint','lipLiner','gloss','blush','tan'];
+var css=MK.map(function(k){return ':root[data-fcstyle="men"] #beauty .bxItem:has(#beauty-'+k+')'}).join(',')+'{display:none!important}'
++':root[data-fcstyle="men"] .beautyGroups [data-beautygroup="makeup"],:root[data-fcstyle="men"] #beauty .bxHead.fcMk,:root[data-fcstyle="men"] #resetCurrentBeauty{display:none!important}'
++'body.fcOtherTab #fcTools{display:none!important}'
++'body.fcOtherTab #finSex{display:none!important}body:not(.fcOtherTab) .faceBadge .fbSex{display:none!important}'
++'@media (min-width:900px){:root:not(.fc-app) .tabs{overflow:hidden}:root:not(.fc-app) .tabs [data-tab]{flex:1 1 auto!important;width:auto!important;min-width:0!important;padding-left:6px!important;padding-right:6px!important;font-size:14.5px!important;white-space:nowrap}}'
++'@media (max-width:899px){:root:not(.fc-app) .tabs{display:grid!important;grid-template-columns:repeat(3,1fr);overflow:visible!important;gap:4px}:root:not(.fc-app) .tabs [data-tab]{width:auto!important;min-width:0!important;padding-left:4px!important;padding-right:4px!important}}';
+var st=D.createElement('style');st.textContent=css;D.head.appendChild(st);
+var SW={'💄':'✨','👠':'👞','👗':'👔'},BACK={'✨':'💄','👞':'👠','👔':'👗'};
+function tick(){var men=R.getAttribute('data-fcstyle')==='men';
+ /* headings of makeup sections inside the Beauty Lab makeup group */
+ D.querySelectorAll('#beauty .bxHead').forEach(function(h){var n=h.nextElementSibling,mk=false;while(n&&!n.classList.contains('bxHead')){if(n.classList.contains('bxItem')&&MK.some(function(k){return n.querySelector('#beauty-'+k)}))mk=true;n=n.nextElementSibling}h.classList.toggle('fcMk',mk)});
+ if(men){var a=D.querySelector('.beautyGroups [data-beautygroup="makeup"].active');if(a){var s=D.querySelector('.beautyGroups [data-beautygroup="skin"]');s&&s.click()}}
+ var map=men?SW:BACK;D.querySelectorAll('#fcWowLooks span,#fcWowOutfit,#fcWowShoes span').forEach(function(e){if(!men&&!e.hasAttribute('data-fcmen'))return;if(men)e.setAttribute('data-fcmen','');else e.removeAttribute('data-fcmen');var w=D.createTreeWalker(e,4),n;while(n=w.nextNode()){var t=n.textContent,u=t;for(var k in map)u=u.split(k).join(map[k]);if(u!==t)n.textContent=u}});
+}
+setInterval(tick,600);D.addEventListener('click',function(){setTimeout(tick,60)},true);tick();
+}catch(e){console.warn('v104',e)}})();
+</script>
+<script>/* v105: small phones (iPhone SE / mini): nothing cut off - AI Studio buttons 3 per row, top bar and photo tools fit */
+(function(){try{var st=document.createElement('style');st.textContent='@media (max-width:360px){'
++'#fcWowRow>button,#fcWowRow2>button{flex:0 0 calc(33.33% - 5px)!important;max-width:none!important}'
++'#fcStudioBar{gap:5px!important;padding-left:6px!important;padding-right:6px!important}#fcStudioBar .fcNew{padding:0 9px!important;white-space:nowrap}#fcStudioBar>img{width:100px!important;height:auto!important;min-width:0}#fcStudioBar .fcSave{padding:0 14px!important}'
++'html body .workspace.expanded .stagefoot{gap:3px!important}html body .workspace.expanded .stagefoot .small{font-size:11px!important;letter-spacing:-.2px;padding:0 2px!important}'+'html body .previewExtras{gap:4px!important}html body .previewExtras>select{font-size:11.5px!important;padding:0 4px!important;min-width:0!important;flex:0 1 100px!important}html body .previewExtras>.toolbtn{font-size:11.5px!important;padding:4px 7px!important}'+'}';document.head.appendChild(st)}catch(e){console.warn('v105',e)}})();
+</script>
 </body></html>
