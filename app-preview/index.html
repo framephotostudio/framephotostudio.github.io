@@ -4913,4 +4913,49 @@ function go(){var t0=Date.now(),was=D.body.classList.contains('ownPhoto')?(W.__f
 </script>
 <style id="v99">/* v99: one AI Studio - the front-page AI tiles hide once a photo is in the studio */
 body.ownPhoto #fcMagic{display:none!important}</style>
+<script>/* v100: AI consent can never be a dead end - the consent line sits at the top of AI Studio (always visible), and the
+   "One quick step" message has an "I agree" button that ticks it and continues the AI feature the customer tapped. */
+(function(){try{var D=document,W=window;
+var st=D.createElement('style');st.textContent='#fcWow.fcAIS #luxeConsentRow{display:flex;gap:8px;align-items:flex-start;margin:0 2px 10px;font-size:12px;line-height:1.35;color:#5a4a60}'+
+ '#fcWow.fcAIS #luxeConsentRow input{margin-top:2px;flex:0 0 auto;width:18px;height:18px;accent-color:#7a3f6e}#fcAgree{margin-right:8px}';D.head.appendChild(st);
+function el(id){return D.getElementById(id)}
+function place(){var w=el('fcWow'),r=el('luxeConsentRow'),h=el('fcAISHead');if(!w||!r||!h)return;if(r.parentNode!==w||r.previousElementSibling!==h)h.insertAdjacentElement('afterend',r)}
+place();setInterval(place,800);
+/* remember which AI button was tapped, so "I agree" can continue it */
+D.addEventListener('click',function(e){try{var t=e.target.closest&&e.target.closest('#fcWow button,#fcMagic button,[data-luxe],#fcTravel button,#fcVenues button,#fcTryCats button,#fcTry button,#fcVanishBtn,#aiGlowBtn');if(t&&t.id!=='fcAgree')W.__fcLastAI=t}catch(x){}},true);
+new MutationObserver(function(){try{var ov=el('luxeOv');if(!ov||ov.hidden)return;var h=ov.querySelector('h4');if(!h||h.textContent!=='One quick step'||ov.querySelector('#fcAgree'))return;
+ var c=el('luxeConsent');if(!c)return;var p=ov.querySelector('.sub');if(p)p.textContent='Your photo is sent securely to our AI provider (Google) only to create this look, and it is not stored. Do you have permission to edit this photo and agree?';
+ var ok=el('luxeOk');if(!ok)return;ok.textContent='Not now';ok.className='luxeBtn ghost';
+ var b=D.createElement('button');b.type='button';b.id='fcAgree';b.className='luxeBtn gold';b.textContent='I agree';ok.parentNode.insertBefore(b,ok);
+ b.onclick=function(){c.checked=true;try{c.dispatchEvent(new Event('change',{bubbles:true}))}catch(x){}ok.click();var t=W.__fcLastAI;setTimeout(function(){try{if(t&&t.isConnected)t.click()}catch(x){}},250)}}catch(e){}}).observe(D.body,{childList:true,subtree:true});
+}catch(e){console.warn('v100',e)}})();
+</script>
+<script>/* v101: the Privacy Policy and Terms shown inside the site/app always show the current privacy.html / terms.html
+   (the old built-in text said AI was "not switched on yet"). */
+(function(){try{var D=document;
+function load(kind){var sh=D.getElementById(kind+'Sheet');if(!sh||sh.dataset.fresh)return;var card=sh.querySelector('.proCard');if(!card)return;
+ fetch(kind+'.html',{cache:'no-cache'}).then(function(r){if(!r.ok)throw 0;return r.text()}).then(function(t){var doc=new DOMParser().parseFromString(t,'text/html');var m=doc.querySelector('main')||doc.body;if(!m)return;
+  m.querySelectorAll('script,style,header,footer,nav').forEach(function(x){x.remove()});m.querySelectorAll('a[href]').forEach(function(a){var h=a.getAttribute('href');if(/^[a-z-]+\.html/.test(h))a.setAttribute('href','https://facecouture.app/'+h)});
+  var close=card.querySelector('[data-closelegal]');var keep=close?close.outerHTML:'';card.innerHTML=keep+m.innerHTML;var c2=card.querySelector('[data-closelegal]');if(c2)c2.onclick=function(){sh.hidden=true};sh.dataset.fresh='1'}).catch(function(){})}
+['privacy','terms'].forEach(load);
+D.addEventListener('click',function(e){var a=e.target.closest&&e.target.closest('.legalLink');if(a&&a.dataset.legal)load(a.dataset.legal)},true);
+}catch(e){console.warn('v101',e)}})();
+</script>
+<style id="v102">/* v102: pop-up messages never block taps underneath */
+#toast,.fcToast{pointer-events:none!important}</style>
+<script>/* v102: accurate home wording (AI features do send the photo, with consent); clean footer without the build note */
+(function(){try{var D=document;
+function fix(){var hp=D.querySelector('.intro .heroNew p, .intro.heroNew p');D.querySelectorAll('.intro p').forEach(function(p){if(/photos never leave your phone/.test(p.textContent))p.textContent='Upload a selfie, choose a look, save. Polished and natural, with beauty tools that run right on your phone.'});
+ var f=D.querySelector('footer');if(f&&!f.dataset.v102){var app=D.documentElement.classList.contains('fc-app')||!!(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform());
+  f.innerHTML='<div>Face Couture by '+(app?'Always Luxe':'<a href="https://www.instagram.com/always_luxe/" target="_blank" rel="noopener">Always Luxe</a>')+'</div><div style="margin-top:4px"><a href="#" class="legalLink" data-legal="privacy">Privacy</a> · <a href="#" class="legalLink" data-legal="terms">Terms</a> · © 2026 Always Luxe</div>';
+  f.querySelectorAll('.legalLink').forEach(function(a){a.onclick=function(e){e.preventDefault();var s=D.getElementById(a.dataset.legal+'Sheet');if(s){s.hidden=false}}});f.dataset.v102=1}}
+fix();setTimeout(fix,1500);setTimeout(fix,4000);
+}catch(e){console.warn('v102',e)}})();
+</script>
+<script>/* v103: each tab shows its own tools first - the AI Studio box and styling switch belong to the Studio tab only */
+(function(){try{var D=document;var st=D.createElement('style');st.textContent='body.fcOtherTab #fcAppTop{display:none!important}';D.head.appendChild(st);
+function sync(){var a=D.querySelector('.tabs [data-tab].active, [data-tab].active');var id=a?a.dataset.tab:'edit';D.body.classList.toggle('fcOtherTab',id!=='edit')}
+D.addEventListener('click',function(e){if(e.target.closest&&e.target.closest('[data-tab]'))setTimeout(sync,30)},true);setInterval(sync,700);sync();
+}catch(e){console.warn('v103',e)}})();
+</script>
 </body></html>
