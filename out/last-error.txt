@@ -1,0 +1,1 @@
+200 STOP  Here is the image with the exact sandals you requested from the second picture: callout:google:display{end_turn:true,filename: image_3.png } @ 2026-10-25T16:02:14.833Z
