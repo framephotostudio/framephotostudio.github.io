@@ -21,21 +21,61 @@ html = html.split(MP + '/wasm').join('./vendor/mediapipe/wasm').split(MP + '/vis
 { const before = html; html = html.split('ort.env.wasm.wasmPaths=ORT').join('ort.env.wasm.wasmPaths=new URL(ORT,location.href).href'); if (html === before) throw new Error('ORT wasmPaths hook not found'); }
 // app-only adjustments to the studio code: the AI button talks to the Face Couture API when one is configured;
 // store-facing names use the current brand
-html = html.replace("$('#generate').onclick=async()=>{openPro();return;", "$('#generate').onclick=async()=>{if(!window.FC_API){openPro();return}")
-  .split('FRAME PRO').join('FACE COUTURE PRO').split('FRAME FREE').join('FACE COUTURE FREE');
-// per-build settings (backend URL and store keys come from repository variables; empty = feature stays off)
+html = html.replace("$('#generate').onclick=async()=>{openPro();return;", "$('#generate').onclick=async()=>{return;");
+// App Store build: no hidden or unfinished features (Apple guideline 2.3.1). The website keeps all of these.
+// Each change must match exactly once, so a website update can never silently bring one back.
+function appOnly(find, repl, why) {
+  const n = html.split(find).length - 1;
+  if (n !== 1) throw new Error('App Store clean-up "' + why + '" expected 1 match, found ' + n + '. Update scripts/build-web.mjs.');
+  html = html.replace(find, () => repl);
+}
+// 1) the old website Pro/plans sheet can never open in the app, and its plan table is removed
+appOnly('function openPro(){', 'function openPro(){return;', 'plans sheet');
+{ const a = html.indexOf('<div class="prolabel">✦ FRAME FREE &amp; PRO</div>'), b = html.indexOf('</tbody></table>', a);
+  if (a < 0 || b < 0) throw new Error('App Store clean-up "plans table" not found. Update scripts/build-web.mjs.');
+  html = html.slice(0, a) + '<h2 id="proTitle"></h2><p class="proReason" id="proReason" hidden></p>' + html.slice(b + '</tbody></table>'.length); }
+appOnly('<button class="toolbtn" id="openPro">✦ Pro</button>', '<button class="toolbtn" id="openPro" hidden></button>', 'Pro button');
+// 2) no owner switches: the website's #owner-on analytics switch and the ?admin= season preview are left out
+{ const a = html.indexOf("/* owner's own devices are never counted"), b = html.indexOf('var OWNER=false;', a);
+  if (a < 0 || b < 0) throw new Error('App Store clean-up "owner switch" not found. Update scripts/build-web.mjs.');
+  html = html.slice(0, a) + html.slice(b); }
+appOnly("var OWNER=false;try{OWNER=localStorage.getItem('fc-owner')==='1'}catch(e){}window.__fcOwnerNoStats=OWNER;", 'var OWNER=false;', 'owner flag');
+appOnly('render();checkAdminParam();', 'render();', 'admin preview');
+appOnly("try{isAdmin=localStorage.getItem('fcAdmin')===ADMIN_HASH}catch(e){}", '', 'admin flag');
+{ const a = html.indexOf('function setAdmin(on){'), b = html.indexOf('window.__seasonal=', a);
+  if (a < 0 || b < 0 || b - a > 3000) throw new Error('App Store clean-up "admin switch" not found. Update scripts/build-web.mjs.');
+  html = html.slice(0, a) + 'function setAdmin(){}\n' + html.slice(b); }
+appOnly("t==='owner'?'Owner mode: unlimited AI looks':", "t==='owner'?'Unlimited AI looks':", 'owner label');
+// 3) no payment screens: the AI counter and AI errors never offer a purchase in this version
+{ const a = html.indexOf("if(isApp&&window.FCPlan&&m.paywall"), b = html.indexOf('el.appendChild(b)}', a);
+  if (a < 0 || b < 0 || b - a > 600) throw new Error('App Store clean-up "counter purchase button" not found. Update scripts/build-web.mjs.');
+  html = html.slice(0, a) + html.slice(b + 'el.appendChild(b)}'.length); }
+for (let k = 0; k < 2; k++) { const a = html.indexOf('if(isApp&&window.FCPlan){'), end = "openTopups('ai_'+L.k);return}}", b = html.indexOf(end, a);
+  if (a < 0 || b < 0 || b - a > 600) throw new Error('App Store clean-up "AI limit purchase screens" not found. Update scripts/build-web.mjs.');
+  html = html.slice(0, a) + html.slice(b + end.length); }
+if (html.indexOf('FCPlan') > -1) throw new Error('App Store clean-up: a purchase screen link (FCPlan) is still in the studio code. Update scripts/build-web.mjs.');
+// per-build settings (backend URL comes from a repository variable). Version 1.0 has no purchases, so no store keys.
 fs.writeFileSync(path.join(OUT, 'app-config.js'), 'window.FC_CONFIG=' + JSON.stringify({
-  apiUrl: process.env.FC_API_URL || 'https://face-couture-api.facecouture.workers.dev', revenueCatIOS: process.env.FC_RC_IOS || '', revenueCatAndroid: process.env.FC_RC_ANDROID || '',
-  analytics: !!process.env.FC_API_URL, preview: process.env.FC_PREVIEW === '1', supportEmail: process.env.FC_SUPPORT_EMAIL || 'hello@facecouture.app', version: process.env.APP_VERSION || '1.0.0' }) + ';');
+  apiUrl: process.env.FC_API_URL || 'https://face-couture-api.facecouture.workers.dev',
+  analytics: !!process.env.FC_API_URL, supportEmail: process.env.FC_SUPPORT_EMAIL || 'hello@facecouture.app', version: process.env.APP_VERSION || '1.0.0' }) + ';');
 // Google Analytics stays on in the app: the studio reports app_platform = ios | android with an anonymous app-only id
 // (no photos, no face data, no names; no ad signals, so no tracking prompt is needed).
 // app mode hook (native look and feel is layered on in app.css / app.js)
-{ const h = html.search(/<head(\s[^>]*)?>/i), hEnd = html.indexOf('>', h) + 1; html = html.slice(0, hEnd) + '<script>window.__FC_APP=true</script>' + (process.env.FC_PLAN_DEMO === '1' ? '<script src="plan-demo.js"></script>' : '') + '<script src="app-config.js"></script><script src="app-early.js"></script><script src="app-api.js"></script>' + html.slice(hEnd); }
+{ const h = html.search(/<head(\s[^>]*)?>/i), hEnd = html.indexOf('>', h) + 1; html = html.slice(0, hEnd) + '<script>window.__FC_APP=true</script><script src="app-config.js"></script><script src="app-early.js"></script><script src="app-api.js"></script>' + html.slice(hEnd); }
 { const i = html.indexOf('</head>'); html = html.slice(0, i) + '<link rel="stylesheet" href="app.css">' + html.slice(i); }
-{ const i = html.lastIndexOf('</body>'); html = html.slice(0, i) + '<script src="app.js"></script><script src="app-pro.js"></script><script src="app-plan.js"></script>' + html.slice(i); }
+{ const i = html.lastIndexOf('</body>'); html = html.slice(0, i) + '<script src="app.js"></script><script src="app-settings.js"></script>' + html.slice(i); }
 fs.writeFileSync(path.join(OUT, 'index.html'), html);
-for (const f of ['app.css', 'app.js', 'app-early.js', 'app-api.js', 'app-pro.js', 'app-plan.js', 'paywall-before.jpg', 'paywall-after.jpg']) fs.copyFileSync(path.join('app', f), path.join(OUT, f));
-// test builds only: scripted walk-through of the subscription screens (never set for store builds)
-if (process.env.FC_PLAN_DEMO === '1') { fs.copyFileSync('scripts/plan-demo.js', path.join(OUT, 'plan-demo.js')); if (process.env.DEMO_PHOTO && fs.existsSync(process.env.DEMO_PHOTO)) fs.copyFileSync(process.env.DEMO_PHOTO, path.join(OUT, 'demo-face.jpg')); console.log('PLAN DEMO build'); }
-const left = (html.match(/https:\/\/(cdn\.jsdelivr|storage\.googleapis)[^"'`\s)]*/g) || []); if (left.length) console.warn('Still online:', [...new Set(left)]);
-console.log('web bundle ready');
+for (const f of ['app.css', 'app.js', 'app-early.js', 'app-api.js', 'app-settings.js']) fs.copyFileSync(path.join('app', f), path.join(OUT, f));
+// the app's own Privacy policy, Terms, Support and Delete-my-data pages are bundled so they open offline inside the app
+for (const f of ['privacy.html', 'terms.html', 'support.html', 'delete-my-data.html']) { const src = fs.existsSync(path.join(SITE, f)) ? path.join(SITE, f) : path.join('site-pages', f); fs.copyFileSync(src, path.join(OUT, f)); }
+// final check: nothing hidden, no payment code and nothing loaded from the internet ships in the App Store build
+{ const bad = [];
+  for (const f of fs.readdirSync(OUT)) if (/\.(html|js|css)$/.test(f) && !/^(privacy|terms|support|delete-my-data)\.html$/.test(f)) { // the legal pages are documents, not app code
+    const t = fs.readFileSync(path.join(OUT, f), 'utf8');
+    for (const w of [/RevenueCat|Purchases\.|purchasePackage|restorePurchases/, /ownerClaim|owner passphrase|Owner mode|fc-owner|checkAdminParam/, /openPaywall|openTopups|paywall\.jpg|plan-demo/, /stripe|checkout\.stripe/i]) if (w.test(t)) bad.push(f + ': ' + w);
+  }
+  const left = (html.match(/https:\/\/(cdn\.jsdelivr|storage\.googleapis)[^"'`\s)]*/g) || []);
+  if (left.length) bad.push('index.html still loads from the internet: ' + [...new Set(left)].join(', '));
+  if (bad.length) throw new Error('App Store build check failed:\n' + bad.join('\n'));
+}
+console.log('web bundle ready (App Store checks passed)');
