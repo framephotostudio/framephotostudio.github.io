@@ -3,10 +3,24 @@
   "appName": "Face Couture",
   "webDir": "www",
   "backgroundColor": "#fffafd",
-  "ios": { "contentInset": "never", "scrollEnabled": true, "allowsLinkPreview": false },
-  "android": { "allowMixedContent": false },
+  "ios": {
+    "contentInset": "never",
+    "scrollEnabled": true,
+    "allowsLinkPreview": false
+  },
+  "android": {
+    "allowMixedContent": false
+  },
   "plugins": {
-    "SplashScreen": { "launchShowDuration": 1200, "backgroundColor": "#2b1636", "showSpinner": false },
-    "StatusBar": { "style": "LIGHT", "backgroundColor": "#2b1636" }
+    "SplashScreen": {
+      "launchAutoHide": false,
+      "launchShowDuration": 6000,
+      "backgroundColor": "#2b1636",
+      "showSpinner": false
+    },
+    "StatusBar": {
+      "style": "LIGHT",
+      "backgroundColor": "#2b1636"
+    }
   }
 }

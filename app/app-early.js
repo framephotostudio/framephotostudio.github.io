@@ -159,7 +159,15 @@
 
     // status bar + splash
     try { if (P.StatusBar) { P.StatusBar.setStyle({ style: 'LIGHT' }); if (P.StatusBar.setOverlaysWebView) P.StatusBar.setOverlaysWebView({ overlay: true }); } } catch (e) {}
-    try { if (P.SplashScreen) setTimeout(function () { P.SplashScreen.hide(); }, 300); } catch (e) {}
+    // the launch screen stays up until the welcome screen is fully built, so nothing flickers while the app opens
+    if (P.SplashScreen) {
+      var splashDone = false, hideSplash = function () { if (splashDone) return; splashDone = true; try { P.SplashScreen.hide({ fadeOutDuration: 250 }); } catch (e) {} };
+      var waitIv = setInterval(function () {
+        // the studio's one-time welcome layout pass hides the banner last
+        if (document.readyState === 'complete' && (document.querySelector('.fcBanner.fcHidden') || !document.querySelector('.fcBanner') || (document.body && document.body.classList.contains('ownPhoto')))) { clearInterval(waitIv); setTimeout(hideSplash, 150); }
+      }, 100);
+      setTimeout(function () { clearInterval(waitIv); hideSplash(); }, 6000); // never longer than this
+    }
   }
 
 })();
