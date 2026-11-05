@@ -52,7 +52,7 @@ appAll('<b>Face detected · AI mapped</b>', '<b>Face detected · mapped on your 
 appAll("faceLight:['Even lighting (AI fill light)'", "faceLight:['Even lighting (fill light)'", 'on-device wording');
 // the AI Studio sits at the end of the Studio tab (not pinned above the tools)
 appOnly('if(w.parentNode!==box){box.appendChild(w);moved=1}', "{var ed=D.getElementById('edit');if(ed&&w.parentNode!==ed){ed.appendChild(w);moved=1}}", 'AI Studio at the end');
-// ---- Try it on, Change the scene, Accessories and Shoes are not in version 1.0 (Demah, Nov 5, 2026). ----
+// ---- Version 1.0 has no AI (Demah, Nov 5, 2026): Try it on, Change the scene, Accessories, Shoes, Couture Glow, Couture Looks and Vanish return in 1.1. ----
 // ONE SWITCH brings all four back for version 1.1: build with FC_TRYON=1 (see RESTORE-AI-TOOLS.md). Nothing is deleted from the website or the server.
 const TRYON = process.env.FC_TRYON === '1';
 if (!TRYON) {
@@ -72,6 +72,8 @@ if (!TRYON) {
   appOnly("D.getElementById('fcWowOutfit').onclick=function(){go('outfit')};D.getElementById('fcWowBg').onclick=function(){go('bg')};", '', '1.0: no outfit or scene handlers');
   appOnly(`r.innerHTML='<button type="button" id="fcWowAcc"><span>&#128141; <b>Accessories</b></span><small>Jewelry, bags, watches</small></button>'+\n   '<button type="button" id="fcWowShoes"><span>&#128096; <b>Shoes</b></span><small>Try on any shoes</small></button>'+\n   `, "r.innerHTML=", '1.0: no accessories or shoes buttons');
   appOnly("D.getElementById('fcWowShoes').onclick=function(){pick('shoes')};", '', '1.0: no shoes handler');
+  // no AI at all in 1.0 (Demah, Nov 5, 2026: Couture Glow, Couture Looks and Vanish also return in 1.1): the studio's AI server address is left out
+  appOnly("var API='https://face-couture-api.facecouture.workers.dev';", "var API='';", '1.0: no AI server');
   for (const bad of ['id="fcWowOutfit"', 'id="fcWowBg"', 'id="fcWowAcc"', 'id="fcWowShoes"', 'id="fcTryBtn"', 'Choose outfit photo', 'id="fcTravel"', 'Travel backgrounds <small', 'shoes try-on <small'])
     if (html.indexOf(bad) > -1) throw new Error('1.0 clean-up: "' + bad + '" is still in the app. Update scripts/build-web.mjs.');
 }
@@ -114,17 +116,20 @@ appAll('>Add your music or recorded voiceover<', '>Add your music or a voiceover
 html = html.replace(/<link rel="manifest"[^>]*>/, ''); // website install manifest (not used in the app)
 appAll('Pro grooming, no makeup', 'Expert grooming, no makeup', 'men glow subtitle');
 appAll('Pro grooming on your own photo.', 'Expert grooming on your own photo.', 'men AI subtitle');
-appAll('Tap Women above the Finishes to switch.', 'Tap Women above the Looks to switch.', 'men toast');
+appAll('Tap Women above the Finishes to switch.', 'You can switch to Women in the Studio tab.', 'men toast');
+appAll('Add your own caption for a Reel, Short or product review.', 'Add your own caption for a Reel, Short or Story.', 'video intro');
+appAll('>Your caption or honest product review<', '>Your caption<', 'video caption label');
+appAll('placeholder="Write your own title or review…"', 'placeholder="Write your caption…"', 'video caption placeholder');
 // saved files carry the Face Couture name
 for (const [a, b] of [["'frame-custom-'", "'face-couture-custom-'"], ["'frame-photo-set.zip'", "'face-couture-photo-set.zip'"], ["'frame-clip.'", "'face-couture-clip.'"], ["'frame-before-after.", "'face-couture-before-after."], ["'frame-set-'", "'face-couture-set-'"], ["'frame-my-look-'", "'face-couture-my-look-'"]]) appAll(a, b, 'file name ' + a);
 // per-build settings (backend URL comes from a repository variable). Version 1.0 has no purchases, so no store keys.
 fs.writeFileSync(path.join(OUT, 'app-config.js'), 'window.FC_CONFIG=' + JSON.stringify({
-  apiUrl: process.env.FC_API_URL || 'https://face-couture-api.facecouture.workers.dev',
+  apiUrl: TRYON ? (process.env.FC_API_URL || 'https://face-couture-api.facecouture.workers.dev') : '', // 1.0 has no AI and talks to no server
   analytics: !!process.env.FC_API_URL, supportEmail: process.env.FC_SUPPORT_EMAIL || 'hello@facecouture.app', version: process.env.APP_VERSION || '1.0.0' }) + ';');
 // Google Analytics stays on in the app: the studio reports app_platform = ios | android with an anonymous app-only id
 // (no photos, no face data, no names; no ad signals, so no tracking prompt is needed).
 // app mode hook (native look and feel is layered on in app.css / app.js)
-{ const h = html.search(/<head(\s[^>]*)?>/i), hEnd = html.indexOf('>', h) + 1; html = html.slice(0, hEnd) + '<script>window.__FC_APP=true' + (TRYON ? '' : ';window.__FC_NO_TRYON=true') + '</script><script src="app-config.js"></script><script src="app-early.js"></script><script src="app-api.js"></script>' + html.slice(hEnd); }
+{ const h = html.search(/<head(\s[^>]*)?>/i), hEnd = html.indexOf('>', h) + 1; html = html.slice(0, hEnd) + '<script>window.__FC_APP=true' + (TRYON ? '' : ';window.__FC_NO_TRYON=true;window.__FC_NO_AI=true') + '</script><script src="app-config.js"></script><script src="app-early.js"></script><script src="app-api.js"></script>' + html.slice(hEnd); }
 { const i = html.indexOf('</head>'); html = html.slice(0, i) + '<link rel="stylesheet" href="app.css">' + html.slice(i); }
 { const i = html.lastIndexOf('</body>'); html = html.slice(0, i) + '<script src="app.js"></script><script src="app-settings.js"></script>' + html.slice(i); }
 fs.writeFileSync(path.join(OUT, 'index.html'), html);

@@ -3,6 +3,7 @@
 (function () {
   'use strict';
   var CFG = window.FC_CONFIG || {}, API = window.FCApi;
+  var NOAI = !!window.__FC_NO_AI; // version 1.0: no AI and no server
   var $ = function (s) { return document.querySelector(s); };
   function toast(t) { try { window.toast(t); } catch (e) {} }
   function tap(s) { try { window.FCNative && window.FCNative.tap(s); } catch (e) {} }
@@ -34,8 +35,9 @@
     s.innerHTML = '<div class="fcSetTop"><button type="button" class="fcSetDone" id="fcSetClose">Done</button><h2 id="fcSetTitle">Settings</h2></div>' +
       '<div class="fcSetBody">' +
       '<div class="fcSetGroup"><div class="fcSetHead">Privacy</div>' +
-      '<p class="fcSetText">Beauty tools, Looks and saving work on your iPhone, even offline. A photo is sent only when you choose an AI feature and agree, just for that one edit. We do not keep it, and it is never used for training.</p></div>' +
-      '<div class="fcSetGroup">' + row('fcSetPrivacy', 'Privacy policy') + row('fcSetTerms', 'Terms of use') + row('fcSetDelete', 'Delete my data', 'Removes your AI history from our server') + '</div>' +
+      (NOAI ? '<p class="fcSetText">Everything in Face Couture runs on your iPhone, even offline. Your photos never leave your phone, and the app sends nothing to us.</p></div>'
+        : '<p class="fcSetText">Beauty tools, Looks and saving work on your iPhone, even offline. A photo is sent only when you choose an AI feature and agree, just for that one edit. We do not keep it, and it is never used for training.</p></div>') +
+      '<div class="fcSetGroup">' + row('fcSetPrivacy', 'Privacy policy') + row('fcSetTerms', 'Terms of use') + row('fcSetDelete', 'Delete my data', NOAI ? 'Clears your saved looks and drafts on this iPhone' : 'Removes your AI history from our server') + '</div>' +
       '<div class="fcSetGroup">' + row('fcSetSupport', 'Contact support', CFG.supportEmail || 'hello@facecouture.app') + '</div>' +
       '<p class="fcSetVer">Face Couture by Always Luxe · Version ' + (CFG.version || '1.0.0') + '</p>' +
       ((API && API.device && API.device()) ? '<p class="fcSetVer fcSetId">Device ID (for support): ' + String(API.device()).replace(/[<>&"]/g, '') + '</p>' : '') + '</div>';
@@ -51,6 +53,12 @@
       location.href = 'mailto:' + em + '?subject=Face%20Couture%20app';
     };
     $('#fcSetDelete').onclick = function () {
+      if (NOAI) {
+        if (!confirm('Clear your saved looks and drafts on this iPhone? Nothing about you is stored anywhere else.')) return;
+        try { localStorage.clear(); } catch (e) {}
+        try { indexedDB.deleteDatabase('fc-ai-results'); } catch (e) {}
+        closeSettings(); toast('Cleared. Nothing is stored for this iPhone.'); return;
+      }
       if (!confirm('Delete the AI history linked to this iPhone from our server? Your photos are never stored by us, so there are none to delete.')) return;
       if (!API || !API.url) { toast('Nothing is stored for this iPhone.'); return; }
       API.api('/api/delete-my-data', {}).then(function (r) { toast(r.message || 'Deleted.'); try { localStorage.removeItem('fc-token'); localStorage.removeItem('fc-device'); localStorage.removeItem('fc-ga-cid'); } catch (e) {} closeSettings(); })

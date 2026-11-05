@@ -170,3 +170,9 @@ html.fc-app #fcWowRow>button,html.fc-app #fcWowRow2>button{flex:1 1 0!important;
 #fcPackDone{border:0!important;background:transparent!important;padding:6px 0 0!important}
 /* small iPhones: the style buttons stay on one line */
 @media (max-width:380px){html.fc-app #styleRow button{white-space:nowrap!important;padding-left:12px!important;padding-right:12px!important;font-size:14.5px!important}}
+/* sample portrait link under "Choose a photo" */
+#fcPackCard .fcPackSample{display:block;width:100%;margin-top:10px;min-height:44px;border:0;background:transparent;color:#4a2a63;font:600 15px/1.2 inherit;text-decoration:underline;text-underline-offset:3px}
+/* app-zone preview: the photo buttons step aside */
+html.fcZones #faceCloseup,html.fcZones #previewFit{visibility:hidden!important}
+/* face already found: a calm confirmation instead of a disabled-looking button */
+#detectFace.fcFound{background:#eaf6ee!important;color:#2f7a4a!important;border:1px solid #bfe3cb!important;opacity:1!important}

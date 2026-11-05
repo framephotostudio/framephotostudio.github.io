@@ -238,7 +238,8 @@
     var c = document.createElement('div'); c.id = 'fcPackCard';
     c.innerHTML = '<b>Platform Pack</b><p>Every size in one tap, saved to Photos.</p>' +
       '<div class="fcPills" role="group" aria-label="Platforms"><button type="button" data-set="social" class="on" aria-pressed="true">Social</button><button type="button" data-set="pro" aria-pressed="false">Work</button><button type="button" data-set="dating" aria-pressed="false">Dating</button></div>' +
-      '<button type="button" class="fcPackGo">Choose a photo</button>';
+      '<button type="button" class="fcPackGo">Choose a photo</button>' +
+      '<button type="button" class="fcPackSample">No photo handy? Use the sample portrait</button>';
     Array.prototype.forEach.call(c.querySelectorAll('.fcPills button'), function (b) {
       b.addEventListener('click', function () {
         tap('LIGHT'); PACKSET = b.dataset.set;
@@ -250,6 +251,17 @@
       if (document.body.classList.contains('ownPhoto')) { enterStudio(); goPack(); return; }
       window.__fcGoPack = true;
       var up = document.getElementById('heroGlow') || document.getElementById('file'); if (up) up.click();
+    });
+    // the built-in sample portrait goes in like a chosen photo, so every tool (and saving) works with it
+    c.querySelector('.fcPackSample').addEventListener('click', function () {
+      tap('LIGHT');
+      var im = document.querySelector('.heroBA img.baImg:not(.baAfter)') || document.querySelector('img.baImg');
+      if (!im || !im.src) return;
+      fetch(im.src).then(function (r) { return r.blob(); }).then(function (b) {
+        var f = new File([b], 'face-couture-sample.jpg', { type: b.type || 'image/jpeg' }), inp = document.getElementById('file'); if (!inp) return;
+        var dt = new DataTransfer(); dt.items.add(f); inp.files = dt.files;
+        inp.dispatchEvent(new Event('input', { bubbles: true })); inp.dispatchEvent(new Event('change', { bubbles: true }));
+      }).catch(function () {});
     });
     anchor.parentNode.insertBefore(c, anchor);
   }
@@ -352,6 +364,10 @@
       var e = document.getElementById(id); if (e && e.parentNode) e.parentNode.removeChild(e);
     });
     window.__fcPickTry = function () {};
+    // 1.0 has no AI at all: the AI Studio section is not part of the app (it returns in 1.1)
+    if (window.__FC_NO_AI) ['fcWow', 'luxe', 'luxeOv', 'fcMyRes', 'fcAISHead', 'luxeConsentRow'].forEach(function (id) {
+      var e = document.getElementById(id); if (e && e.parentNode) e.parentNode.removeChild(e);
+    });
   }
 
   // for the app-zone preview the face sits in the clear middle area (left of the buttons, above the caption)
@@ -360,11 +376,11 @@
       var o = beauty.faceOutline; if (!o || o.length < 3) return null;
       var xs = o.map(function (p) { return p.x; }), ys = o.map(function (p) { return p.y; });
       var fx0 = Math.min.apply(0, xs), fx1 = Math.max.apply(0, xs), fy0 = Math.min.apply(0, ys), fy1 = Math.max.apply(0, ys), fw = fx1 - fx0, fh = fy1 - fy0;
-      var top = Math.max(0, fy0 - 0.35 * fh), bot = Math.min(1, fy1 + 0.06 * fh), cx = (fx0 + fx1) / 2, cy = (top + bot) / 2;
+      var top = Math.max(0, fy0 - 0.35 * fh), bot = Math.min(1, fy1 + 0.14 * fh), cx = (fx0 + fx1) / 2, cy = (top + bot) / 2;
       var cw = presets[i][3], ch = presets[i][4], sc = Math.max(cw / iw, ch / ih), w = iw * sc, h = ih * sc;
-      var z = Math.max(0.3, Math.min(1, 0.6 * ch / ((bot - top) * h), 0.7 * cw / (fw * 1.2 * w))), W = w * z, H = h * z;
+      var z = Math.max(0.3, Math.min(1, 0.56 * ch / ((bot - top) * h), 0.68 * cw / (fw * 1.2 * w))), W = w * z, H = h * z;
       var cl = function (v) { return Math.max(0, Math.min(1, v)); };
-      var x = Math.abs(cw - W) > 1 ? cl((0.41 * cw - cx * W) / (cw - W)) : 0.5, y = Math.abs(ch - H) > 1 ? cl((0.45 * ch - cy * H) / (ch - H)) : 0.5;
+      var x = Math.abs(cw - W) > 1 ? cl((0.41 * cw - cx * W) / (cw - W)) : 0.5, y = Math.abs(ch - H) > 1 ? cl((0.43 * ch - cy * H) / (ch - H)) : 0.5;
       return { x: x, y: y, z: z, mode: 'fill' };
     } catch (e) { return null; }
   }
@@ -396,10 +412,25 @@
     });
   }
 
+  // while an app-zone preview is on, the Face / Full photo buttons step aside so the zones read clearly;
+  // once the face is found, the Beauty tab's "Detect face" button says so instead of looking disabled
+  function zonesAndFace() {
+    var pp = document.getElementById('platformPreview');
+    if (pp && !pp.__fcz) { pp.__fcz = true; pp.addEventListener('change', function () { root.classList.toggle('fcZones', /^(tiktok|reels|safe)$/.test(pp.value)); }); }
+    if (pp && pp.value !== 'tiktok' && pp.value !== 'reels' && pp.value !== 'safe') root.classList.remove('fcZones');
+    var d = document.getElementById('detectFace');
+    if (d) {
+      var n = 0; try { n = detectedFaces.length; } catch (e) {}
+      var want = n > 0 ? 'Face found \u2713' : 'Detect face';
+      if (d.textContent !== want) d.textContent = want;
+      d.classList.toggle('fcFound', n > 0);
+    }
+  }
   function init() {
     hideFileTools(); fileButtons(); packSetHighlight(); photoToPack(); zonesOn916();
     noTryOn(); if (window.__FC_NO_TRYON && window.MutationObserver) new MutationObserver(noTryOn).observe(document.body, { childList: true, subtree: true });
     welcome(); setTimeout(welcome, 1600);
+    zonesAndFace(); setInterval(zonesAndFace, 700);
     setInterval(menIcons, 700); document.addEventListener('click', function () { setTimeout(menIcons, 80); }, true);
     if (window.MutationObserver) new MutationObserver(function () { addReport(); }).observe(document.body, { childList: true, subtree: true });
     guardEditor();
