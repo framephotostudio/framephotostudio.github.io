@@ -37,7 +37,7 @@
       '<div class="fcSetGroup"><div class="fcSetHead">Privacy</div>' +
       (NOAI ? '<p class="fcSetText">Everything in Face Couture runs on your iPhone, even offline. Your photos never leave your phone, and the app sends nothing to us.</p></div>'
         : '<p class="fcSetText">Beauty tools, Looks and saving work on your iPhone, even offline. A photo is sent only when you choose an AI feature and agree, just for that one edit. We do not keep it, and it is never used for training.</p></div>') +
-      '<div class="fcSetGroup">' + row('fcSetPrivacy', 'Privacy policy') + row('fcSetTerms', 'Terms of use') + row('fcSetDelete', 'Delete my data', NOAI ? 'Clears your saved looks and drafts on this iPhone' : 'Removes your AI history from our server') + '</div>' +
+      '<div class="fcSetGroup">' + row('fcSetPrivacy', 'Privacy Policy') + row('fcSetTerms', 'Terms of Use') + row('fcSetDelete', 'Delete my data', NOAI ? 'Clears your saved looks and drafts on this iPhone' : 'Removes your AI history from our server') + '</div>' +
       '<div class="fcSetGroup">' + row('fcSetSupport', 'Contact support', CFG.supportEmail || 'hello@facecouture.app') + '</div>' +
       '<p class="fcSetVer">Face Couture by Always Luxe · Version ' + (CFG.version || '1.0.0') + '</p>' +
       ((API && API.device && API.device()) ? '<p class="fcSetVer fcSetId">Device ID (for support): ' + String(API.device()).replace(/[<>&"]/g, '') + '</p>' : '') + '</div>';

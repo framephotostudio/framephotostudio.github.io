@@ -6,6 +6,7 @@ import UIKit
 import Vision
 import Photos
 import UniformTypeIdentifiers
+import ImageIO
 
 final class ShareViewController: UIViewController {
     // (label, width, height)
@@ -15,6 +16,8 @@ final class ShareViewController: UIViewController {
         ("Dating", [("Hinge · Bumble · Raya", 1080, 1350), ("Tinder", 1080, 1920), ("The League", 1080, 1080)])
     ]
     private var setIndex = 0
+    /// set only by the screenshot helper app (never in the extension itself)
+    var injectedPhoto: UIImage?
     private var photo: UIImage?
     private var face: CGRect?          // normalized, origin top-left
     private var edge = UIColor(white: 0.93, alpha: 1)
@@ -118,12 +121,14 @@ final class ShareViewController: UIViewController {
 
     // MARK: Loading the shared photo
     private func loadPhoto() {
+        if let i = injectedPhoto { prepare(i); return }
         let providers = (extensionContext?.inputItems as? [NSExtensionItem] ?? []).flatMap { $0.attachments ?? [] }
         guard let p = providers.first(where: { $0.hasItemConformingToTypeIdentifier(UTType.image.identifier) }) else { fail("Share a photo to make a Platform Pack."); return }
         p.loadItem(forTypeIdentifier: UTType.image.identifier, options: nil) { [weak self] item, _ in
+            // large photos (24-48 MP) are read straight at 2400 px so the extension stays well inside its memory limit
             var img: UIImage?
-            if let u = item as? URL, let d = try? Data(contentsOf: u) { img = UIImage(data: d) }
-            else if let d = item as? Data { img = UIImage(data: d) }
+            if let u = item as? URL, let src = CGImageSourceCreateWithURL(u as CFURL, nil) { img = Self.thumbnail(src) }
+            else if let d = item as? Data, let src = CGImageSourceCreateWithData(d as CFData, nil) { img = Self.thumbnail(src) }
             else if let i = item as? UIImage { img = i }
             DispatchQueue.main.async {
                 guard let self = self else { return }
@@ -131,6 +136,13 @@ final class ShareViewController: UIViewController {
                 self.prepare(img)
             }
         }
+    }
+
+    private static func thumbnail(_ src: CGImageSource) -> UIImage? {
+        let opts: [CFString: Any] = [kCGImageSourceCreateThumbnailFromImageAlways: true, kCGImageSourceCreateThumbnailWithTransform: true,
+                                     kCGImageSourceThumbnailMaxPixelSize: 2400, kCGImageSourceShouldCacheImmediately: true]
+        guard let cg = CGImageSourceCreateThumbnailAtIndex(src, 0, opts as CFDictionary) else { return nil }
+        return UIImage(cgImage: cg)
     }
 
     private func fail(_ msg: String) { spinner.stopAnimating(); status.textColor = .darkGray; status.text = msg }
@@ -242,7 +254,7 @@ final class ShareViewController: UIViewController {
                 }) { ok, _ in
                     DispatchQueue.main.async {
                         self.status.textColor = UIColor(red: 0.18, green: 0.48, blue: 0.29, alpha: 1)
-                        self.status.text = ok ? "Saved to Photos ✓  \(images.count) sizes, each framed on your face." : "Could not save. Please try again."
+                        self.status.text = ok ? (self.face == nil ? "Saved to Photos ✓  \(images.count) sizes." : "Saved to Photos ✓  \(images.count) sizes, each framed on your face.") : "Could not save. Please try again."
                         self.saveButton.setTitle("Done", for: .normal); self.saveButton.isEnabled = true; self.saveButton.alpha = 1
                         if ok { self.saveButton.removeTarget(self, action: #selector(self.save), for: .touchUpInside); self.saveButton.addTarget(self, action: #selector(self.close), for: .touchUpInside) }
                     }

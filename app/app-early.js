@@ -69,8 +69,9 @@
       var g = s.getContext('2d'); g.drawImage(src, 0, 0, s.width, s.height);
       var d = g.getImageData(0, 0, s.width, s.height).data, sw = s.width, sh = s.height;
       var avg = function (x0, y0, x1, y1) { var r = 0, gg = 0, b = 0, c = 0; for (var y = y0; y < y1; y++) for (var x = x0; x < x1; x++) { var i = (y * sw + x) * 4; r += d[i]; gg += d[i + 1]; b += d[i + 2]; c++; } return 'rgb(' + Math.round(r / c) + ',' + Math.round(gg / c) + ',' + Math.round(b / c) + ')'; };
+      var mix = function (a, b) { var x = a.match(/\d+/g), y = b.match(/\d+/g); return 'rgb(' + Math.round((+x[0] + +y[0]) / 2) + ',' + Math.round((+x[1] + +y[1]) / 2) + ',' + Math.round((+x[2] + +y[2]) / 2) + ')'; };
       var gr, k;
-      if (H / W > src.height / src.width) { k = Math.max(1, Math.round(sh * 0.08)); gr = ctx.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, avg(0, 0, sw, k)); gr.addColorStop(1, avg(0, sh - k, sw, sh)); }
+      if (H / W > src.height / src.width) { k = Math.max(1, Math.round(sh * 0.08)); gr = ctx.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, avg(0, 0, sw, k)); var cw = Math.max(1, Math.round(sw * 0.15)); gr.addColorStop(1, mix(avg(0, sh - k, cw, sh), avg(sw - cw, sh - k, sw, sh))); }
       else { k = Math.max(1, Math.round(sw * 0.1)); gr = ctx.createLinearGradient(0, 0, W, 0); gr.addColorStop(0, avg(0, 0, k, sh)); gr.addColorStop(1, avg(sw - k, 0, sw, sh)); }
       ctx.fillStyle = gr; ctx.fillRect(0, 0, W, H); s.width = s.height = 1;
     } catch (e) { ctx.fillStyle = '#f4eef6'; ctx.fillRect(0, 0, W, H); }

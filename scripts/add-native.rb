@@ -53,5 +53,29 @@ unless proj.targets.any? { |t| t.name == 'PackShare' }
   bf = embed.add_file_reference(ext.product_reference, true)
   bf.settings = { 'ATTRIBUTES' => ['RemoveHeadersOnCopy'] }
 end
+# Screenshot helper app (simulator only, only when SHARE_SHOT=1; never part of the App Store build)
+if ENV['SHARE_SHOT'] == '1' && !proj.targets.any? { |t| t.name == 'ShareShot' }
+  FileUtils.mkdir_p(File.join(ios, 'ShareShot'))
+  FileUtils.cp(File.join(root, 'native', 'ShareShot', 'ShotApp.swift'), File.join(ios, 'ShareShot'))
+  FileUtils.cp(File.join(root, 'native', 'ShareShot', 'sample.jpg'), File.join(ios, 'ShareShot'))
+  shot = proj.new_target(:application, 'ShareShot', :ios, deploy, nil, :swift)
+  sg = proj.main_group.new_group('ShareShot', 'ShareShot')
+  pg = proj.main_group.children.find { |g| g.respond_to?(:path) && g.path == 'PackShare' }
+  srcs = [sg.new_file('ShotApp.swift'), pg.files.find { |f| f.path == 'ShareViewController.swift' }]
+  shot.add_file_references(srcs)
+  shot.add_resources([sg.new_file('sample.jpg')])
+  shot.build_configurations.each do |c|
+    s = c.build_settings
+    s['PRODUCT_BUNDLE_IDENTIFIER'] = bundle + '.shot'
+    s['PRODUCT_NAME'] = '$(TARGET_NAME)'
+    s['GENERATE_INFOPLIST_FILE'] = 'YES'
+    s['INFOPLIST_KEY_UILaunchScreen_Generation'] = 'YES'
+    s['INFOPLIST_KEY_UIStatusBarStyle'] = 'UIStatusBarStyleLightContent'
+    s['SWIFT_VERSION'] = '5.0'
+    s['TARGETED_DEVICE_FAMILY'] = '1'
+    s['IPHONEOS_DEPLOYMENT_TARGET'] = deploy
+    s['CODE_SIGNING_ALLOWED'] = 'NO'
+  end
+end
 proj.save
 puts 'Native pieces added: PackShare extension, PackIntent shortcut'

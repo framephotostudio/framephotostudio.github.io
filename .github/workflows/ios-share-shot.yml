@@ -1,0 +1,46 @@
+name: iOS Share extension screenshot (simulator)
+# Takes a real simulator screenshot of the Platform Pack share sheet for the App Store picture. Nothing is uploaded to Apple.
+on:
+  push:
+    branches: [ci-native-test]
+  workflow_dispatch:
+permissions:
+  contents: write
+env:
+  DEPS: "@capacitor/core@8 @capacitor/cli@8 @capacitor/android@8 @capacitor/ios@8 @capacitor/splash-screen@8.0.2 @capacitor/status-bar@8.0.4 @capacitor/share@8.0.3 @capacitor/filesystem@8.1.5 @capacitor/haptics@8.0.2 @capacitor/app@8.1.2 @capacitor/network@8.0.1 @capacitor/preferences@8.0.1 @capacitor/browser@8.0.5 @capacitor/camera@8.2.6"
+jobs:
+  shot:
+    runs-on: macos-15-intel
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with: { ref: main, path: site }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Use the newest Xcode
+        run: |
+          X=$(ls -d /Applications/Xcode_*.app | grep -v -i beta | sort -V | tail -1); sudo xcode-select -s "$X"; xcodebuild -version
+      - run: npm install $DEPS
+      - run: npm install @capacitor-community/media@9.1.0
+      - run: npm run build:web
+      - run: npx cap add ios && bash scripts/native-setup.sh ios && npx cap sync ios
+        env: { APP_VERSION: '1.0.0', BUILD_NUMBER: '1', SHARE_SHOT: '1' }
+      - name: Build the screenshot helper for the simulator
+        run: |
+          cd ios/App
+          xcodebuild -project App.xcodeproj -target ShareShot -configuration Release -sdk iphonesimulator CODE_SIGNING_ALLOWED=NO SYMROOT="$RUNNER_TEMP/b" build > "$RUNNER_TEMP/shot.log" 2>&1 || { grep -n 'error:' "$RUNNER_TEMP/shot.log" | head -30; tail -30 "$RUNNER_TEMP/shot.log"; exit 65; }
+          find "$RUNNER_TEMP/b" -name "ShareShot.app" -maxdepth 3
+      - name: Screenshot on an iPhone Pro Max simulator
+        run: |
+          DEV=$(xcrun simctl list devices available | grep -E "iPhone 1[5-9] Pro Max" | tail -1 | grep -oE "[0-9A-F-]{36}")
+          echo "device $DEV"; xcrun simctl boot "$DEV"; xcrun simctl bootstatus "$DEV" -b
+          xcrun simctl status_bar "$DEV" override --time "9:41" --batteryState charged --batteryLevel 100 --cellularBars 4 --wifiBars 3 || true
+          APP=$(find "$RUNNER_TEMP/b" -name "ShareShot.app" -maxdepth 3 | head -1)
+          xcrun simctl install "$DEV" "$APP"; xcrun simctl launch "$DEV" app.facecouture.studio.shot
+          sleep 12; mkdir -p /tmp/shots; xcrun simctl io "$DEV" screenshot /tmp/shots/share-sheet.png; ls -la /tmp/shots
+      - name: Publish the screenshot
+        run: |
+          git config user.name face-couture-ci; git config user.email hello@facecouture.app
+          git checkout --orphan ci-shots; git rm -rfq --cached . ; rm -rf shots; mkdir shots; cp /tmp/shots/* shots/
+          git add -f shots; git commit -qm "Share sheet screenshot, run ${{ github.run_number }}"; git push -qf origin HEAD:ci-shots
