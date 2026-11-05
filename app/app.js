@@ -197,7 +197,7 @@
   }
   // every AI result can be reported (sent to the Face Couture team, no photo is sent)
   function addReport() {
-    var res = document.querySelector('.luxeRes'); if (!res || res.querySelector('.fcReport')) return;
+    var res = document.querySelector('.luxeRes'); if (!res || res.querySelector('.fcReport') || !res.querySelector('#luxeStage canvas')) return; // only under a finished AI image
     var acts = res.querySelector('.luxeActs') || res;
     var b = document.createElement('button'); b.type = 'button'; b.className = 'fcReport'; b.textContent = 'Report this result';
     b.onclick = function () {
@@ -210,8 +210,16 @@
     acts.appendChild(b);
   }
 
+  // men's mode: the welcome screen's AI buttons use the same men's icons as the studio
+  function menIcons() {
+    var men = root.getAttribute('data-fcstyle') === 'men';
+    var map = { outfit: ['\u{1F457}', '\u{1F454}'], shoes: ['\u{1F460}', '\u{1F45E}'], looks: ['\u{1F484}', '\u2728'] };
+    Object.keys(map).forEach(function (k) { Array.prototype.forEach.call(document.querySelectorAll('button[data-k="' + k + '"] > i'), function (i) { var want = map[k][men ? 1 : 0]; if (i.textContent !== want) i.textContent = want; }); });
+  }
+
   function init() {
     hideFileTools();
+    setInterval(menIcons, 700); document.addEventListener('click', function () { setTimeout(menIcons, 80); }, true);
     if (window.MutationObserver) new MutationObserver(function () { addReport(); }).observe(document.body, { childList: true, subtree: true });
     guardEditor();
     setupNative();

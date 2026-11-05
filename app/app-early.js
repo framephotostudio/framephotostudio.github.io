@@ -61,6 +61,19 @@
     });
   }
   window.FCNative = { isNative: isNative, saveBlobs: nativeSaveBlobs, shareBlobs: nativeShareBlobs, tap: tap };
+  // network failures to the Face Couture server read as a plain message (never "Failed to fetch" / "Load failed")
+  (function () {
+    var f = window.fetch && window.fetch.bind(window); if (!f) return;
+    window.fetch = function (input, init) {
+      var url = typeof input === 'string' ? input : (input && input.url) || '';
+      return f(input, init).catch(function (e) {
+        if (/facecouture|workers\.dev|^\/api\//.test(url) && e && /fetch|load failed|network/i.test(String(e.message || e))) {
+          throw new TypeError(navigator.onLine === false ? 'You\'re offline. Connect to the internet and try again.' : 'Face Couture couldn\'t connect just now. Please check your connection and try again.');
+        }
+        throw e;
+      });
+    };
+  })();
 
   // ---------- native photo picker (iPhone Photos picker and camera instead of the web file chooser) ----------
   function wantsImage(input) { var a = (input.getAttribute('accept') || '').toLowerCase(); return !a || a.indexOf('image') > -1; }

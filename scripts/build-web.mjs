@@ -75,6 +75,9 @@ appAll('<p class="prolabel">✦ FRAME PRO · PREMIUM AI</p><button class="btn fu
 appAll('Tap AI Glow for your premium AI makeover.', 'Tap AI Glow for your AI makeover.', 'AI Glow tip');
 appAll('Your photos are edited on your device and are not uploaded to Face Couture.', 'Your photos are edited on your iPhone. A photo is sent only when you choose an AI feature and agree.', 'privacy note');
 appAll("st.textContent=files.length+' photos styled'", "st.textContent=files.length+(files.length===1?' photo':' photos')+' styled'", 'carousel count');
+appAll('>Add your music or recorded voiceover<', '>Add your music or a voiceover file<', 'video audio label');
+appAll("to create the look. It isn't stored. <a", "to create the look. We don't store it. <a", 'consent wording');
+html = html.replace(/<link rel="manifest"[^>]*>/, ''); // website install manifest (not used in the app)
 // saved files carry the Face Couture name
 for (const [a, b] of [["'frame-custom-'", "'face-couture-custom-'"], ["'frame-photo-set.zip'", "'face-couture-photo-set.zip'"], ["'frame-clip.'", "'face-couture-clip.'"], ["'frame-before-after.", "'face-couture-before-after."], ["'frame-set-'", "'face-couture-set-'"], ["'frame-my-look-'", "'face-couture-my-look-'"]]) appAll(a, b, 'file name ' + a);
 // per-build settings (backend URL comes from a repository variable). Version 1.0 has no purchases, so no store keys.
@@ -93,6 +96,7 @@ for (const f of ['app.css', 'app.js', 'app-early.js', 'app-api.js', 'app-setting
 // Inside the iPhone app these pages describe version 1.0 exactly: no purchases, promo codes or other platforms.
 const LEGAL_APP = {
   'support.html': [
+    ['Tap Save, then "Save Image" on the sheet: the photo lands in your Photos app. Videos save the same way.', 'Tap Save and the photo goes straight into your Photos app. Videos save the same way. To send a photo to another app, use a Share button.'],
     ['Tap Save, then "Save Image" on the sheet: the photo lands in your Photos app (Camera Roll on Android). Videos save the same way.', 'Tap Save and the photo goes straight into your Photos app. Videos save the same way. To send a photo to another app, use a Share button.'],
     [' Pro raises the allowance when available.', ''],
     ['<div class="card"><b>Subscription or refund</b> — manage it in your <a href="https://apps.apple.com/account/subscriptions">App Store</a> or <a href="https://play.google.com/store/account/subscriptions">Google Play</a> account. Refunds are issued by Apple or Google.</div>', ''],

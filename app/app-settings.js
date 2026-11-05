@@ -41,8 +41,8 @@
       ((API && API.device && API.device()) ? '<p class="fcSetVer fcSetId">Device ID (for support): ' + String(API.device()).replace(/[<>&"]/g, '') + '</p>' : '') + '</div>';
     s.hidden = false; document.documentElement.classList.add('fcSetOpen');
     $('#fcSetClose').onclick = closeSettings;
-    $('#fcSetPrivacy').onclick = function () { closeSettings(); openLegal('privacy'); };
-    $('#fcSetTerms').onclick = function () { closeSettings(); openLegal('terms'); };
+    $('#fcSetPrivacy').onclick = function () { closeSettings(); window.__fcLegalFromSettings = true; openLegal('privacy'); };
+    $('#fcSetTerms').onclick = function () { closeSettings(); window.__fcLegalFromSettings = true; openLegal('terms'); };
     $('#fcSetSupport').onclick = function () { location.href = 'mailto:' + (CFG.supportEmail || 'hello@facecouture.app') + '?subject=Face%20Couture%20app'; };
     $('#fcSetDelete').onclick = function () {
       if (!confirm('Delete the AI history linked to this iPhone from our server? Your photos are never stored by us, so there are none to delete.')) return;
@@ -60,7 +60,9 @@
     var title = { privacy: 'Privacy Policy', terms: 'Terms of Use', 'delete-my-data': 'Delete my data', support: 'Support' }[kind] || '';
     v.innerHTML = '<div class="fcSetTop"><button type="button" class="fcSetDone" id="fcLegalDone">Done</button><h2>' + title + '</h2></div><iframe title="' + title + '" src="' + kind + '.html"></iframe>';
     v.hidden = false; document.documentElement.classList.add('fcSetOpen');
-    $('#fcLegalDone').onclick = function () { v.hidden = true; document.documentElement.classList.remove('fcSetOpen'); };
+    var fromSettings = !!(window.__fcLegalFromSettings); window.__fcLegalFromSettings = false;
+    $('#fcLegalDone').textContent = fromSettings ? 'Back' : 'Done';
+    $('#fcLegalDone').onclick = function () { v.hidden = true; document.documentElement.classList.remove('fcSetOpen'); if (fromSettings) openSettings(); };
     var fr = v.querySelector('iframe');
     fr.onload = function () {
       try {
