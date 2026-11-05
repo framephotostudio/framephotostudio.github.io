@@ -6,48 +6,45 @@ Paste-ready text for App Store Connect and Google Play Console. Character limits
 
 **Name (30):** Face Couture by Always Luxe
 **Subtitle (30):** Real Face Studio
-**Promotional text (170):** Your real face, couture styled: AI Glow, outfit try-on, dream destinations and every social size in one beautiful studio. Free while we launch.
+**Promotional text (170):** One photo, ready for every platform: sized and framed on your face, polished with Makeup Artist Mode and real-skin beauty tools. Free, with a daily AI limit.
 **Keywords (100, comma-separated, no spaces):**
-`glam,makeup,outfit,try on,headshot,work photo,dating,profile,santorini,travel,bridal,lashes,resize`
+`glam,makeup,headshot,work photo,dating,profile,platform pack,resize,crop,makeup artist,lashes,bridal`
 **Primary category:** Photo & Video · **Secondary:** Lifestyle
-**Age rating:** 13+ (AI photo editing of real people; no objectionable content)
+**Age rating:** 18+ (Google's Gemini API terms: not for audiences under 18)
 **Support URL:** https://facecouture.app/support.html
 **Marketing URL:** (leave empty)
 **Privacy Policy URL:** https://facecouture.app/privacy.html
 **Copyright:** © 2026 Always Luxe
 
 **Description (4000):**
-Face Couture is a beauty studio built around one promise: you still look like you.
+Face Couture turns one photo into a polished, ready-to-post set for every platform, framed around your face, while keeping your real features.
 
-Your AI makeup is placed on your real, unchanged face. Face Couture keeps your eye shape and color, your lips and your smile, then adds polished makeup, a new outfit or a dream destination around them. One photo becomes a complete look, ready for every platform.
-
-YOUR REAL FACE, PERFECTED
-• AI Glow: one-tap glam placed onto your real, unchanged face
-• AI Looks: Satin Glam, Full Glam, Red Carpet, Clean Girl, Bridal Glow and more
-• Makeup Artist Mode: already wearing makeup? Keep your artist's work and make it photo-ready
-
-STYLE THE WHOLE PHOTO
-• AI Outfit Change: add a photo of any outfit and see yourself wearing it
-• AI Accessories and AI Shoes: try on handbags, jewelry, watches and shoes
-• AI Background Change: Santorini, Paris, New York, Tokyo, a rooftop, fine dining and more
-• Vanish: remove people in the background
-
-READY FOR EVERY PLATFORM
-• 40+ exact sizes for LinkedIn, dating apps, Instagram, TikTok and more, each framed around your face
-• Platform Pack: save every size at once
+ONE PHOTO, EVERY PLATFORM
+• Platform Pack: pick your platforms and save every size at once, each framed around your face
+• 40 exact sizes for Instagram, TikTok, LinkedIn, dating apps, WhatsApp, YouTube and more, plus any custom size
 • Before and after photos and short reels
 
-BEAUTY LAB, FREE AND ON YOUR PHONE
-Smooth skin that keeps real texture, blemish fix, lipstick and gloss, lashes, liner, brows, blush and contour, eyelid lift, nose size, background blur and frames. These tools work on your iPhone, even offline.
+MAKEUP ARTIST MODE
+Already wearing makeup? Keep your artist's work and make it photo-ready: sharper eyes and brows, richer lips and smooth skin with real texture.
+
+BEAUTY STUDIO, ON YOUR IPHONE
+Skin smoothing that keeps real texture, wrinkle softening, blemish fix, lipstick and gloss, lashes, liner, brows, blush and contour, eyelid lift, nose size, background blur and frames. Face mapping and these tools run on your iPhone, even offline.
 
 FOR MEN TOO
 A dedicated men's mode with no makeup at all: subtle skin smoothing, grooming and flattering light.
 
-PRIVATE BY DESIGN
-No account needed. Face mapping runs on your iPhone. A photo leaves your phone only when you choose an AI feature and agree, just for that one edit. We don't keep it, and it is never used for training.
+AI STUDIO, WHEN YOU WANT IT
+• AI Glow and AI Looks: makeup placed on your real, unchanged face, keeping your eyes, lips and smile
+• AI Outfit Change, AI Accessories and AI Shoes: try on an outfit, bag, jewelry or shoes from a photo
+• AI Background Change: Santorini, Paris, a rooftop and more
+• Stack your changes: a new outfit, then a new destination
+AI runs only when you choose it and agree. Your photo is sent securely for that one edit. We don't keep it, and it is never used for training.
 
-FREE WHILE WE LAUNCH
-Every feature is free right now. AI features have a daily limit.
+PRIVATE BY DESIGN
+No account needed. Face mapping runs on your iPhone.
+
+FREE
+Face Couture is free. AI features have a daily limit.
 
 Terms of Use: https://facecouture.app/terms.html
 Privacy Policy: https://facecouture.app/privacy.html
