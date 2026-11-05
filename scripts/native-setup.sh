@@ -11,7 +11,7 @@ if [ "$PLATFORM" = "ios" ]; then
   pb() { /usr/libexec/PlistBuddy -c "$1" "$PL" 2>/dev/null || true; }
   setstr() { pb "Delete :$1"; pb "Add :$1 string $2"; }
   setstr NSCameraUsageDescription "Face Couture uses the camera so you can take a selfie to edit."
-  setstr NSPhotoLibraryUsageDescription "Face Couture opens the photos you choose so you can edit them."
+  setstr NSPhotoLibraryUsageDescription "Face Couture opens the photos you choose to edit and saves your finished photos to your library."
   setstr NSPhotoLibraryAddUsageDescription "Face Couture saves your finished photos and videos to your Photos."
   setstr CFBundleDisplayName "Face Couture"
   pb "Delete :ITSAppUsesNonExemptEncryption"; pb "Add :ITSAppUsesNonExemptEncryption bool false"

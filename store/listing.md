@@ -2,7 +2,7 @@
 
 Paste-ready text for App Store Connect and Google Play Console. Character limits are respected.
 
-## Apple App Store (version 1.0 resubmission, approved by Demah Nov 4, 2026)
+## Apple App Store (version 1.0 resubmission, build 40; approved by Demah Nov 4, 2026, AI tools trimmed Nov 5)
 
 **Name (30):** Face Couture by Always Luxe
 **Subtitle (30):** Portraits sized for every app
@@ -20,7 +20,7 @@ Paste-ready text for App Store Connect and Google Play Console. Character limits
 Face Couture turns one photo into a polished, ready-to-post set for every platform, framed around your face, while keeping your real features.
 
 ONE PHOTO, EVERY PLATFORM
-• Platform Pack: pick your platforms and save every size at once, each framed around your face
+• Platform Pack: pick Social, Work or Dating and save every size at once to Photos, each framed on your face and shown on screen
 • 40 exact sizes for Instagram, TikTok, LinkedIn, dating apps, WhatsApp, YouTube and more, plus any custom size
 • Before and after photos and short reels
 
@@ -34,7 +34,7 @@ FOR MEN TOO
 A dedicated men's mode with no makeup at all: subtle skin smoothing, grooming and flattering light.
 
 AI STUDIO, WHEN YOU WANT IT
-Glow and Glam Looks place AI makeup on your real, unchanged face, keeping your eyes, lips and smile. More AI tools inside, including outfit and accessory try-on. AI runs only when you choose it and agree; your photo is sent securely for that one edit, we don't keep it, and it is never used for training.
+Glow and Glam Looks place AI makeup on your real, unchanged face, keeping your eyes, lips and smile. Vanish removes people behind you. AI runs only when you choose it and agree; your photo is sent securely for that one edit, we don't keep it, and it is never used for training.
 
 PRIVATE BY DESIGN
 No account needed. The face-mapping models are built into the app, so the beauty tools work even in Airplane Mode.
@@ -80,7 +80,11 @@ Use one address everywhere (stores require a working, monitored email). Suggeste
 The app asks for a rating through the native in-app review sheet only after the third successful save, never conditionally on satisfaction and never with an incentive (store policy compliant).
 
 
-## Save for version 1.1 (when payments are switched on with RevenueCat)
+## Save for version 1.1: the 4 AI tools come back
+
+Try it on, Change the scene, Accessories and Shoes return in 1.1 (see RESTORE-AI-TOOLS.md). In the AI STUDIO paragraph, add: "Try on outfits, jewelry and shoes from a photo, or change the scene to Paris, Santorini and more."
+
+## Save for a later version (when payments are switched on with RevenueCat)
 
 Replace the FREE AT LAUNCH section above with:
 

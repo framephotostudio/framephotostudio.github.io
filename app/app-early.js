@@ -61,6 +61,20 @@
     });
   }
   window.FCNative = { isNative: isNative, saveBlobs: nativeSaveBlobs, shareBlobs: nativeShareBlobs, tap: tap };
+  // Platform Pack backdrop: when a size needs more room than the photo has, the extra space is a smooth gradient
+  // made from the photo's own edge colours (top/bottom for tall sizes, left/right for wide ones)
+  window.fcSoftBackdrop = function (ctx, W, H, src) {
+    try {
+      var s = document.createElement('canvas'), n = 24; s.width = n; s.height = Math.max(2, Math.round(n * src.height / src.width));
+      var g = s.getContext('2d'); g.drawImage(src, 0, 0, s.width, s.height);
+      var d = g.getImageData(0, 0, s.width, s.height).data, sw = s.width, sh = s.height;
+      var avg = function (x0, y0, x1, y1) { var r = 0, gg = 0, b = 0, c = 0; for (var y = y0; y < y1; y++) for (var x = x0; x < x1; x++) { var i = (y * sw + x) * 4; r += d[i]; gg += d[i + 1]; b += d[i + 2]; c++; } return 'rgb(' + Math.round(r / c) + ',' + Math.round(gg / c) + ',' + Math.round(b / c) + ')'; };
+      var gr, k;
+      if (H / W > src.height / src.width) { k = Math.max(1, Math.round(sh * 0.08)); gr = ctx.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, avg(0, 0, sw, k)); gr.addColorStop(1, avg(0, sh - k, sw, sh)); }
+      else { k = Math.max(1, Math.round(sw * 0.1)); gr = ctx.createLinearGradient(0, 0, W, 0); gr.addColorStop(0, avg(0, 0, k, sh)); gr.addColorStop(1, avg(sw - k, 0, sw, sh)); }
+      ctx.fillStyle = gr; ctx.fillRect(0, 0, W, H); s.width = s.height = 1;
+    } catch (e) { ctx.fillStyle = '#f4eef6'; ctx.fillRect(0, 0, W, H); }
+  };
   // network failures to the Face Couture server read as a plain message (never "Failed to fetch" / "Load failed")
   (function () {
     var f = window.fetch && window.fetch.bind(window); if (!f) return;
@@ -84,7 +98,9 @@
       ? P.Camera.pickImages({ quality: 92, limit: input.id === 'carouselFiles' ? 10 : 7, correctOrientation: true }).then(function (r) { return (r.photos || []).map(function (x) { return x.webPath; }); })
       : P.Camera.getPhoto(Object.assign(base, cam
           ? { source: 'CAMERA', direction: 'FRONT' }
-          : { source: 'PROMPT', promptLabelHeader: 'Add a photo', promptLabelPhoto: 'Choose from Photos', promptLabelPicture: 'Take a selfie', promptLabelCancel: 'Cancel' }))
+          : (input.id === 'file' || input.id === 'cameraFile'
+            ? { source: 'PROMPT', direction: 'FRONT', promptLabelHeader: 'Add a photo', promptLabelPhoto: 'Choose from Photos', promptLabelPicture: 'Take a selfie', promptLabelCancel: 'Cancel' }
+            : { source: 'PROMPT', direction: 'REAR', promptLabelHeader: 'Add a photo', promptLabelPhoto: 'Choose from Photos', promptLabelPicture: 'Take a photo', promptLabelCancel: 'Cancel' })))
         .then(function (x) { return [x.webPath || x.dataUrl]; });
     pick.then(function (paths) {
       return Promise.all(paths.filter(Boolean).map(function (u, i) {

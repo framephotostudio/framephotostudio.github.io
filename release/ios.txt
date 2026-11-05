@@ -1,1 +1,1 @@
-iPhone build request: 1.0.0 (build 39: Platform Pack first screen, second review fixes)
+iPhone build request: 1.0.0 (build 40: Platform Pack sizes framed on the face, 4 AI tools moved to 1.1, review fixes)

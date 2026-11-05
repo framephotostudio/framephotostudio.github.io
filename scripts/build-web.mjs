@@ -9,7 +9,8 @@ async function get(url, dest) { const r = await fetch(url); if (!r.ok) throw new
 const MP = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.21', ORT = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.30.0/dist/';
 await get(MP + '/vision_bundle.mjs', V + '/mediapipe/vision_bundle.mjs');
 for (const f of ['vision_wasm_internal.js', 'vision_wasm_internal.wasm', 'vision_wasm_nosimd_internal.js', 'vision_wasm_nosimd_internal.wasm']) await get(MP + '/wasm/' + f, V + '/mediapipe/wasm/' + f);
-for (const f of ['ort.webgpu.min.mjs', 'ort.min.mjs', 'ort-wasm-simd-threaded.jsep.mjs', 'ort-wasm-simd-threaded.jsep.wasm', 'ort-wasm-simd-threaded.mjs', 'ort-wasm-simd-threaded.wasm', 'ort-wasm-simd-threaded.asyncify.mjs', 'ort-wasm-simd-threaded.asyncify.wasm', 'ort-wasm-simd-threaded.jspi.mjs', 'ort-wasm-simd-threaded.jspi.wasm']) { try { await get(ORT + f, V + '/ort/' + f) } catch (e) { console.warn('optional', e.message) } }
+// only the files the studio actually loads (ort.webgpu.min.mjs imports the asyncify runtime); unused runtimes are left out
+for (const f of ['ort.webgpu.min.mjs', 'ort-wasm-simd-threaded.asyncify.mjs', 'ort-wasm-simd-threaded.asyncify.wasm']) await get(ORT + f, V + '/ort/' + f);
 await get('https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task', V + '/models/face_landmarker.task');
 await get('https://storage.googleapis.com/mediapipe-models/image_segmenter/selfie_segmenter/float16/latest/selfie_segmenter.tflite', V + '/models/selfie_segmenter.tflite');
 let html = fs.readFileSync(path.join(SITE, 'index.html'), 'utf8');
@@ -49,6 +50,37 @@ appAll('Coming soon<b>Face Couture mobile app</b>', 'Face Couture<b>on iPhone</b
 appAll("matte:{n:'Matte Pro'", "matte:{n:'Matte Finish'", 'look name without Pro');
 appAll('<b>Face detected · AI mapped</b>', '<b>Face detected · mapped on your phone</b>', 'on-device wording');
 appAll("faceLight:['Even lighting (AI fill light)'", "faceLight:['Even lighting (fill light)'", 'on-device wording');
+// ---- Platform Pack (build 40, App Review): every set saves distinct sizes, each framed on the face, never two identical files ----
+appOnly("const SETS={social:['ig-portrait','ig-story','tiktok'],pro:['linkedin','whatsapp-profile','x'],dating:['hinge','ig-portrait','whatsapp-profile']};",
+  "const SETS={social:['ig-portrait','ig-square','ig-story','pinterest','youtube'],pro:['linkedin','headshot','linkedin-post','x','whatsapp-status'],dating:['hinge','tinder','league']};", 'pack sets');
+{ const a = html.indexOf("const PACK=[['ig-portrait','Instagram post']"), b = html.indexOf('].map(([id,n])=>', a);
+  if (a < 0 || b < 0 || b - a > 600) throw new Error('Platform Pack "chip list" not found. Update scripts/build-web.mjs.');
+  html = html.slice(0, a) + "const PACK=[['ig-portrait','Instagram post'],['ig-square','Square post'],['ig-story','Story · Reels'],['tiktok','TikTok'],['pinterest','Pinterest pin'],['youtube','YouTube thumbnail'],['linkedin','LinkedIn profile'],['headshot','Headshot'],['linkedin-post','LinkedIn post'],['x','X post'],['whatsapp-status','WhatsApp status'],['whatsapp-profile','WhatsApp profile'],['facebook-portrait','Facebook post'],['hinge','Hinge · Bumble · Raya'],['tinder','Tinder'],['league','The League']" + html.slice(b); }
+// face framing: if the head with hair doesn't fit a size, frame the face itself (hair at the sides may be trimmed);
+// if even that doesn't fit (wide sizes), zoom out on a clean backdrop instead of keeping the whole photo small
+{ const a = html.indexOf('function faceFrame(i,iw,ih,box){'), b = html.indexOf('\n', a);
+  if (a < 0 || b < 0 || html.indexOf('function faceFrame(i,iw,ih,box){', a + 1) > -1) throw new Error('Platform Pack "face framing" not found. Update scripts/build-web.mjs.');
+  html = html.slice(0, a) + "function faceFrame(i,iw,ih,box){const cw=presets[i][3],ch=presets[i][4],sc=Math.max(cw/iw,ch/ih),w=iw*sc,h=ih*sc,ty=ch>cw*1.05?.45:.5,o=beauty.faceOutline||[];let tight=box;if(o.length>2){const xs=o.map(p=>p.x),ys=o.map(p=>p.y),fx0=Math.min(...xs),fx1=Math.max(...xs),fy0=Math.min(...ys),fy1=Math.max(...ys),fw=fx1-fx0,fh=fy1-fy0;tight={x0:Math.max(0,fx0-.06*fw),x1:Math.min(1,fx1+.06*fw),y0:Math.max(0,fy0-.3*fh),y1:Math.min(1,fy1+.1*fh)}}const cl=v=>Math.max(0,Math.min(1,v));function at(b,z){const W=w*z,H=h*z,cx=(b.x0+b.x1)/2,cy=(b.y0+b.y1)/2,x=Math.abs(cw-W)>1?cl((.5*cw-cx*W)/(cw-W)):.5,y=Math.abs(ch-H)>1?cl((ty*ch-cy*H)/(ch-H)):.5,ox=(cw-W)*x,oy=(ch-H)*y;if(ox+b.x0*W<-1||ox+b.x1*W>cw+1||oy+b.y0*H<-1||oy+b.y1*H>ch+1)return null;return{x,y,z,mode:'fill'}}for(const b of [box,tight]){const r=at(b,1);if(r)return r}const zb=tight,z=Math.max(.3,Math.min(1,.96*cw/((zb.x1-zb.x0)*w),.96*ch/((zb.y1-zb.y0)*h)));return at(zb,z)||at(tight,z)||{x:.5,y:.5,z:1,mode:'fit'}}" + html.slice(b); }
+// the space around a zoomed-out or whole photo is a smooth backdrop made from the photo's own edge colours (no blown-up blur)
+appOnly("if(f.mode==='fit'&&$('#frameBackdrop').value==='soft'){const bg=document.createElement('canvas');bg.width=32;bg.height=Math.max(1,Math.round(32*input.height/input.width));bg.getContext('2d').drawImage(baseCanvas(160),0,0,bg.width,bg.height);const cover=Math.max(c.width/bg.width,c.height/bg.height);const bw=bg.width*cover,bh=bg.height*cover;ctx.imageSmoothingEnabled=true;ctx.drawImage(bg,(c.width-bw)/2,(c.height-bh)/2,bw,bh);ctx.fillStyle='#ffffff66';ctx.fillRect(0,0,c.width,c.height);bg.width=bg.height=1}",
+  "if((f.mode==='fit'||f.z<.999)&&$('#frameBackdrop').value==='soft'){window.fcSoftBackdrop(ctx,c.width,c.height,baseCanvas(160))}", 'pack backdrop');
+// one file per size: platforms that share a size are saved once, named for all of them; the saved sizes are shown on screen
+appOnly("const files=[];for(const i of selected){const blob=await exportBlob(i);files.push(new File([blob],filename(i),{type:blob.type}))}",
+  "const groups=new Map();for(const i of selected){const k=presets[i][3]+'x'+presets[i][4];if(!groups.has(k))groups.set(k,[]);groups.get(k).push(i)}const files=[],made=[];framed=0;for(const g of groups.values()){const i=g[0];if(frameState[i].mode==='fill')framed++;const blob=await exportBlob(i);const names=[...new Set(g.map(j=>{const q=PACK.find(x=>x[0]===j);return q?q[1]:presets[j][1]+' '+presets[j][2]}))];const slug=names.join(' ').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');const f=new File([blob],'face-couture-'+slug+'-'+presets[i][3]+'x'+presets[i][4]+'.'+($('#quality').value==='image/png'?'png':'jpg'),{type:blob.type});files.push(f);made.push({file:f,names,w:presets[i][3],h:presets[i][4]})}", 'pack one file per size');
+appOnly("const r=await deliverFiles(files,'Face Couture Platform Pack');", "const r=await deliverFiles(files,'Face Couture Platform Pack');try{if(r!=='cancelled'&&window.fcPackResult)window.fcPackResult(made,r)}catch(e){}", 'pack result');
+appOnly("(framed?', '+framed+' framed on your face':'')", "(framed&&framed===files.length?', each framed on your face':framed?', '+framed+' framed on your face':'')", 'pack toast');
+appOnly('Center on my face (keeps the whole photo if a size would cut it off)', 'Frame every size on my face', 'pack option');
+// the AI Studio sits at the end of the Studio tab (not pinned above the tools)
+appOnly('if(w.parentNode!==box){box.appendChild(w);moved=1}', "{var ed=D.getElementById('edit');if(ed&&w.parentNode!==ed){ed.appendChild(w);moved=1}}", 'AI Studio at the end');
+// ---- Try it on, Change the scene, Accessories and Shoes are not in version 1.0 (Demah, Nov 5, 2026). ----
+// ONE SWITCH brings all four back for version 1.1: build with FC_TRYON=1 (see RESTORE-AI-TOOLS.md). Nothing is deleted from the website or the server.
+const TRYON = process.env.FC_TRYON === '1';
+if (!TRYON) {
+  appAll("'Travel, Vanish & try-on'", "'Vanish'", 'AI panel title without try-on');
+  { const h = html.search(/<head(\s[^>]*)?>/i), hEnd = html.indexOf('>', h) + 1; html = html.slice(0, hEnd) + '<script>window.__FC_NO_TRYON=true</script>' + html.slice(hEnd); }
+}
+appOnly('content="width=device-width,initial-scale=1,viewport-fit=cover"', 'content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"', 'no page zoom');
+appAll('only to create this look, and it is not stored.', 'only to create this look. We do not store it.', 'consent wording 2');
 appAll('<button type="button" data-set="pro">Professional</button>', '<button type="button" data-set="pro">Work</button>', 'same set name as the welcome card');
 appOnly("try{isAdmin=localStorage.getItem('fcAdmin')===ADMIN_HASH}catch(e){}", '', 'admin flag');
 { const a = html.indexOf('function setAdmin(on){'), b = html.indexOf('window.__seasonal=', a);
@@ -134,6 +166,11 @@ const LEGAL_APP = {
   'terms.html': [['the website and the iPhone and Android apps, by Always Luxe', 'the website and apps by Always Luxe'],
     ['<h2>Free launch, trials and subscriptions</h2><p>Face Couture is free to use at launch. If we introduce Face Couture Pro, prices, the free-trial length and what is included are shown before you subscribe. Subscriptions are billed by Apple or Google to your store account and renew automatically until cancelled in your store settings; cancel at least 24 hours before the current period ends to avoid renewal. Refunds are handled by Apple or Google under their policies. Promo codes are personal, non-transferable and may expire.</p>', '<h2>Free to use</h2><p>Face Couture is free to use, with a daily limit on AI features. If we ever add paid features, their price and terms will be shown clearly before you choose them.</p>']]
 };
+// version 1.0 legal pages describe only the AI tools in this build (the FC_TRYON=1 switch restores the full wording)
+if (!TRYON) {
+  LEGAL_APP['privacy.html'].push(['AI Luxe Looks, headshot, backgrounds, outfit try-on, Vanish, blur', 'Glow, Glam Looks, Vanish']);
+  LEGAL_APP['terms.html'].push([' Outfit try-on is a visual preview, not a guarantee of fit or availability, and does not imply any partnership with a brand whose product you upload.', '']);
+}
 for (const f of ['privacy.html', 'terms.html', 'support.html', 'delete-my-data.html']) {
   const src = fs.existsSync(path.join(SITE, f)) ? path.join(SITE, f) : path.join('site-pages', f);
   let t = fs.readFileSync(src, 'utf8');

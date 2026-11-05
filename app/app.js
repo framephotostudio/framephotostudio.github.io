@@ -252,9 +252,6 @@
       var up = document.getElementById('heroGlow') || document.getElementById('file'); if (up) up.click();
     });
     anchor.parentNode.insertBefore(c, anchor);
-    if (window.MutationObserver) new MutationObserver(function () {
-      if (window.__fcGoPack && document.body.classList.contains('ownPhoto')) { window.__fcGoPack = false; setTimeout(function () { enterStudio(); goPack(); }, 600); }
-    }).observe(document.body, { attributes: true, attributeFilter: ['class'] });
   }
   // welcome headline: Platform Pack is what Face Couture is about; the AI tools live in the studio's AI Studio
   function heroText() {
@@ -290,8 +287,118 @@
     if (chips) chips.addEventListener('click', function () { Array.prototype.forEach.call(sets.querySelectorAll('[data-set]'), function (x) { x.classList.remove('on'); x.setAttribute('aria-pressed', 'false'); }); });
   }
 
+  // Platform Pack result: the saved sizes are shown right under the Save button, each labelled with its apps and size
+  var packUrls = [];
+  window.fcPackResult = function (made, r) {
+    var save = document.getElementById('packSave'); if (!save || !made || !made.length) return;
+    packUrls.forEach(function (u) { try { URL.revokeObjectURL(u); } catch (e) {} }); packUrls = [];
+    var old = document.getElementById('fcPackDone'); if (old) old.parentNode.removeChild(old);
+    var d = document.createElement('div'); d.id = 'fcPackDone';
+    var head = r === 'pending' ? 'Your pack is ready' : r === 'downloaded' ? 'Saved' : 'Saved to Photos ✓';
+    d.innerHTML = '<b>' + head + '</b><span>' + made.length + (made.length === 1 ? ' size' : ' sizes') + ', each framed on your face</span><div class="fcPackGrid"></div><button type="button" class="fcPackShare">Share these photos</button>';
+    var grid = d.querySelector('.fcPackGrid');
+    made.forEach(function (m) {
+      var u = URL.createObjectURL(m.file); packUrls.push(u);
+      var f = document.createElement('figure');
+      f.innerHTML = '<div class="fcPackImg" style="aspect-ratio:' + m.w + '/' + m.h + '"><img alt=""></div><figcaption></figcaption>';
+      f.querySelector('img').src = u; f.querySelector('img').alt = m.names.join(', ') + ' size';
+      f.querySelector('figcaption').innerHTML = '<b></b><small></small>';
+      f.querySelector('figcaption b').textContent = m.names.join(' · ');
+      f.querySelector('figcaption small').textContent = m.w + ' × ' + m.h;
+      grid.appendChild(f);
+    });
+    d.querySelector('.fcPackShare').addEventListener('click', function () {
+      tap('LIGHT'); try { navigator.share({ files: made.map(function (m) { return m.file; }), title: 'Face Couture Platform Pack' }); } catch (e) {}
+    });
+    save.parentNode.insertBefore(d, save.nextSibling);
+    setTimeout(function () { try { d.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (e) {} }, 120);
+  };
+
+  // every new photo opens on Platform Pack (from the welcome screen, "+ Photo" or the camera)
+  function photoToPack() {
+    var t = null;
+    function cur() { try { return typeof source !== 'undefined' ? source : null; } catch (e) { return null; } }
+    document.addEventListener('change', function (e) {
+      if (!e.target || e.target.id !== 'file') return;
+      var was = cur(), n = 0; clearInterval(t);
+      t = setInterval(function () {
+        if (++n > 80) { clearInterval(t); return; }
+        if (cur() && cur() !== was && document.body.classList.contains('ownPhoto')) { clearInterval(t); window.__fcGoPack = false; setTimeout(function () { enterStudio(); goPack(); }, 600); }
+      }, 250);
+    }, true);
+  }
+
+  // welcome screen: one main button (in the Platform Pack card) and an example of one photo in several sizes
+  function welcome() {
+    var hero = document.querySelector('.intro.heroNew'); if (!hero) return;
+    if (!document.getElementById('fcSizes')) {
+      var src = (document.querySelector('.heroBA img.baAfter') || {}).src; var card = document.getElementById('fcPackCard');
+      if (src && card) {
+        var s = document.createElement('div'); s.id = 'fcSizes';
+        var tiles = [['Post', '4/5', 0.8], ['Square', '1/1', 1], ['Story', '9/16', 0.5625], ['Pin', '2/3', 0.667]];
+        s.innerHTML = '<p>One photo, framed for each app</p><div class="fcSizeRow">' + tiles.map(function (t) {
+          return '<figure style="flex:' + t[2] + ' 1 0"><div style="aspect-ratio:' + t[1] + '"><img alt="" src=""></div><figcaption>' + t[0] + '</figcaption></figure>';
+        }).join('') + '</div>';
+        Array.prototype.forEach.call(s.querySelectorAll('img'), function (im) { im.src = src; });
+        card.parentNode.insertBefore(s, card.nextSibling);
+      }
+    }
+  }
+
+  // version 1.0: Try it on, Change the scene, Accessories and Shoes are not in the app (they return in 1.1, see RESTORE-AI-TOOLS.md)
+  function noTryOn() {
+    if (!window.__FC_NO_TRYON) return;
+    ['fcWowOutfit', 'fcWowBg', 'fcWowAcc', 'fcWowShoes', 'fcTravel', 'fcTryCats', 'fcOwnOutfit'].forEach(function (id) {
+      var e = document.getElementById(id); if (e && e.parentNode) e.parentNode.removeChild(e);
+    });
+    window.__fcPickTry = function () {};
+  }
+
+  // for the app-zone preview the face sits in the clear middle area (left of the buttons, above the caption)
+  function zoneFrame(i, iw, ih) {
+    try {
+      var o = beauty.faceOutline; if (!o || o.length < 3) return null;
+      var xs = o.map(function (p) { return p.x; }), ys = o.map(function (p) { return p.y; });
+      var fx0 = Math.min.apply(0, xs), fx1 = Math.max.apply(0, xs), fy0 = Math.min.apply(0, ys), fy1 = Math.max.apply(0, ys), fw = fx1 - fx0, fh = fy1 - fy0;
+      var top = Math.max(0, fy0 - 0.35 * fh), bot = Math.min(1, fy1 + 0.06 * fh), cx = (fx0 + fx1) / 2, cy = (top + bot) / 2;
+      var cw = presets[i][3], ch = presets[i][4], sc = Math.max(cw / iw, ch / ih), w = iw * sc, h = ih * sc;
+      var z = Math.max(0.3, Math.min(1, 0.6 * ch / ((bot - top) * h), 0.7 * cw / (fw * 1.2 * w))), W = w * z, H = h * z;
+      var cl = function (v) { return Math.max(0, Math.min(1, v)); };
+      var x = Math.abs(cw - W) > 1 ? cl((0.41 * cw - cx * W) / (cw - W)) : 0.5, y = Math.abs(ch - H) > 1 ? cl((0.45 * ch - cy * H) / (ch - H)) : 0.5;
+      return { x: x, y: y, z: z, mode: 'fill' };
+    } catch (e) { return null; }
+  }
+  // the TikTok / Reels / Story guides are drawn on the 9:16 size, framed on the face
+  function zonesOn916() {
+    var pp = document.getElementById('platformPreview'); if (!pp || pp.__fc) return; pp.__fc = true;
+    var back = null;
+    document.addEventListener('change', function (e) { if (e.target && e.target.id === 'file') back = null; }, true);
+    pp.addEventListener('change', function () {
+      var v = pp.value;
+      if (!/^(tiktok|reels|safe)$/.test(v)) {
+        // leaving the app-zone preview: back to the size and framing the person had before
+        if (back) { try { var b = back; back = null; frameState[b.i] = b.f; choose(b.active); pp.value = v; if (typeof schedule === 'function') schedule(); } catch (e) {} }
+        return;
+      }
+      try {
+        var i = presets.findIndex(function (p) { return p[0] === (v === 'tiktok' ? 'tiktok' : 'ig-story'); });
+        if (i < 0) return;
+        if (back && back.i !== i) { frameState[back.i] = back.f; }
+        else if (presets[active][3] === 1080 && presets[active][4] === 1920 && !back) return;
+        if (!back || back.i !== i) back = { i: i, f: Object.assign({}, frameState[i]), active: back ? back.active : active };
+        Promise.resolve(ensureFace()).then(function (ok) {
+          if (ok) { var d = baseCanvas(100); frameState[i] = zoneFrame(i, d.width, d.height) || faceFrame(i, d.width, d.height, headBox()); }
+          choose(i); pp.value = v; if (typeof schedule === 'function') schedule();
+          setTimeout(function () { if (pp.value === v && typeof window.toast === 'function') window.toast('Showing the 9:16 ' + (v === 'tiktok' ? 'TikTok' : v === 'reels' ? 'Reels' : 'Story') + ' size, framed on your face.'); }, 80);
+        });
+      } catch (e) {}
+    });
+  }
+
   function init() {
-    hideFileTools(); fileButtons(); packSetHighlight();
+    hideFileTools(); fileButtons(); packSetHighlight(); photoToPack(); zonesOn916();
+    noTryOn(); if (window.__FC_NO_TRYON && window.MutationObserver) new MutationObserver(noTryOn).observe(document.body, { childList: true, subtree: true });
+    welcome(); setTimeout(welcome, 1600);
     setInterval(menIcons, 700); document.addEventListener('click', function () { setTimeout(menIcons, 80); }, true);
     if (window.MutationObserver) new MutationObserver(function () { addReport(); }).observe(document.body, { childList: true, subtree: true });
     guardEditor();
