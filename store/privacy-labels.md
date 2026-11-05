@@ -2,25 +2,23 @@
 
 These match what the app actually does. Change them only if the app changes.
 
-## Apple — App Privacy (App Store Connect → App Privacy)
+## Apple — App Privacy for iPhone version 1.0 (App Store Connect → App Privacy)
 
-**Do you or your third-party partners collect data from this app?** Yes. Google Analytics counts actions (no photos, no face data, no names, ad signals off); AI Looks send a photo only when used.
+Version 1.0 has no AI, no analytics and no server connection, so:
 
-| Data type | Collected? | Linked to identity? | Used for tracking? | Purpose |
+**Do you or your third-party partners collect data from this app?** **No, we do not collect data from this app.** The label then shows "Data Not Collected".
+
+**Tracking:** No.
+
+**Encryption export compliance:** `ITSAppUsesNonExemptEncryption = false` — already set by the build.
+
+**Age rating:** with no AI in 1.0, the questionnaire answers are all "None", which gives 4+. (It was 18+ only because of Google's Gemini API terms; set it back to 18+ when AI returns in 1.1.)
+
+### For version 1.1 (AI back)
+| Data type | Collected? | Linked? | Tracking? | Purpose |
 |---|---|---|---|---|
-| Photos or Videos | Yes — only when the user chooses an AI Look and agrees; sent to the AI provider for that one edit, not stored by us | No | No | App Functionality |
-| Purchases (purchase history) | **Version 1.0 (free): No — leave unticked.** From 1.1 with payments: Yes — via App Store / RevenueCat to grant Pro | No (device-level ID only) | No | App Functionality |
-| Product Interaction (taps on looks, saves, shares) | Yes — counts only, no photos, sent to Google Analytics | No | No | Analytics |
-| Device ID (a random install ID we create, not the advertising ID) | Yes | No | No | Analytics; App Functionality (AI allowance, fraud prevention) |
-| Coarse Location (country from IP, no GPS) | Yes | No | No | Analytics |
-| Crash data | No (unless you add a crash reporter) | — | — | — |
-| Contact info, Health, Financial, Contacts, Browsing history, Search history, Sensitive info | Not collected | — | — | — |
-
-**Face data note for App Review (Review Notes field):** "Face and lip landmarks are computed on-device with MediaPipe/ONNX to position makeup. No face data leaves the device, is stored, or is shared. Optional AI features send the chosen photo to Google's Gemini image API only for the requested edit, after explicit consent (checkbox), and the result is returned; we do not retain the photo. No account is required."
-
-**Tracking:** No. The app does not request App Tracking Transparency because it does not track across apps or sites.
-
-**Encryption export compliance:** `ITSAppUsesNonExemptEncryption = false` (HTTPS only) — already set by the build.
+| Photos or Videos | Yes, only when the user chooses an AI tool and agrees; not stored by us | No | No | App Functionality |
+| Device ID (random install ID, not the advertising ID) | Yes | No | No | App Functionality (AI allowance, abuse prevention) |
 
 ## Google Play — Data safety
 

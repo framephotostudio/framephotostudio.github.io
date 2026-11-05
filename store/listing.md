@@ -2,50 +2,48 @@
 
 Paste-ready text for App Store Connect and Google Play Console. Character limits are respected.
 
-## Apple App Store (version 1.0 resubmission, build 40; approved by Demah Nov 4, 2026, AI tools trimmed Nov 5)
+## Apple App Store (version 1.0 resubmission, build 41; approved by Demah Nov 5, 2026)
 
-**Name (30):** Face Couture by Always Luxe
+**Name (30):** Face Couture: Platform Pack
 **Subtitle (30):** Portraits sized for every app
-**Promotional text (170):** One photo, ready for every platform: sized and framed on your face, polished with Makeup Artist Mode and real-skin beauty tools. Free, with a daily AI limit.
+**Promotional text (170):** One photo, ready for every platform: sized and framed on your face, polished with Makeup Artist Mode and beauty tools that run on your iPhone.
 **Keywords (100, comma-separated, no spaces):**
-`glam,makeup,headshot,work photo,dating,profile,platform pack,resize,crop,makeup artist,lashes,bridal`
+`pfp,profile picture,story size,safe zone,cover photo,headshot,dating photo,work photo,resize`
 **Primary category:** Photo & Video · **Secondary:** Lifestyle
-**Age rating:** 18+ (Google's Gemini API terms: not for audiences under 18)
+**Age rating:** 4+ (no AI in 1.0; back to 18+ when AI returns in 1.1)
 **Support URL:** https://facecouture.app/support.html
-**Marketing URL:** (leave empty)
+**Marketing URL:** https://facecouture.app/
 **Privacy Policy URL:** https://facecouture.app/privacy.html
 **Copyright:** © 2026 Always Luxe
 
 **Description (4000):**
-Face Couture turns one photo into a polished, ready-to-post set for every platform, framed around your face, while keeping your real features.
+Face Couture turns one portrait into a ready-to-post set for every platform, each size framed on your face and checked against that platform's own layout.
 
 ONE PHOTO, EVERY PLATFORM
 • Platform Pack: pick Social, Work or Dating and save every size at once to Photos, each framed on your face and shown on screen
-• 40 exact sizes for Instagram, TikTok, LinkedIn, dating apps, WhatsApp, YouTube and more, plus any custom size
-• Before and after photos and short reels
+• From Photos too: tap Share › Platform Pack on any portrait
+• "Make a Platform Pack" in Shortcuts and Spotlight
+• 40 exact sizes for posts, stories, profiles, headshots, banners and dating apps, plus any custom size
+
+SEE EACH APP'S LAYOUT BEFORE YOU POST
+Preview a profile circle, a story safe area, or the TikTok and Reels app zones on the 9:16 size, so captions and buttons never cover your face.
 
 MAKEUP ARTIST MODE
 Already wearing makeup? Keep your artist's work and make it photo-ready: sharper eyes and brows, richer lips and smooth skin with real texture.
 
-BEAUTY STUDIO, ON YOUR IPHONE
-Skin smoothing that keeps real texture, wrinkle softening, blemish fix, lipstick and gloss, lashes, liner, brows, blush and contour, eyelid lift, nose size, background blur and frames. Face mapping and these tools run on your iPhone, even offline.
+BEAUTY TOOLS ON YOUR IPHONE
+Skin, makeup, hair and lighting tools, plus finishes like Satin Glam, Grand Soirée and Ivory Vow. Face mapping runs on your iPhone, even in Airplane Mode.
 
 FOR MEN TOO
 A dedicated men's mode with no makeup at all: subtle skin smoothing, grooming and flattering light.
 
-AI STUDIO, WHEN YOU WANT IT
-Couture Glow and Couture Looks place AI makeup on your real, unchanged face, keeping your eyes, lips and smile. Vanish removes people behind you. AI runs only when you choose it and agree; your photo is sent securely for that one edit, we don't keep it, and it is never used for training.
-
 PRIVATE BY DESIGN
-No account needed. The face-mapping models are built into the app, so the beauty tools work even in Airplane Mode.
-
-FREE
-Face Couture is free. AI features have a daily limit.
+No account. Your photos never leave your iPhone, and the app collects no data.
 
 Terms of Use: https://facecouture.app/terms.html
 Privacy Policy: https://facecouture.app/privacy.html
 
-**Screenshots:** the 6 approved pictures (6.9-inch, 1290×2796) are kept out of this public repository because two of them show Demah's own photos.
+**Screenshots (6.9-inch, 1290×2796), in this order:** 1 Platform Pack, 2 app layouts, 3 Makeup Artist Mode, 4 For him, 5 Real skin (Airplane Mode). Kept out of this public repository.
 
 ## Google Play
 
