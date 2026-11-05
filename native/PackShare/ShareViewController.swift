@@ -29,7 +29,6 @@ final class ShareViewController: UIViewController {
     private let titleLabel = UILabel()
     private let subLabel = UILabel()
     private let segment = UISegmentedControl(items: ["Social", "Work", "Dating"])
-    private let strip = UIStackView()
     private let scroll = UIScrollView()
     private let saveButton = UIButton(type: .system)
     private let status = UILabel()
@@ -68,9 +67,6 @@ final class ShareViewController: UIViewController {
         segment.translatesAutoresizingMaskIntoConstraints = false
 
         scroll.showsHorizontalScrollIndicator = false; scroll.translatesAutoresizingMaskIntoConstraints = false
-        strip.axis = .horizontal; strip.spacing = 12; strip.alignment = .bottom
-        strip.translatesAutoresizingMaskIntoConstraints = false
-        scroll.addSubview(strip)
 
         saveButton.setTitle("Save to Photos", for: .normal)
         saveButton.setTitleColor(plum, for: .normal)
@@ -100,11 +96,6 @@ final class ShareViewController: UIViewController {
             scroll.topAnchor.constraint(equalTo: segment.bottomAnchor, constant: 20),
             scroll.leadingAnchor.constraint(equalTo: g.leadingAnchor), scroll.trailingAnchor.constraint(equalTo: g.trailingAnchor),
             scroll.heightAnchor.constraint(equalToConstant: 250),
-            strip.leadingAnchor.constraint(equalTo: scroll.contentLayoutGuide.leadingAnchor, constant: 20),
-            strip.trailingAnchor.constraint(equalTo: scroll.contentLayoutGuide.trailingAnchor, constant: -20),
-            strip.topAnchor.constraint(equalTo: scroll.contentLayoutGuide.topAnchor),
-            strip.bottomAnchor.constraint(equalTo: scroll.contentLayoutGuide.bottomAnchor),
-            strip.heightAnchor.constraint(equalTo: scroll.frameLayoutGuide.heightAnchor),
             saveButton.topAnchor.constraint(equalTo: scroll.bottomAnchor, constant: 22),
             saveButton.leadingAnchor.constraint(equalTo: g.leadingAnchor, constant: 20), saveButton.trailingAnchor.constraint(equalTo: g.trailingAnchor, constant: -20),
             saveButton.heightAnchor.constraint(equalToConstant: 52),
@@ -220,22 +211,28 @@ final class ShareViewController: UIViewController {
         }
     }
 
+    // previews are laid out with plain frames inside the horizontal scroll view (no Auto Layout inside it)
+    private var previewViews: [UIView] = []
     private func refreshPreviews() {
-        strip.arrangedSubviews.forEach { $0.removeFromSuperview() }
+        previewViews.forEach { $0.removeFromSuperview() }; previewViews = []
         guard photo != nil else { return }
+        view.layoutIfNeeded()
+        let labelH: CGFloat = 34, gap: CGFloat = 12
+        let thumbH = max(120, scroll.bounds.height - labelH - 6)
+        var x: CGFloat = 20
         for (name, w, h) in sets[setIndex].1 {
-            let thumbH: CGFloat = 190, thumbW = thumbH * w / h
-            let card = UIStackView(); card.axis = .vertical; card.spacing = 6; card.alignment = .center
+            let thumbW = round(thumbH * w / h)
             let iv = UIImageView(image: render(w, h, scale: min(1, (thumbW * 2) / w)))
             iv.contentMode = .scaleAspectFill; iv.clipsToBounds = true; iv.layer.cornerRadius = 12
-            iv.translatesAutoresizingMaskIntoConstraints = false
-            iv.widthAnchor.constraint(equalToConstant: thumbW).isActive = true
-            iv.heightAnchor.constraint(equalToConstant: thumbH).isActive = true
-            let l = UILabel(); l.text = "\(name)\n\(Int(w)) × \(Int(h))"; l.numberOfLines = 2; l.textAlignment = .center
-            l.font = .systemFont(ofSize: 12, weight: .semibold); l.textColor = plum
-            card.addArrangedSubview(iv); card.addArrangedSubview(l)
-            strip.addArrangedSubview(card)
+            iv.frame = CGRect(x: x, y: 0, width: thumbW, height: thumbH)
+            let l = UILabel(frame: CGRect(x: x - 10, y: thumbH + 4, width: thumbW + 20, height: labelH))
+            l.text = "\(name)\n\(Int(w)) × \(Int(h))"; l.numberOfLines = 2; l.textAlignment = .center
+            l.font = .systemFont(ofSize: 12, weight: .semibold); l.textColor = plum; l.adjustsFontSizeToFitWidth = true; l.minimumScaleFactor = 0.7
+            scroll.addSubview(iv); scroll.addSubview(l); previewViews += [iv, l]
+            x += thumbW + gap
         }
+        scroll.contentSize = CGSize(width: x - gap + 20, height: scroll.bounds.height)
+        scroll.contentOffset = .zero
     }
 
     // MARK: Saving
