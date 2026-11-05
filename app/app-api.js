@@ -24,9 +24,12 @@
   }
   // map the studio's AI form onto the API's tools
   var TASK_MAP = { refine: 'refine', enhance: 'enhance', background: 'background', remove: 'vanish', film: 'refine', glam: 'glam', headshot: 'headshot', travel: 'travel', tryon: 'tryon', blur: 'blur' };
+  // version 1.0 has no try-on or scene change (they return in 1.1 with the FC_TRYON build switch)
+  if (window.__FC_NO_TRYON) { delete TASK_MAP.travel; delete TASK_MAP.tryon; }
   var origFetch = window.fetch.bind(window);
   window.fetch = function (input, init) {
     var url = typeof input === 'string' ? input : (input && input.url) || '';
+    if (window.__FC_NO_TRYON && /\/api\/ai\b/.test(url) && init && typeof init.body === 'string' && /"task"\s*:\s*"(travel|tryon)"/.test(init.body)) return Promise.resolve(new Response(JSON.stringify({ error: 'This tool is not in this version.' }), { status: 400, headers: { 'content-type': 'application/json' } }));
     if (!/^\/api\//.test(url)) return origFetch(input, init);
     if (!API) return Promise.resolve(new Response(JSON.stringify({ ai_ready: false, error: 'AI is not connected yet.' }), { status: url === '/api/status' ? 200 : 503, headers: { 'content-type': 'application/json' } }));
     init = init || {};
@@ -35,7 +38,9 @@
       var path = url;
       if (url === '/api/refine' && init.body) {
         try {
-          var b = JSON.parse(init.body); var task = TASK_MAP[b.task] || 'refine';
+          var b = JSON.parse(init.body);
+          if (window.__FC_NO_TRYON && (b.task === 'travel' || b.task === 'tryon')) return new Response(JSON.stringify({ error: 'This tool is not in this version.' }), { status: 400, headers: { 'content-type': 'application/json' } });
+          var task = TASK_MAP[b.task] || 'refine';
           if (b.task === 'film') b.detail = ('cinematic film look, ' + (b.detail || '')).trim();
           b.task = task; path = '/api/ai';
           if (window.__fcGarment && task === 'tryon') { b.garment = window.__fcGarment.data; b.category = window.__fcGarment.category; }

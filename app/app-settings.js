@@ -43,7 +43,13 @@
     $('#fcSetClose').onclick = closeSettings;
     $('#fcSetPrivacy').onclick = function () { closeSettings(); window.__fcLegalFromSettings = true; openLegal('privacy'); };
     $('#fcSetTerms').onclick = function () { closeSettings(); window.__fcLegalFromSettings = true; openLegal('terms'); };
-    $('#fcSetSupport').onclick = function () { location.href = 'mailto:' + (CFG.supportEmail || 'hello@facecouture.app') + '?subject=Face%20Couture%20app'; };
+    $('#fcSetSupport').onclick = function () {
+      var em = CFG.supportEmail || 'hello@facecouture.app';
+      // the address is also copied and shown, so support works even on a phone with no Mail account
+      try { if (navigator.clipboard) navigator.clipboard.writeText(em); } catch (e) {}
+      try { if (typeof window.toast === 'function') window.toast('Email us at ' + em + ' (address copied).'); } catch (e) {}
+      location.href = 'mailto:' + em + '?subject=Face%20Couture%20app';
+    };
     $('#fcSetDelete').onclick = function () {
       if (!confirm('Delete the AI history linked to this iPhone from our server? Your photos are never stored by us, so there are none to delete.')) return;
       if (!API || !API.url) { toast('Nothing is stored for this iPhone.'); return; }

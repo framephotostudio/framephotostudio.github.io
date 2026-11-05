@@ -377,6 +377,7 @@
       var v = pp.value;
       if (!/^(tiktok|reels|safe)$/.test(v)) {
         // leaving the app-zone preview: back to the size and framing the person had before
+        try { var tt = document.getElementById('toast'); if (tt) { tt.classList.remove('show'); tt.style.display = 'none'; } } catch (e) {}
         if (back) { try { var b = back; back = null; frameState[b.i] = b.f; choose(b.active); pp.value = v; if (typeof schedule === 'function') schedule(); } catch (e) {} }
         return;
       }

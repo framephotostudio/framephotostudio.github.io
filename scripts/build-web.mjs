@@ -44,10 +44,10 @@ appOnly("var OWNER=false;try{OWNER=localStorage.getItem('fc-owner')==='1'}catch(
 appOnly('render();checkAdminParam();', 'render();', 'admin preview');
 // Google Analytics stays on the website only; the iPhone app sends no analytics
 appOnly('try{if(OWNER){window.gtag=function(){};return}', 'try{if(true){window.gtag=function(){};return}', 'no analytics in the app');
-appAll("n:'Headshot Pro'", "n:'Headshot Studio'", 'look name without Pro');
+appAll('Headshot Pro', 'Boardroom Portrait', 'look name (Headshot Studio is another app)');
 appAll('"operatingSystem":"Web, iOS, Android"', '"operatingSystem":"iOS"', 'app platform');
 appAll('Coming soon<b>Face Couture mobile app</b>', 'Face Couture<b>on iPhone</b>', 'store badge text');
-appAll("matte:{n:'Matte Pro'", "matte:{n:'Matte Finish'", 'look name without Pro');
+appAll("matte:{n:'Matte Pro'", "matte:{n:'Velvet Matte'", 'look name without Pro');
 appAll('<b>Face detected · AI mapped</b>', '<b>Face detected · mapped on your phone</b>', 'on-device wording');
 appAll("faceLight:['Even lighting (AI fill light)'", "faceLight:['Even lighting (fill light)'", 'on-device wording');
 // ---- Platform Pack (build 40, App Review): every set saves distinct sizes, each framed on the face, never two identical files ----
@@ -72,12 +72,28 @@ appOnly("(framed?', '+framed+' framed on your face':'')", "(framed&&framed===fil
 appOnly('Center on my face (keeps the whole photo if a size would cut it off)', 'Frame every size on my face', 'pack option');
 // the AI Studio sits at the end of the Studio tab (not pinned above the tools)
 appOnly('if(w.parentNode!==box){box.appendChild(w);moved=1}', "{var ed=D.getElementById('edit');if(ed&&w.parentNode!==ed){ed.appendChild(w);moved=1}}", 'AI Studio at the end');
+// Full Glam (Grand Soirée) lipstick: velvet rose, fuller colour and a pearl gloss (Demah's pick B, Nov 5, 2026; was a bright pink that went flat and bubblegum on light lips)
+appOnly("b.tint=S.beauty.tint;b.gloss=60;", "b.tint=85;b.gloss=40;", 'Full Glam lipstick strength');
+appOnly("Object.assign(sh,{color:'glamRosePink',lipFinish:'cream',glossShade:'gRose',opaqueLip:1});", "Object.assign(sh,{color:'velvetRose',lipFinish:'cream',glossShade:'gPearl',opaqueLip:1});", 'Full Glam lipstick shade');
+// app-zone guide text sits in the top red band, not across the face
+appOnly("ctx.fillText('Keep faces and text out of the red areas',w/2,h*.5)", "ctx.fillText('Keep faces and text out of the red areas',w/2,h*.06)", 'zone text position');
 // ---- Try it on, Change the scene, Accessories and Shoes are not in version 1.0 (Demah, Nov 5, 2026). ----
 // ONE SWITCH brings all four back for version 1.1: build with FC_TRYON=1 (see RESTORE-AI-TOOLS.md). Nothing is deleted from the website or the server.
 const TRYON = process.env.FC_TRYON === '1';
 if (!TRYON) {
   appAll("'Travel, Vanish & try-on'", "'Vanish'", 'AI panel title without try-on');
-  { const h = html.search(/<head(\s[^>]*)?>/i), hEnd = html.indexOf('>', h) + 1; html = html.slice(0, hEnd) + '<script>window.__FC_NO_TRYON=true</script>' + html.slice(hEnd); }
+  // the travel and try-on controls are cut out of the 1.0 build itself (not hidden), so nothing can reach them
+  appOnly('<h4>Travel backgrounds <small style="font-weight:600;color:#b8913a">AI</small></h4><div id="fcTravel" role="group" aria-label="Travel backgrounds"></div>', '', '1.0: no travel backgrounds');
+  { const a = html.indexOf('<h4>Outfit, accessories &amp; shoes try-on'), b = html.indexOf('<p class="aiNote">Each uses 1 AI look.', a);
+    if (a < 0 || b < 0 || b - a > 2000) throw new Error('1.0 clean-up "try-on controls" not found. Update scripts/build-web.mjs.');
+    html = html.slice(0, a) + html.slice(b); }
+  appOnly("var row=card.querySelector('#fcTravel');", "var row=card.querySelector('#fcTravel')||D.createElement('div');", '1.0: travel row not in the page');
+  appOnly("var tf=card.querySelector('#fcTryFile');card.querySelector('#fcTryBtn').onclick=function(){if(!needs())return;tf.value='';tf.click()};tf.onchange=function(){if(tf.files&&tf.files[0])tryOn(tf.files[0])};", '', '1.0: no try-on button');
+  appOnly("'Blur is free and made on your phone. Travel, Vanish and Outfit try-on use AI. Your face always stays exactly yours.'", "'Blur is free and made on your phone. Vanish uses AI. Your face always stays exactly yours.'", '1.0: panel intro');
+  appOnly("hh.textContent='Background & outfit'", "hh.textContent='Vanish'", '1.0: panel title');
+  appOnly("if(!box||!D.getElementById('aiGlowBtn')||!D.getElementById('fcTryBtn'))return false;", "if(!box||!D.getElementById('aiGlowBtn'))return false;", '1.0: AI Studio row without try-on');
+  for (const bad of ['id="fcTryBtn"', 'Choose outfit photo', 'id="fcTravel"', 'Travel backgrounds <small', 'shoes try-on <small'])
+    if (html.indexOf(bad) > -1) throw new Error('1.0 clean-up: "' + bad + '" is still in the app. Update scripts/build-web.mjs.');
 }
 appOnly('content="width=device-width,initial-scale=1,viewport-fit=cover"', 'content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"', 'no page zoom');
 appAll('only to create this look, and it is not stored.', 'only to create this look. We do not store it.', 'consent wording 2');
@@ -120,7 +136,9 @@ appAll('>Add your music or recorded voiceover<', '>Add your music or a voiceover
 appAll("to create the look. It isn't stored. <a", "to create the look. We don't store it. <a", 'consent wording');
 html = html.replace(/<link rel="manifest"[^>]*>/, ''); // website install manifest (not used in the app)
 // 5) App Store names for the AI Studio buttons (approved by Demah, Nov 4, 2026); the section is still called "AI Studio"
-for (const [a, b] of [['AI Outfit Change', 'Try it on'], ['AI Background Change', 'Change the scene'], ['AI Accessories', 'Accessories'], ['AI Shoes', 'Shoes'], ['AI Looks', 'Glam Looks'], ['AI Glow', 'Glow']]) appAll(a, b, 'button name ' + a);
+for (const [a, b] of [['AI Outfit Change', 'Try it on'], ['AI Background Change', 'Change the scene'], ['AI Accessories', 'Accessories'], ['AI Shoes', 'Shoes'], ['AI Looks', 'Couture Looks'], ['AI Glow', 'Couture Glow']]) appAll(a, b, 'button name ' + a);
+// original look names (Demah, Nov 5, 2026): common beauty terms read like a template app, so each look has its own Face Couture name
+for (const [a, b] of [['Full Glam', 'Grand Soirée'], ['Red Carpet', 'Première'], ['Clean Girl', 'Bare Luxe'], ['Bridal Glow', 'Ivory Vow'], ['Glass Skin', 'Porcelain Dew'], ['Hollywood Glam', 'Silver Screen'], ['Golden Hour', 'Gilded Hour'], ['Magazine Cover', 'Cover Edit'], ['Ice Queen', 'Frost Couture'], ['Pumpkin Spice', 'Spiced Amber']]) appAll(a, b, 'look name ' + a);
 appAll('Pro grooming, no makeup', 'Expert grooming, no makeup', 'men glow subtitle');
 appAll('Pro grooming on your own photo.', 'Expert grooming on your own photo.', 'men AI subtitle');
 appAll('Tap Women above the Finishes to switch.', 'Tap Women above the Looks to switch.', 'men toast');
@@ -133,7 +151,7 @@ fs.writeFileSync(path.join(OUT, 'app-config.js'), 'window.FC_CONFIG=' + JSON.str
 // Google Analytics stays on in the app: the studio reports app_platform = ios | android with an anonymous app-only id
 // (no photos, no face data, no names; no ad signals, so no tracking prompt is needed).
 // app mode hook (native look and feel is layered on in app.css / app.js)
-{ const h = html.search(/<head(\s[^>]*)?>/i), hEnd = html.indexOf('>', h) + 1; html = html.slice(0, hEnd) + '<script>window.__FC_APP=true</script><script src="app-config.js"></script><script src="app-early.js"></script><script src="app-api.js"></script>' + html.slice(hEnd); }
+{ const h = html.search(/<head(\s[^>]*)?>/i), hEnd = html.indexOf('>', h) + 1; html = html.slice(0, hEnd) + '<script>window.__FC_APP=true' + (TRYON ? '' : ';window.__FC_NO_TRYON=true') + '</script><script src="app-config.js"></script><script src="app-early.js"></script><script src="app-api.js"></script>' + html.slice(hEnd); }
 { const i = html.indexOf('</head>'); html = html.slice(0, i) + '<link rel="stylesheet" href="app.css">' + html.slice(i); }
 { const i = html.lastIndexOf('</body>'); html = html.slice(0, i) + '<script src="app.js"></script><script src="app-settings.js"></script>' + html.slice(i); }
 fs.writeFileSync(path.join(OUT, 'index.html'), html);
@@ -166,9 +184,12 @@ const LEGAL_APP = {
   'terms.html': [['the website and the iPhone and Android apps, by Always Luxe', 'the website and apps by Always Luxe'],
     ['<h2>Free launch, trials and subscriptions</h2><p>Face Couture is free to use at launch. If we introduce Face Couture Pro, prices, the free-trial length and what is included are shown before you subscribe. Subscriptions are billed by Apple or Google to your store account and renew automatically until cancelled in your store settings; cancel at least 24 hours before the current period ends to avoid renewal. Refunds are handled by Apple or Google under their policies. Promo codes are personal, non-transferable and may expire.</p>', '<h2>Free to use</h2><p>Face Couture is free to use, with a daily limit on AI features. If we ever add paid features, their price and terms will be shown clearly before you choose them.</p>']]
 };
+// the in-app pages describe the iPhone app (the website wording stays on the website)
+LEGAL_APP['privacy.html'].push([' · website and apps · ', ' · iPhone app · '], [' (website visitors download them from Google Cloud Storage and jsDelivr the first time)', '']);
 // version 1.0 legal pages describe only the AI tools in this build (the FC_TRYON=1 switch restores the full wording)
 if (!TRYON) {
-  LEGAL_APP['privacy.html'].push(['AI Luxe Looks, headshot, backgrounds, outfit try-on, Vanish, blur', 'Glow, Glam Looks, Vanish']);
+  LEGAL_APP['privacy.html'].push(['AI Luxe Looks, headshot, backgrounds, outfit try-on, Vanish, blur', 'Couture Glow, Couture Looks, Vanish']);
+  LEGAL_APP['privacy.html'].push(['<tr><td>Outfit or accessory photos you upload for try-on</td><td>Same as above</td><td>Same as above. Upload only items you have the right to use; try-on implies no brand partnership.</td></tr>\n', '']);
   LEGAL_APP['terms.html'].push([' Outfit try-on is a visual preview, not a guarantee of fit or availability, and does not imply any partnership with a brand whose product you upload.', '']);
 }
 for (const f of ['privacy.html', 'terms.html', 'support.html', 'delete-my-data.html']) {

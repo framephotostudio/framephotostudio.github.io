@@ -34,7 +34,7 @@ FOR MEN TOO
 A dedicated men's mode with no makeup at all: subtle skin smoothing, grooming and flattering light.
 
 AI STUDIO, WHEN YOU WANT IT
-Glow and Glam Looks place AI makeup on your real, unchanged face, keeping your eyes, lips and smile. Vanish removes people behind you. AI runs only when you choose it and agree; your photo is sent securely for that one edit, we don't keep it, and it is never used for training.
+Couture Glow and Couture Looks place AI makeup on your real, unchanged face, keeping your eyes, lips and smile. Vanish removes people behind you. AI runs only when you choose it and agree; your photo is sent securely for that one edit, we don't keep it, and it is never used for training.
 
 PRIVATE BY DESIGN
 No account needed. The face-mapping models are built into the app, so the beauty tools work even in Airplane Mode.

@@ -166,3 +166,7 @@ html.fc-app #heroGlow,html.fc-app #heroCamera,html.fc-app #heroQuiz,html.fc-app 
 /* AI Studio (1.0): Glow, Glam Looks and Vanish share one even row */
 html.fc-app #fcWowRow2{display:contents!important}
 html.fc-app #fcWowRow>button,html.fc-app #fcWowRow2>button{flex:1 1 0!important;max-width:none!important;min-width:0!important}
+/* the saved-pack card sits inside the Platform Pack card without a second border */
+#fcPackDone{border:0!important;background:transparent!important;padding:6px 0 0!important}
+/* small iPhones: the style buttons stay on one line */
+@media (max-width:380px){html.fc-app #styleRow button{white-space:nowrap!important;padding-left:12px!important;padding-right:12px!important;font-size:14.5px!important}}

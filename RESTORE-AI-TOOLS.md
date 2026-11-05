@@ -17,6 +17,12 @@ tools, unchanged. Only the iPhone build leaves them out, using one switch.
 
 ## What the switch controls (for reference)
 
-- `scripts/build-web.mjs`: the `TRYON` block (panel title, `window.__FC_NO_TRYON` flag, legal-page wording)
+- `scripts/build-web.mjs`: the `TRYON` block cuts the travel and try-on controls out of the 1.0 build, sets the
+  `window.__FC_NO_TRYON` flag and trims the legal-page wording. With FC_TRYON=1 none of that runs.
+- `app/app-api.js`: refuses travel/try-on requests only when that flag is set
 - `app/app.js`: `noTryOn()` removes `#fcWowOutfit`, `#fcWowBg`, `#fcWowAcc`, `#fcWowShoes`,
   `#fcTravel`, `#fcTryCats` only when that flag is set
+
+Also in 1.1: the look names were changed in 1.0 (Nov 5, 2026: Grand Soirée, Première, Bare Luxe, Ivory Vow,
+Boardroom Portrait, Couture Glow, Couture Looks, etc.). They are app-only renames in build-web.mjs; the website
+still uses the old names until Demah approves the same change there.
