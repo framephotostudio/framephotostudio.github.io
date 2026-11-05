@@ -41,7 +41,7 @@ const BACKDROPS = {
   marrakech: 'a Marrakech, Morocco riad courtyard: intricate zellige tiles, carved arches, lanterns and a fountain, warm soft light',
   maldives_villa: 'the Maldives: overwater villas on a wooden jetty over clear turquoise water, bright tropical sun',
   fine_dining: 'an elegant fine-dining restaurant at night: candlelit tables, crystal glasses, velvet chairs and warm chandelier light, softly blurred',
-  nightclub: 'an upscale VIP nightclub: a luxurious lounge with moody purple and gold lighting, sparkling bottles and soft bokeh, nighttime',
+  nightclub: 'an upscale VIP nightclub: a luxurious lounge with moody purple and gold lighting, sparkling chandeliers and soft bokeh, nighttime',
   rooftop: 'a chic rooftop lounge at night overlooking a glittering city skyline, string lights and warm ambient light, softly blurred',
   yacht: 'the deck of a luxury yacht on deep blue sea, white leather seating and a sunny Mediterranean coastline behind',
   red_carpet: 'a red-carpet gala entrance: step-and-repeat backdrop, velvet ropes and camera flashes softly blurred, glamorous evening light',
@@ -183,6 +183,6 @@ function buildPromptCore(task, o = {}) {
 }
 
 // Safety rules added to every AI request (app and website): the provider's own safety system also blocks unsafe requests.
-const SAFETY = 'Safety rules that always apply: never create nudity, partial nudity, lingerie, underwear or sexually suggestive content; never make clothing more revealing than the outfit photo shows; if the person could be under 18, keep them fully and modestly dressed; never change age, ethnicity or body size; never add weapons, drugs, alcohol, hate symbols or violent content; never add or alter text, logos or watermarks.';
+const SAFETY = 'Safety rules that always apply: never create nudity, partial nudity, lingerie, underwear or sexually suggestive content; never make clothing more revealing than the outfit photo shows; if the person could be under 18, keep them fully and modestly dressed; never make the person look like a different age group, ethnicity or body size; never add weapons, drugs, drinks with alcohol, hate symbols or violent content; never add watermarks, and never add text or brand logos onto the person or their clothing (signs that naturally belong to a place may stay).';
 export function buildPrompt(task, o = {}) { const p = buildPromptCore(task, o); return p ? p + ' ' + SAFETY : p; }
 export function simplePrompt(task, o = {}) { const p = simplePromptCore(task, o); return p ? p + ' ' + SAFETY : p; }

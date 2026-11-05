@@ -1,1 +1,1 @@
-iPhone build request: 1.0.0 (independent review fixes: For men freeze, app wording, in-app legal pages, Report this result)
+iPhone build request: 1.0.0 (final review fixes: consent Privacy link in app, quiz sample, AI safety rules)

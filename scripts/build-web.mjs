@@ -100,6 +100,7 @@ const LEGAL_APP = {
     ['on the AI screen tap "Report this AI result"', 'tap "Report this result" under any AI result']],
   'delete-my-data.html': [
     ['or delete the app (iPhone/Android) or clear site data (browser).', 'or delete the app.'],
+    [" On the website, clear this site's data in your browser settings.", ''],
     ['A random install ID with AI-allowance counts and promo-code use.', 'A random install ID with AI-allowance counts.'],
     ['<h2>Subscriptions</h2><p>Subscriptions are held by Apple or Google. Cancel in your <a href="https://apps.apple.com/account/subscriptions">App Store</a> or <a href="https://play.google.com/store/account/subscriptions">Google Play</a> account; deleting the app does not cancel a subscription.</p>', '']],
   'privacy.html': [
