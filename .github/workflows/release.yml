@@ -17,7 +17,7 @@ on:
         options: [internal, alpha, beta, production]
 env:
   VERSION: ${{ inputs.version || '1.0.0' }}
-  DEPS: "@capacitor/core@latest @capacitor/cli@latest @capacitor/android@latest @capacitor/ios@latest @capacitor/splash-screen@latest @capacitor/status-bar@latest @capacitor/share@latest @capacitor/filesystem@latest @capacitor/haptics@latest @capacitor/app@latest @capacitor/network@latest @capacitor/preferences@latest @capacitor/browser@latest @capacitor/camera@latest"
+  DEPS: "@capacitor/core@8 @capacitor/cli@8 @capacitor/android@8 @capacitor/ios@8 @capacitor/splash-screen@8.0.2 @capacitor/status-bar@8.0.4 @capacitor/share@8.0.3 @capacitor/filesystem@8.1.5 @capacitor/haptics@8.0.2 @capacitor/app@8.1.2 @capacitor/network@8.0.1 @capacitor/preferences@8.0.1 @capacitor/browser@8.0.5 @capacitor/camera@8.2.6"
 jobs:
   android:
     if: github.event_name == 'workflow_dispatch'
@@ -34,8 +34,8 @@ jobs:
       - uses: actions/setup-java@v4
         with: { distribution: temurin, java-version: 21 }
       - run: npm install $DEPS
-      - run: npm install @capacitor-community/in-app-review@latest || true
-      - run: npm install @capacitor-community/media@latest || echo 'save-to-Photos plugin skipped (Save opens the share sheet instead)'
+      - run: npm install @capacitor-community/in-app-review@8.0.0 || true
+      - run: npm install @capacitor-community/media@9.1.0
       - run: npm run build:web
         env: { FC_API_URL: '${{ vars.FC_API_URL }}', FC_SUPPORT_EMAIL: '${{ vars.FC_SUPPORT_EMAIL }}', APP_VERSION: '${{ env.VERSION }}' }
       - run: npx cap add android && bash scripts/native-setup.sh android && npx cap sync android
@@ -96,8 +96,8 @@ jobs:
         run: |
           X=$(ls -d /Applications/Xcode_*.app | grep -v -i beta | sort -V | tail -1); sudo xcode-select -s "$X"; xcodebuild -version
       - run: npm install $DEPS
-      - run: npm install @capacitor-community/in-app-review@latest || true
-      - run: npm install @capacitor-community/media@latest || echo 'save-to-Photos plugin skipped (Save opens the share sheet instead)'
+      - run: npm install @capacitor-community/in-app-review@8.0.0 || true
+      - run: npm install @capacitor-community/media@9.1.0
       - run: npm run build:web
         env: { FC_API_URL: '${{ vars.FC_API_URL }}', FC_SUPPORT_EMAIL: '${{ vars.FC_SUPPORT_EMAIL }}', APP_VERSION: '${{ env.VERSION }}' }
       - run: npx cap add ios && bash scripts/native-setup.sh ios && npx cap sync ios

@@ -47,7 +47,8 @@
   // Save: one tap straight into the Photos app. If Photos access is refused, the share sheet opens instead.
   function nativeSaveBlobs(items, title) {
     if (!P.Filesystem) return Promise.reject(new Error('no native'));
-    if (!(P.Media && P.Media.savePhoto)) return nativeShareBlobs(items, title).then(function () { try { window.dispatchEvent(new Event('fc:saved')); } catch (e) {} });
+    var media = items.every(function (it) { return /^(image|video)\//.test((it.blob && it.blob.type) || ''); });
+    if (!media || !(P.Media && P.Media.savePhoto)) return nativeShareBlobs(items, title).then(function () { try { window.dispatchEvent(new Event('fc:saved')); } catch (e) {} });
     return toCache(items).then(function (files) {
       return files.reduce(function (p, f) { return p.then(function () { return f.video ? P.Media.saveVideo({ path: f.uri }) : P.Media.savePhoto({ path: f.uri }); }); }, Promise.resolve());
     }).then(function () {
