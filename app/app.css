@@ -136,3 +136,8 @@ html.fc-app .packOpt{display:flex;align-items:center;min-height:44px}
 /* Video tab: styled buttons instead of the web file fields */
 html.fc-app #videoPhotos,html.fc-app #videoAudio{position:absolute!important;width:1px!important;height:1px!important;opacity:0!important;pointer-events:none!important}
 .fcFileBtn{display:flex;align-items:center;justify-content:center;width:100%;min-height:46px;margin:6px 0 4px;border-radius:14px;border:1px solid #d9c9ee;background:#fff;color:#4a2a63;font:inherit;font-size:15px;font-weight:600}
+/* consent and result text readable on the dark overlay */
+.luxeRes p.sub{color:#ece2f1!important}
+/* Platform Pack: the chosen set is highlighted */
+.packSets button.on{background:#4a2a63!important;border-color:#4a2a63!important;color:#fff!important}
+#rememberDraft{width:22px;height:22px;margin-right:8px;vertical-align:middle;accent-color:#6d3fd0}

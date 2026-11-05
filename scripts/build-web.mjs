@@ -46,6 +46,10 @@ appOnly('try{if(OWNER){window.gtag=function(){};return}', 'try{if(true){window.g
 appAll("n:'Headshot Pro'", "n:'Headshot Studio'", 'look name without Pro');
 appAll('"operatingSystem":"Web, iOS, Android"', '"operatingSystem":"iOS"', 'app platform');
 appAll('Coming soon<b>Face Couture mobile app</b>', 'Face Couture<b>on iPhone</b>', 'store badge text');
+appAll("matte:{n:'Matte Pro'", "matte:{n:'Matte Finish'", 'look name without Pro');
+appAll('<b>Face detected · AI mapped</b>', '<b>Face detected · mapped on your phone</b>', 'on-device wording');
+appAll("faceLight:['Even lighting (AI fill light)'", "faceLight:['Even lighting (fill light)'", 'on-device wording');
+appAll('<button type="button" data-set="pro">Professional</button>', '<button type="button" data-set="pro">Work</button>', 'same set name as the welcome card');
 appOnly("try{isAdmin=localStorage.getItem('fcAdmin')===ADMIN_HASH}catch(e){}", '', 'admin flag');
 { const a = html.indexOf('function setAdmin(on){'), b = html.indexOf('window.__seasonal=', a);
   if (a < 0 || b < 0 || b - a > 3000) throw new Error('App Store clean-up "admin switch" not found. Update scripts/build-web.mjs.');
@@ -119,6 +123,9 @@ const LEGAL_APP = {
     ['A random install ID with AI-allowance counts and promo-code use.', 'A random install ID with AI-allowance counts.'],
     ['<h2>Subscriptions</h2><p>Subscriptions are held by Apple or Google. Cancel in your <a href="https://apps.apple.com/account/subscriptions">App Store</a> or <a href="https://play.google.com/store/account/subscriptions">Google Play</a> account; deleting the app does not cancel a subscription.</p>', '']],
   'privacy.html': [
+    ['<td>Google Analytics on the website and in the apps (the apps use a random app-only ID, not your advertising ID); our server once enabled</td>', '<td>Google Analytics on the website only. The iPhone app sends no analytics; our server counts AI use per random install ID to apply the daily limit</td>'],
+    ['We count basic actions to understand which looks people love. Analytics never receive photos or face data.', 'The iPhone app sends no analytics. On the website we count basic actions to understand which looks people love; analytics never receive photos or face data.'],
+    ['Face Couture is not directed to children under 13 and we do not knowingly collect their data.', 'The Face Couture app is rated 18+ and is not directed to anyone under 18. We do not knowingly collect data from children.'],
     ['website and iPhone/Android apps', 'website and apps'],
     ['Used to count AI allowances, prevent abuse and honour promo codes.', 'Used to count AI allowances and prevent abuse.'],
     ['<tr><td>Purchase status (Pro trial/subscription)</td><td>Apple / Google and RevenueCat (our subscription processor)</td><td>For the life of the subscription plus legal retention. We never see card details.</td></tr>', ''],

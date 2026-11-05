@@ -281,8 +281,17 @@
     if (clr && au && !clr.__fcBtn) { clr.__fcBtn = true; clr.addEventListener('click', function () { setTimeout(function () { var b = au.nextSibling; if (b && b.className === 'fcFileBtn') b.textContent = 'Choose music or voiceover'; }, 50); }); }
   }
 
+  // Platform Pack: show which set is picked; picking single sizes clears it
+  function packSetHighlight() {
+    var sets = document.getElementById('packSets'); if (!sets || sets.__fc) return; sets.__fc = true;
+    sets.addEventListener('click', function (e) { var b = e.target.closest && e.target.closest('[data-set]'); if (!b) return;
+      Array.prototype.forEach.call(sets.querySelectorAll('[data-set]'), function (x) { x.classList.toggle('on', x === b); x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); }); });
+    var chips = document.getElementById('packChips');
+    if (chips) chips.addEventListener('click', function () { Array.prototype.forEach.call(sets.querySelectorAll('[data-set]'), function (x) { x.classList.remove('on'); x.setAttribute('aria-pressed', 'false'); }); });
+  }
+
   function init() {
-    hideFileTools(); fileButtons();
+    hideFileTools(); fileButtons(); packSetHighlight();
     setInterval(menIcons, 700); document.addEventListener('click', function () { setTimeout(menIcons, 80); }, true);
     if (window.MutationObserver) new MutationObserver(function () { addReport(); }).observe(document.body, { childList: true, subtree: true });
     guardEditor();

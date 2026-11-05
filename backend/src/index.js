@@ -272,7 +272,7 @@ async function generate(req, env, ctx, forcedTask) {
       const userEng = (b.engine === 'std' || b.engine === 'nb21') ? b.engine : null;
       engKey = (testKey && ENG[b.engine]) ? b.engine : (userEng || (ENG[cfg.ai && cfg.ai.engine] ? cfg.ai.engine : 'std'));
       if (testKey && b.model) ENG[engKey] = Object.assign({}, ENG[engKey], { model: String(b.model).slice(0, 60) });
-      const model = ENG[engKey].model; engSize = ENG[engKey].size; engCost = ENG[engKey].cost; engModel = model; usedPro = engKey !== 'std';
+      let model = ENG[engKey].model; engSize = ENG[engKey].size; engCost = ENG[engKey].cost; engModel = model; usedPro = engKey !== 'std';
       const attempt = async (text) => {
         const parts = [{ text }, inlinePart(b.image)];
         if (task === 'tryon') parts.push(inlinePart(b.garment));
@@ -285,6 +285,12 @@ async function generate(req, env, ctx, forcedTask) {
         else { const c0 = (j.candidates || [])[0] || {}; const said = (c0.content && c0.content.parts || []).map(x => x.text || '').join(' ').slice(0, 200); msg = (j.error && j.error.message) || (j.promptFeedback && ('blocked ' + (j.promptFeedback.blockReason || ''))) || ((c0.finishReason || '') + ' ' + (c0.finishMessage || '') + ' ' + said).trim(); }
       };
       await attempt(prompt);
+      // if a newer model name is ever unavailable, the standard image model makes the edit instead of failing
+      if (!out && engKey !== 'std' && (status === 404 || (status === 400 && /model|not found|not supported/i.test(msg)))) {
+        await env.KV.put('alert:model_fallback', (engModel + ' ' + status + ' ' + msg).slice(0, 200) + ' @ ' + new Date().toISOString(), { expirationTtl: 30 * 86400 });
+        engKey = 'std'; model = ENG.std.model; engSize = ENG.std.size; engCost = ENG.std.cost; engModel = model; usedPro = false;
+        await attempt(prompt);
+      }
       // the image model sometimes declines a long instruction (IMAGE_OTHER / NO_IMAGE / STOP without an image): one retry with a plain one
       if (!out && status === 200 && !/SAFETY|PROHIBITED|blocked/i.test(msg)) { const sp = simplePrompt(task, b); if (sp) { await attempt(sp); if (out) await bump(env, 'stat:retry_ok:' + month()); } }
       if (!out && /SAFETY|PROHIBITED|blocked|IMAGE_SAFETY/i.test(msg)) msg = 'safety ' + msg;
@@ -462,7 +468,7 @@ async function report(req, env) {
   const b = await req.json().catch(() => ({}));
   const dev = await auth(req, env);
   const id = crypto.randomUUID();
-  await env.KV.put('report:' + id, JSON.stringify({ at: Date.now(), task: (b.task || '').slice(0, 30), reason: (b.reason || '').slice(0, 500), device: dev ? dev.id : 'anon' }), { expirationTtl: 180 * 86400 });
+  await env.KV.put('report:' + id, JSON.stringify({ at: Date.now(), task: (b.task || '').slice(0, 30), reason: (b.reason || '').slice(0, 500) }), { expirationTtl: 180 * 86400 });
   return json({ ok: true, id });
 }
 async function deleteMyData(req, env) {
