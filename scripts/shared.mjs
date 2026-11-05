@@ -74,6 +74,11 @@ export function shared(html) {
   one("d.querySelector('.no').onclick=function(){d.remove()};",
     "var fcAns=function(go){if(!d.parentNode)return;d.remove();if(!go){try{localStorage.removeItem('frame-draft')}catch(e){}}};d.querySelector('.no').onclick=function(){fcAns(false)};d.querySelector('.no').addEventListener('touchend',function(e){e.preventDefault();fcAns(false)});d.querySelector('.go').addEventListener('touchend',function(e){e.preventDefault();d.querySelector('.go').onclick()});setTimeout(function(){if(d.parentNode)d.remove()},15000);",
     'resume box');
+  // the main everyday looks sit at the top of Finishes (Demah, Nov 5, 2026): evening and daytime first, then the signature looks
+  one("const FIN=['fx_soft','fx_full','fx_red','fx_clean','bridal','fx_golden','datenight','fx_natural','fx_sunlit','fx_bold','fx_headshot']",
+    "const FIN=['evening','fresh','fx_soft','fx_full','fx_natural','smokyeye','vampy','softnatural','datenight','fx_red','fx_clean','bridal','fx_golden','fx_sunlit','fx_bold','fx_headshot']", 'main looks on top');
+  // Halloween is over for this year (Demah, Nov 5, 2026): its tab now ends on Oct 31
+  one("{id:'halloween',name:'Halloween',from:[10,1],to:[11,7],until:'Until Nov 7'", "{id:'halloween',name:'Halloween',from:[10,1],to:[10,31],until:'Until Oct 31'", 'Halloween ends Oct 31');
   // names: original look names and the AI Studio button names
   all("matte:{n:'Matte Pro'", "matte:{n:'Velvet Matte'", 'Velvet Matte');
   for (const [a, b] of LOOK_NAMES) all(a, b, 'look name ' + a);
@@ -94,6 +99,6 @@ function zones(){var pp=D.getElementById('platformPreview');if(!pp||pp.__fc)retu
 pp.addEventListener('change',function(){var v=pp.value;if(!/^(tiktok|reels|safe)$/.test(v)){try{var tt=D.getElementById('toast');if(tt){tt.classList.remove('show');tt.style.display='none'}}catch(e){}if(back){try{var b=back;back=null;frameState[b.i]=b.f;choose(b.active);pp.value=v;if(typeof schedule==='function')schedule()}catch(e){}}return}
 try{var i=presets.findIndex(function(p){return p[0]===(v==='tiktok'?'tiktok':'ig-story')});if(i<0)return;if(back&&back.i!==i){frameState[back.i]=back.f}else if(presets[active][3]===1080&&presets[active][4]===1920&&!back)return;if(!back||back.i!==i)back={i:i,f:Object.assign({},frameState[i]),active:back?back.active:active};
 Promise.resolve(ensureFace()).then(function(ok){if(ok){var d=baseCanvas(100);frameState[i]=zoneFrame(i,d.width,d.height)||faceFrame(i,d.width,d.height,headBox())}choose(i);pp.value=v;if(typeof schedule==='function')schedule();setTimeout(function(){if(pp.value===v&&typeof W.toast==='function')W.toast('Showing the 9:16 '+(v==='tiktok'?'TikTok':v==='reels'?'Reels':'Story')+' size, framed on your face.')},80)})}catch(e){}});return true}
-var n=0,t=setInterval(function(){if(zones()||++n>40)clearInterval(t)},250);
+var n=0,t=setInterval(function(){if(zones()||++n>40)clearInterval(t)},250);\nvar dd=D.createElement('style');dd.id='fcFinDedupe';dd.textContent=['evening','fresh','smokyeye','vampy','softnatural'].map(function(k){return '#vibes [data-vibe="'+k+'"]'}).join(',')+'{display:none!important}';D.head.appendChild(dd);
 }catch(e){console.warn('v109',e)}})();
 </script>`;
