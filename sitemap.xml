@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://facecouture.app/</loc><lastmod>2026-11-05</lastmod><priority>1.0</priority></url>
   <url><loc>https://facecouture.app/ai-makeup-app/</loc><lastmod>2026-11-05</lastmod><priority>0.8</priority></url>
   <url><loc>https://facecouture.app/virtual-makeup-try-on/</loc><lastmod>2026-11-05</lastmod><priority>0.8</priority></url>
   <url><loc>https://facecouture.app/ai-glow-up/</loc><lastmod>2026-11-05</lastmod><priority>0.8</priority></url>
@@ -96,6 +95,8 @@
   <url><loc>https://facecouture.app/lash-try-on/</loc><lastmod>2026-11-05</lastmod><priority>0.8</priority></url>
   <url><loc>https://facecouture.app/free-selfie-editor/</loc><lastmod>2026-11-05</lastmod><priority>0.8</priority></url>
   <url><loc>https://facecouture.app/blemish-remover/</loc><lastmod>2026-11-05</lastmod><priority>0.8</priority></url>
+  <url><loc>https://facecouture.app/</loc><lastmod>2026-11-05</lastmod><priority>1.0</priority></url>
+  <url><loc>https://facecouture.app/studio/</loc><lastmod>2026-11-05</lastmod><priority>0.6</priority></url>
   <url><loc>https://facecouture.app/privacy.html</loc><lastmod>2026-11-05</lastmod><priority>0.3</priority></url>
   <url><loc>https://facecouture.app/terms.html</loc><lastmod>2026-11-05</lastmod><priority>0.3</priority></url>
   <url><loc>https://facecouture.app/support.html</loc><lastmod>2026-11-05</lastmod><priority>0.4</priority></url>

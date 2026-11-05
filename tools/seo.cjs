@@ -6,7 +6,7 @@ const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(
 const slug = s => s.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
 // The same sizes the editor exports (index.html `presets`)
-const src = fs.readFileSync('index.html', 'utf8');
+const src = fs.readFileSync('studio/index.html', 'utf8');
 const m = src.match(/const presets=(\[[\s\S]*?\]\]);/);
 if (!m) throw new Error('presets not found in index.html');
 const PRESETS = eval(m[1]).map(([id, platform, label, w, h, group]) => ({ id, platform, label, w, h, group }));
@@ -45,7 +45,7 @@ ${ld.map(o => '<script type="application/ld+json">' + JSON.stringify(o).replace(
 ${ga}<style>${CSS}</style></head><body><header><a href="/">FACE COUTURE</a><small>by Always Luxe</small></header><main>
 <nav class="crumb">${crumbs.map((c, i) => i < crumbs.length - 1 ? `<a href="${c.url.replace(SITE, '')}">${esc(c.name)}</a> › ` : esc(c.name)).join('')}</nav>
 <h1>${esc(h1)}</h1>${body}</main>
-<footer><p><a href="/">Face Couture</a> · <a href="/photo-sizes/">Photo sizes</a> · <a href="/ai-makeup-app/">AI makeup</a> · <a href="/virtual-makeup-try-on/">Makeup try-on</a> · <a href="/ai-outfit-change/">Outfit change</a> · <a href="/ai-background-change/">Background change</a> · <a href="/looks/">Looks</a> · <a href="/makeup-ideas/">Makeup ideas</a> · <a href="/lipstick-try-on/">Lipstick try-on</a> · <a href="/hair-color-try-on/">Hair color</a></p>
+<footer><p><a href="/">Face Couture</a> · <a href="/photo-sizes/">Photo sizes</a> · <a href="/dating-profile-photos/">Dating profile photos</a> · <a href="/looks/">Looks</a> · <a href="/makeup-ideas/">Makeup ideas</a> · <a href="/free-selfie-editor/">Selfie editor</a></p>
 <p>Planning an event? <a href="https://eventcouture.app/">Event Couture</a> plans it from one photo.</p><p>© ${YEAR} Always Luxe · <a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a> · <a href="/support.html">Support</a></p></footer></body></html>`;
 }
 const faqLd = faqs => ({ '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: faqs.map(([q, a]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } })) });
@@ -153,9 +153,25 @@ ${others.length ? `<h2>More ${group} sizes</h2><ul class="grid">${others.map(o =
 const KW = require('./seo-more.cjs')({ SITE, YEAR, src, esc, slug, page, faqLd, faqHtml, cta, write, platforms });
 fs.writeFileSync(process.env.KW_OUT || require('os').tmpdir() + '/fc-keywords.json', JSON.stringify(KW));
 
+// ---------- Home page: the iPhone app (the web studio is at /studio/) ----------
+{
+  const sec = (h, p) => `<h2>${h}</h2><p>${p}</p>`;
+  const body = `<p class="lead">Face Couture turns one portrait into a ready-to-post set for every app: each size framed on your face and checked against that app’s own layout. Polish it first with Makeup Artist Mode and beauty tools that run right on your phone.</p>
+<p><span class="btn" style="cursor:default;opacity:.95">Coming soon on iPhone</span></p>
+<p><img src="/brand/landing-pack.jpg" alt="One portrait saved as a story, post, square, pin and thumbnail, each framed on the face" width="1600" height="378" style="width:100%;height:auto;border-radius:16px;margin:10px 0"></p>
+${sec('Platform Pack', 'Pick Social, Work or Dating and save every size at once, straight to Photos: post, square, story, pin and thumbnail, or profile, headshot and banner sizes. Each one is framed on your face, never just cropped, and platforms that share a size are saved once.')}
+${sec('See each app’s layout before you post', 'Preview your photo inside a profile circle, a story safe area, or the TikTok and Reels app zones, so captions and buttons never cover your face.')}
+${sec('Makeup Artist Mode', 'Already wearing professional makeup? Face Couture keeps the artist’s work and only makes it photo-ready: sharper eyes and brows, richer lips and smooth skin that keeps its texture.')}
+${sec('Beauty tools on your phone', 'Skin smoothing that keeps real texture, blemish fix, lipstick and gloss, lashes, liner, brows, blush and contour, plus looks like Satin Glam, Grand Soirée and Ivory Vow. Face mapping runs on your iPhone, even in Airplane Mode.')}
+${sec('For men too', 'A dedicated men’s mode with no makeup at all: subtle skin smoothing, grooming and flattering light.')}
+${sec('Private by design', 'No account. Your photos stay on your iPhone.')}
+<p style="margin-top:28px;font-size:15px">On a computer? <a href="/studio/">Try the web version</a>.</p>`;
+  write('/', page({ url: '/', title: 'Face Couture: Platform Pack & Makeup Artist Mode | Always Luxe', desc: 'One photo, every platform: Face Couture sizes and frames your portrait on your face for every app, with Makeup Artist Mode and beauty tools that run on your iPhone.', h1: 'One photo. Every platform, framed on you.', body }), '1.0');
+}
+
 // ---------- 404, robots, sitemap ----------
 fs.writeFileSync('404.html', page({ url: '/404.html', title: 'Page not found | Face Couture', desc: 'This page could not be found.', h1: 'This page has moved', body: '<p class="lead">The page you were looking for isn’t here.</p>' + cta('Start with your photo') + '<p><a href="/photo-sizes/">Photo sizes</a> · <a href="/ai-makeup-app/">AI makeup</a> · <a href="/virtual-makeup-try-on/">Makeup try-on</a></p>' }).replace('<link rel="canonical"', '<meta name="robots" content="noindex"><link rel="x-canonical"'));
 fs.writeFileSync('robots.txt', `User-agent: *\nAllow: /\nDisallow: /app-preview/\nDisallow: /tools/\n\nSitemap: ${SITE}/sitemap.xml\n`);
-const urls = [['/', '1.0'], ...out, ['/privacy.html', '0.3'], ['/terms.html', '0.3'], ['/support.html', '0.4']];
+const urls = [...out, ['/studio/', '0.6'], ['/privacy.html', '0.3'], ['/terms.html', '0.3'], ['/support.html', '0.4']];
 fs.writeFileSync('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map(([u, p]) => `  <url><loc>${SITE + u}</loc><lastmod>${TODAY}</lastmod><priority>${p}</priority></url>`).join('\n')}\n</urlset>\n`);
 console.log('pages', out.length, 'platforms', Object.keys(platforms).length);
