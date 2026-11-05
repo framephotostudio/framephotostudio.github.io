@@ -5,9 +5,12 @@ module.exports = function more({ SITE, YEAR, src, esc, slug, page, faqLd, faqHtm
   const kw = (url, intent, list, pri = 1) => list.forEach(k => KW.push([k, intent, url, pri]));
   const grid = items => `<ul class="grid">${items.map(([u, b, s]) => `<li><a href="${u}"><b>${esc(b)}</b><span>${esc(s)}</span></a></li>`).join('')}</ul>`;
 
-  // ---------- Looks (straight from the AI Looks lists in index.html) ----------
+  // ---------- Looks (straight from the Couture Looks lists in index.html) ----------
   const grab = name => { const m = src.match(new RegExp('var ' + name + '=\\[([\\s\\S]*?)\\];')); return [...m[1].matchAll(/k:'([^']+)',n:'([^']+)',t:'([^']+)'/g)].map(x => ({ k: x[1], n: x[2], t: x[3] })); };
   const LOOKS = grab('LOOKS'), MEN = grab('MENLOOKS');
+  // Nov 5, 2026: looks have their own Face Couture names; each page keeps its old address and mentions the classic name for search
+  const AKA = { 'Grand Soirée': 'Full Glam', 'Première': 'Red Carpet', 'Bare Luxe': 'Clean Girl', 'Ivory Vow': 'Bridal Glow', 'Gilded Hour': 'Golden Hour', 'Cover Edit': 'Magazine Cover', 'Boardroom Portrait': 'Headshot Pro', 'Silver Screen': 'Hollywood Glam', 'Porcelain Dew': 'Glass Skin' };
+  const aka = l => AKA[l.n] ? ` (${AKA[l.n].toLowerCase()})` : '';
   const LOOK_INFO = {
     soft: ['Soft smoky eyes in rose and mauve, defined lashes, sculpted cheeks and a glossy pink lip. Polished but never heavy.', ['date night', 'birthday dinners', 'weddings as a guest', 'everyday glam'], ['satin glam makeup', 'soft glam makeup look', 'soft glam makeup', 'rosy smoky eye makeup', 'glossy pink lip look']],
     max: ['A deep smoky eye, full lashes, strong sculpting and a rich rose-berry lip. The look for big nights and big photos.', ['galas', 'parties', 'photoshoots', 'New Year’s Eve'], ['full glam makeup', 'full glam makeup look', 'glam makeup try on', 'smoky eye makeup look', 'dramatic makeup look']],
@@ -24,25 +27,25 @@ module.exports = function more({ SITE, YEAR, src, esc, slug, page, faqLd, faqHtm
     mbronzed: ['A healthy, warm, natural tan.', ['summer photos', 'vacation', 'dating apps'], ['tan photo editor', 'bronzed skin photo filter men']],
     mrested: ['Brighter, fresher under-eyes, like a full night’s sleep.', ['early meetings', 'travel photos', 'everyday'], ['remove dark circles photo', 'tired eyes photo fix']]
   };
-  const lookUrl = l => '/looks/' + slug(l.n) + '/';
+  const lookUrl = l => '/looks/' + slug(AKA[l.n] || l.n) + '/';
   const lookList = (keys, all = LOOKS.concat(MEN)) => grid(keys.map(k => all.find(l => l.k === k)).filter(Boolean).map(l => [lookUrl(l), l.n, l.t]));
   for (const l of LOOKS.concat(MEN)) {
     const men = MEN.includes(l), [about, best, kws] = LOOK_INFO[l.k] || [l.t, [], []];
-    const title = men ? `${l.n} Photo Look for Men: ${l.t} | Face Couture` : `${l.n} Makeup Look: ${l.t} | Try It On Your Photo`;
+    const title = men ? `${l.n}${aka(l)} Photo Look for Men: ${l.t} | Face Couture` : `${l.n}${aka(l)} Makeup Look: ${l.t} | Try It On Your Photo`;
     const desc = men ? `${l.n}: ${l.t.toLowerCase()}. A natural men’s photo finish with no makeup. Try it on your own photo.` : `See the ${l.n} makeup look (${l.t.toLowerCase()}) on your own selfie. Your eyes, lips and face shape stay yours.`;
     const faqs = men ? [[`Does ${l.n} add makeup?`, 'No. Men’s looks never add makeup, only subtle retouching, light and grooming.']] :
-      [[`What is ${l.n} makeup?`, `${l.n} is ${about.charAt(0).toLowerCase() + about.slice(1)}`], [`Can I try the ${l.n} look on my photo?`, `Yes. Upload a selfie to Face Couture and choose ${l.n} in Looks or AI Looks. Your eyes, lips and face shape stay yours.`]];
+      [[`What is ${l.n} makeup?`, `${l.n} is ${about.charAt(0).toLowerCase() + about.slice(1)}`], [`Can I try the ${l.n} look on my photo?`, `Yes. Upload a selfie to Face Couture and choose ${l.n} in Looks or Couture Looks. Your eyes, lips and face shape stay yours.`]];
     const others = (men ? MEN : LOOKS).filter(x => x !== l).map(x => x.k);
     const body = `<p class="lead">${esc(about)}</p><h2>Best for</h2><ul>${best.map(b => `<li>${esc(b.charAt(0).toUpperCase() + b.slice(1))}</li>`).join('')}</ul>
-<h2>How to try it</h2><ol><li>Open Face Couture and add a clear, front-facing photo.</li><li>Choose <b>${esc(l.n)}</b> in ${men ? 'the men’s looks' : 'Looks (instant, on your phone) or AI Looks'}.</li><li>Compare before and after, adjust the strength and save.</li></ol>
+<h2>How to try it</h2><ol><li>Open Face Couture and add a clear, front-facing photo.</li><li>Choose <b>${esc(l.n)}</b> in ${men ? 'the men’s looks' : 'Looks (instant, on your phone) or Couture Looks'}.</li><li>Compare before and after, adjust the strength and save.</li></ol>
 ${cta(`See ${l.n} on your own photo`)}${faqHtml(faqs)}<h2>More looks</h2>${lookList(others)}`;
-    write(lookUrl(l), page({ url: lookUrl(l), title, desc, h1: men ? `${l.n}: a men’s photo look` : `${l.n} makeup look`, body, crumb: [{ name: 'Looks', url: SITE + '/looks/' }, { name: l.n, url: SITE + lookUrl(l) }], ld: [faqLd(faqs)] }), '0.7');
+    write(lookUrl(l), page({ url: lookUrl(l), title, desc, h1: men ? `${l.n}: a men’s photo look` : `${l.n}${aka(l)} makeup look`, body, crumb: [{ name: 'Looks', url: SITE + '/looks/' }, { name: l.n, url: SITE + lookUrl(l) }], ld: [faqLd(faqs)] }), '0.7');
     kw(lookUrl(l), men ? 'Men’s photo look' : 'A specific makeup look', kws.concat(men ? [] : [l.n.toLowerCase() + ' makeup try on']), men ? 2 : 1);
   }
   {
     const body = `<p class="lead">Every Face Couture look, ready to try on your own photo.</p><h2>Makeup looks</h2>${lookList(LOOKS.map(l => l.k))}<h2>Men’s looks (no makeup)</h2>${lookList(MEN.map(l => l.k))}` + cta('Find your look', 'Take the quiz or try them all');
     const faqs = [['Which makeup look suits me?', 'Take Face Couture’s 30-second quiz, or try each look on your photo and compare.']];
-    write('/looks/', page({ url: '/looks/', title: 'Makeup Looks to Try On Your Photo: Glam, Natural, Bridal & More | Face Couture', desc: 'Try Satin Glam, Full Glam, Red Carpet, Clean Girl, Bridal Glow, Golden Hour, Date Night and Executive makeup looks on your own selfie, free.', h1: 'Makeup looks to try on your photo', body: body + faqHtml(faqs), crumb: [{ name: 'Looks', url: SITE + '/looks/' }], ld: [faqLd(faqs)] }), '0.8');
+    write('/looks/', page({ url: '/looks/', title: 'Makeup Looks to Try On Your Photo: Glam, Natural, Bridal & More | Face Couture', desc: 'Try Satin Glam, Grand Soirée (full glam), Première (red carpet), Bare Luxe (clean girl), Ivory Vow (bridal glow), Gilded Hour (golden hour), Date Night and Executive makeup looks on your own selfie, free.', h1: 'Makeup looks to try on your photo', body: body + faqHtml(faqs), crumb: [{ name: 'Looks', url: SITE + '/looks/' }], ld: [faqLd(faqs)] }), '0.8');
     kw('/looks/', 'Browse makeup looks', ['makeup looks', 'makeup look ideas', 'makeup looks to try', 'which makeup look suits me', 'makeup quiz', 'what makeup look is right for me', 'makeup styles'], 1);
   }
 
@@ -132,7 +135,7 @@ ${cta(`Try ${l}-skin shades on your photo`)}${faqHtml(faqs)}<h2>Other skin tones
   // ---------- More features ----------
   const F2 = [
     ['ai-headshot-generator', 'AI Headshot Generator: Professional Photo From a Selfie | Face Couture', 'Professional headshots from a selfie', 'Turn a good selfie into a polished, professional headshot for LinkedIn, resumes and company pages. Your face stays yours.',
-      '<p class="lead">No studio needed: start with a clear selfie and finish with a polished headshot.</p><h2>How it works</h2><ul><li>Choose the <b>Executive</b> look (or <b>Sharp Headshot</b> for men) for even skin and soft definition.</li><li>Use a clean background with Background swap or AI Background Change.</li><li>Save at LinkedIn’s 800 × 800 profile size or a 1600 × 2000 portrait.</li></ul>', ['ai headshot generator', 'ai headshot', 'professional headshot from selfie', 'linkedin headshot generator', 'ai linkedin photo', 'corporate headshot ai', 'headshot photo editor']],
+      '<p class="lead">No studio needed: start with a clear selfie and finish with a polished headshot.</p><h2>How it works</h2><ul><li>Choose the <b>Executive</b> look (or <b>Sharp Headshot</b> for men) for even skin and soft definition.</li><li>Use a clean background with Background swap or Change the scene (AI).</li><li>Save at LinkedIn’s 800 × 800 profile size or a 1600 × 2000 portrait.</li></ul>', ['ai headshot generator', 'ai headshot', 'professional headshot from selfie', 'linkedin headshot generator', 'ai linkedin photo', 'corporate headshot ai', 'headshot photo editor']],
     ['lash-try-on', 'Eyelash Try-On: Natural to Dramatic Lashes on Your Photo | Face Couture', 'Eyelash try-on', 'Try natural, wispy, lifted, glam and dramatic lashes on your own photo before you book extensions or buy strips.',
       '<p class="lead">See lash styles on your own eyes before you book extensions or buy strip lashes.</p><h2>Styles to try</h2><ul><li>Natural</li><li>Wispy</li><li>Lifted</li><li>Satin Glam (volume)</li><li>Dramatic</li><li>Full drama (runway)</li></ul><p>Lashes sit on your lash line so they look real, never floating.</p>', ['lash try on', 'eyelash extensions try on', 'eyelash filter', 'false lashes try on', 'lash style finder', 'which lashes suit my eyes']],
     ['free-selfie-editor', 'Free Selfie Editor: Retouch, Glow & Resize in One Tap | Face Couture', 'Free selfie editor', 'A free selfie editor that keeps you looking like you: skin smoothing, glow, makeup, filters, captions and 40+ sizes. No account needed.',
