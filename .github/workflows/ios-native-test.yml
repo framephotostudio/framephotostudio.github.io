@@ -1,0 +1,59 @@
+name: iOS native test (no upload)
+# Builds the iPhone app with the Share extension and App Shortcut on a test branch: compiles for the simulator,
+# then archives and signs an App Store package WITHOUT uploading it. Nothing reaches TestFlight or the App Store.
+on:
+  push:
+    branches: [ci-native-test]
+  workflow_dispatch:
+env:
+  VERSION: '1.0.0'
+  DEPS: "@capacitor/core@8 @capacitor/cli@8 @capacitor/android@8 @capacitor/ios@8 @capacitor/splash-screen@8.0.2 @capacitor/status-bar@8.0.4 @capacitor/share@8.0.3 @capacitor/filesystem@8.1.5 @capacitor/haptics@8.0.2 @capacitor/app@8.1.2 @capacitor/network@8.0.1 @capacitor/preferences@8.0.1 @capacitor/browser@8.0.5 @capacitor/camera@8.2.6"
+jobs:
+  ios:
+    runs-on: macos-15-intel
+    timeout-minutes: 90
+    env:
+      KEY_ID: ${{ secrets.APPSTORE_KEY_ID || secrets.ASC_KEY_ID }}
+      ISSUER: ${{ secrets.APPSTORE_ISSUER_ID || secrets.ASC_ISSUER_ID }}
+      KEY_P8: ${{ secrets.APPSTORE_PRIVATE_KEY || secrets.ASC_KEY_P8 }}
+      TEAM: ${{ secrets.APPLE_TEAM_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with: { ref: main, path: site }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Use the newest Xcode
+        run: |
+          X=$(ls -d /Applications/Xcode_*.app | grep -v -i beta | sort -V | tail -1); sudo xcode-select -s "$X"; xcodebuild -version
+      - run: npm install $DEPS
+      - run: npm install @capacitor-community/in-app-review@8.0.0 || true
+      - run: npm install @capacitor-community/media@9.1.0
+      - run: npm run build:web
+      - run: npx cap add ios && bash scripts/native-setup.sh ios && npx cap sync ios
+        env: { APP_VERSION: '1.0.0', BUILD_NUMBER: '9999' }
+      - name: Compile for the simulator (app + Share extension + shortcut)
+        run: |
+          set -o pipefail
+          cd ios/App
+          if [ -d App.xcworkspace ]; then TARGET="-workspace App.xcworkspace"; else TARGET="-project App.xcodeproj"; fi
+          xcodebuild $TARGET -scheme App -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath "$RUNNER_TEMP/dd" build CODE_SIGNING_ALLOWED=NO > "$RUNNER_TEMP/sim.log" 2>&1 || { grep -n -E 'error:' "$RUNNER_TEMP/sim.log" | head -40; tail -40 "$RUNNER_TEMP/sim.log"; exit 65; }
+          tail -5 "$RUNNER_TEMP/sim.log"
+          find "$RUNNER_TEMP/dd" -name "*.appex" -maxdepth 8 | head
+      - name: Archive and sign an App Store package (no upload)
+        run: |
+          set -o pipefail
+          KEY="$RUNNER_TEMP/AuthKey_$KEY_ID.p8"; printf '%s\n' "$KEY_P8" > "$KEY"
+          AUTH="-allowProvisioningUpdates -authenticationKeyPath $KEY -authenticationKeyID $KEY_ID -authenticationKeyIssuerID $ISSUER"
+          cd ios/App
+          if [ -d App.xcworkspace ]; then TARGET="-workspace App.xcworkspace"; else TARGET="-project App.xcodeproj"; fi
+          xcodebuild $TARGET -scheme App -configuration Release -destination 'generic/platform=iOS' -archivePath "$RUNNER_TEMP/App.xcarchive" archive DEVELOPMENT_TEAM="$TEAM" CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" > "$RUNNER_TEMP/archive.log" 2>&1 || { grep -n -E 'error:' "$RUNNER_TEMP/archive.log" | head -40; tail -40 "$RUNNER_TEMP/archive.log"; exit 65; }
+          ls "$RUNNER_TEMP/App.xcarchive/Products/Applications/App.app/PlugIns" || true
+          cat > "$RUNNER_TEMP/ExportOptions.plist" <<EOF
+          <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd"><plist version="1.0"><dict>
+          <key>method</key><string>app-store-connect</string><key>destination</key><string>export</string><key>signingStyle</key><string>automatic</string>
+          <key>teamID</key><string>$TEAM</string><key>manageAppVersionAndBuildNumber</key><false/><key>uploadSymbols</key><false/></dict></plist>
+          EOF
+          xcodebuild -exportArchive -archivePath "$RUNNER_TEMP/App.xcarchive" -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" -exportPath "$RUNNER_TEMP/out" $AUTH > "$RUNNER_TEMP/export.log" 2>&1 || { grep -n -E 'error|Error' "$RUNNER_TEMP/export.log" | head -40; tail -40 "$RUNNER_TEMP/export.log"; rm -f "$KEY"; exit 65; }
+          rm -f "$KEY"; tail -8 "$RUNNER_TEMP/export.log"; ls -la "$RUNNER_TEMP/out"
+          cd "$RUNNER_TEMP/out" && unzip -q -o *.ipa && ls Payload/App.app/PlugIns && /usr/libexec/PlistBuddy -c "Print :CFBundleVersion" Payload/App.app/PlugIns/PackShare.appex/Info.plist

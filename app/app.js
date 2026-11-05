@@ -147,6 +147,12 @@
   function setupNative() {
     if (!isNative) return;
     // Android back button: close an open sheet first, never drop the user out mid-edit
+    // facecouture://pack (the "Make a Platform Pack" App Shortcut) opens Platform Pack
+    if (P.App && P.App.addListener) P.App.addListener('appUrlOpen', function (e) {
+      if (!e || !/^facecouture:\/\/pack/i.test(e.url || '')) return;
+      if (document.body.classList.contains('ownPhoto')) { enterStudio(); goPack(); return; }
+      var c = document.getElementById('fcPackCard'); if (c) { try { c.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (x) {} c.classList.add('fcFlash'); setTimeout(function () { c.classList.remove('fcFlash'); }, 1600); }
+    });
     if (P.App && P.App.addListener) P.App.addListener('backButton', function () {
       var open = document.querySelector('.proSheet.show,.proSheet.open,#photoSheet.show,#cropSheet.show,#cropSheet.open');
       if (open) { var c = open.querySelector('[data-close],.close,button[aria-label*="lose"],#photoSheetDone'); if (c) c.click(); else open.classList.remove('show', 'open'); return; }

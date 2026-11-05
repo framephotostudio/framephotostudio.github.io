@@ -24,6 +24,13 @@ if [ "$PLATFORM" = "ios" ]; then
   if [ -n "${APP_VERSION:-}" ]; then
     sed -i '' "s/MARKETING_VERSION = [^;]*;/MARKETING_VERSION = ${APP_VERSION};/g; s/CURRENT_PROJECT_VERSION = [^;]*;/CURRENT_PROJECT_VERSION = ${BUILD_NUMBER:-1};/g" ios/App/App.xcodeproj/project.pbxproj
   fi
+  # facecouture:// opens the app on Platform Pack (used by the "Make a Platform Pack" App Shortcut)
+  pb "Delete :CFBundleURLTypes"; pb "Add :CFBundleURLTypes array"; pb "Add :CFBundleURLTypes:0 dict"
+  pb "Add :CFBundleURLTypes:0:CFBundleURLName string app.facecouture.studio"
+  pb "Add :CFBundleURLTypes:0:CFBundleURLSchemes array"; pb "Add :CFBundleURLTypes:0:CFBundleURLSchemes:0 string facecouture"
+  # native pieces: Share extension (Photos -> Share -> Platform Pack) and the App Shortcut
+  gem list -i xcodeproj >/dev/null 2>&1 || gem install xcodeproj --no-document >/dev/null 2>&1 || sudo gem install xcodeproj --no-document
+  ruby scripts/add-native.rb
   echo "iOS Info.plist:"; cat "$PL"
 fi
 
