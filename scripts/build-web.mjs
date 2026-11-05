@@ -13,7 +13,9 @@ for (const f of ['vision_wasm_internal.js', 'vision_wasm_internal.wasm', 'vision
 for (const f of ['ort.webgpu.min.mjs', 'ort-wasm-simd-threaded.asyncify.mjs', 'ort-wasm-simd-threaded.asyncify.wasm']) await get(ORT + f, V + '/ort/' + f);
 await get('https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task', V + '/models/face_landmarker.task');
 await get('https://storage.googleapis.com/mediapipe-models/image_segmenter/selfie_segmenter/float16/latest/selfie_segmenter.tflite', V + '/models/selfie_segmenter.tflite');
-let html = fs.readFileSync(path.join(SITE, 'index.html'), 'utf8');
+// the web studio lives at /studio/ on the website (the home page is the app's landing page); older checkouts have it at the root
+const STUDIO = fs.existsSync(path.join(SITE, 'studio', 'index.html')) ? path.join(SITE, 'studio', 'index.html') : path.join(SITE, 'index.html');
+let html = fs.readFileSync(STUDIO, 'utf8').replace('<base href="/">', '');
 html = html.split(MP + '/wasm').join('./vendor/mediapipe/wasm').split(MP + '/vision_bundle.mjs').join('./vendor/mediapipe/vision_bundle.mjs').split(ORT).join('./vendor/ort/')
   .split('https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task').join('./vendor/models/face_landmarker.task')
   .split('https://storage.googleapis.com/mediapipe-models/image_segmenter/selfie_segmenter/float16/latest/selfie_segmenter.tflite').join('./vendor/models/selfie_segmenter.tflite');
@@ -180,6 +182,8 @@ for (const f of ['privacy.html', 'terms.html', 'support.html', 'delete-my-data.h
   t = t.replace('</head>', '<style>html.in-app header a,html.in-app .brand a{pointer-events:none}</style></head>');
   fs.writeFileSync(path.join(OUT, f), t);
 }
+// version 1.0 has no AI and no server: its in-app Privacy, Terms, Support and Delete pages say exactly that (app/legal-1.0)
+if (!TRYON) for (const f of ['privacy.html', 'terms.html', 'support.html', 'delete-my-data.html']) fs.copyFileSync(path.join('app', 'legal-1.0', f), path.join(OUT, f));
 { const legal = ['privacy.html', 'support.html', 'delete-my-data.html', 'terms.html'].map(f => fs.readFileSync(path.join(OUT, f), 'utf8')).join(' ');
   if (/Google Play|Android|RevenueCat|promo code|Enter a promo/i.test(legal)) throw new Error('App legal pages still mention purchases or other platforms. Update scripts/build-web.mjs.');
   if (!TRYON && /try-on|outfit try|website and apps/i.test(legal)) throw new Error('App legal pages still mention try-on or the website. Update LEGAL_APP in scripts/build-web.mjs.'); }
