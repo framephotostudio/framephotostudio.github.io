@@ -1,1 +1,1 @@
-iPhone build request: 1.0.0 (final review fixes: consent Privacy link in app, quiz sample, AI safety rules)
+iPhone build request: 1.0.0 (build 38: new AI Studio button names, review fixes)

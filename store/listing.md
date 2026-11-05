@@ -34,7 +34,7 @@ FOR MEN TOO
 A dedicated men's mode with no makeup at all: subtle skin smoothing, grooming and flattering light.
 
 AI STUDIO, WHEN YOU WANT IT
-AI Glow and AI Looks place makeup on your real, unchanged face, keeping your eyes, lips and smile. More AI tools inside, including outfit and accessory try-on. AI runs only when you choose it and agree; your photo is sent securely for that one edit, we don't keep it, and it is never used for training.
+Glow and Glam Looks place AI makeup on your real, unchanged face, keeping your eyes, lips and smile. More AI tools inside, including outfit and accessory try-on. AI runs only when you choose it and agree; your photo is sent securely for that one edit, we don't keep it, and it is never used for training.
 
 PRIVATE BY DESIGN
 No account needed. The face-mapping models are built into the app, so the beauty tools work even in Airplane Mode.

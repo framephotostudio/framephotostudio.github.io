@@ -78,6 +78,8 @@ appAll("st.textContent=files.length+' photos styled'", "st.textContent=files.len
 appAll('>Add your music or recorded voiceover<', '>Add your music or a voiceover file<', 'video audio label');
 appAll("to create the look. It isn't stored. <a", "to create the look. We don't store it. <a", 'consent wording');
 html = html.replace(/<link rel="manifest"[^>]*>/, ''); // website install manifest (not used in the app)
+// 5) App Store names for the AI Studio buttons (approved by Demah, Nov 4, 2026); the section is still called "AI Studio"
+for (const [a, b] of [['AI Outfit Change', 'Try it on'], ['AI Background Change', 'Change the scene'], ['AI Accessories', 'Accessories'], ['AI Shoes', 'Shoes'], ['AI Looks', 'Glam Looks'], ['AI Glow', 'Glow']]) appAll(a, b, 'button name ' + a);
 // saved files carry the Face Couture name
 for (const [a, b] of [["'frame-custom-'", "'face-couture-custom-'"], ["'frame-photo-set.zip'", "'face-couture-photo-set.zip'"], ["'frame-clip.'", "'face-couture-clip.'"], ["'frame-before-after.", "'face-couture-before-after."], ["'frame-set-'", "'face-couture-set-'"], ["'frame-my-look-'", "'face-couture-my-look-'"]]) appAll(a, b, 'file name ' + a);
 // per-build settings (backend URL comes from a repository variable). Version 1.0 has no purchases, so no store keys.
