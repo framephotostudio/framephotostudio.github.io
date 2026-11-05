@@ -217,11 +217,44 @@
     Object.keys(map).forEach(function (k) { Array.prototype.forEach.call(document.querySelectorAll('button[data-k="' + k + '"] > i'), function (i) { var want = map[k][men ? 1 : 0]; if (i.textContent !== want) i.textContent = want; }); });
   }
 
+  // welcome screen: Platform Pack first (one photo sized and framed for every app), above the AI Studio buttons
+  function goPack() {
+    var tb = document.querySelector('#fcTabBar button[data-tab="share"]') || document.querySelector('nav.tabs button[data-tab="share"]'); if (tb) tb.click();
+    setTimeout(function () {
+      var h = Array.prototype.find.call(document.querySelectorAll('h2,h3'), function (x) { return (x.textContent || '').trim().indexOf('Platform Pack') === 0 && x.offsetParent; });
+      if (!h) return;
+      var panel = document.querySelector('.workspace.expanded .panel');
+      var head = (document.getElementById('fcTools') ? document.getElementById('fcTools').offsetHeight : 0) + (document.querySelector('.editorActions') ? document.querySelector('.editorActions').offsetHeight : 0) + 12;
+      if (panel) { var y = h.getBoundingClientRect().top - panel.getBoundingClientRect().top + panel.scrollTop - head; panel.scrollTo({ top: Math.max(0, y), behavior: 'smooth' }); }
+      else h.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      h.classList.add('fcFlash'); setTimeout(function () { h.classList.remove('fcFlash'); }, 1600);
+    }, 450);
+  }
+  function addPackCard() {
+    if (document.getElementById('fcPackCard')) return;
+    var magic = document.getElementById('fcMagic'); if (!magic || !magic.parentNode) return;
+    var c = document.createElement('div'); c.id = 'fcPackCard';
+    c.innerHTML = '<b>Platform Pack</b><p>One photo, every platform. Sized and framed on your face.</p>' +
+      '<div class="fcPills"><span>Profile</span><span>Story</span><span>Post</span><span>Cover</span><span>Work</span><span>Dating</span></div>' +
+      '<button type="button" class="fcPackGo">Choose a photo</button>';
+    c.querySelector('.fcPackGo').addEventListener('click', function () {
+      tap('MEDIUM');
+      if (document.body.classList.contains('ownPhoto')) { enterStudio(); goPack(); return; }
+      window.__fcGoPack = true;
+      var up = document.getElementById('heroGlow') || document.getElementById('file'); if (up) up.click();
+    });
+    magic.parentNode.insertBefore(c, magic);
+    if (window.MutationObserver) new MutationObserver(function () {
+      if (window.__fcGoPack && document.body.classList.contains('ownPhoto')) { window.__fcGoPack = false; setTimeout(function () { enterStudio(); goPack(); }, 600); }
+    }).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+  }
+
   function init() {
     hideFileTools();
     setInterval(menIcons, 700); document.addEventListener('click', function () { setTimeout(menIcons, 80); }, true);
     if (window.MutationObserver) new MutationObserver(function () { addReport(); }).observe(document.body, { childList: true, subtree: true });
     guardEditor();
+    addPackCard(); setTimeout(addPackCard, 1500);
     setupNative();
     buildTabBar();
     watchStudio();
