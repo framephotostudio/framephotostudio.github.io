@@ -67,7 +67,7 @@ Use one address everywhere (stores require a working, monitored email). Suggeste
 3. Makeup Artist Mode — your work, perfected
 4. Every social size, framed around you
 5. Before → after reels in one tap
-6. Private by design — nothing leaves your phone
+6. Private by design — beauty tools run on your phone; AI only when you choose it
 
 ## In-App Events / Promotional content ideas (optional, after launch)
 

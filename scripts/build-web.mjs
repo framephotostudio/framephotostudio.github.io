@@ -76,7 +76,7 @@ appOnly('if(w.parentNode!==box){box.appendChild(w);moved=1}', "{var ed=D.getElem
 appOnly("b.tint=S.beauty.tint;b.gloss=60;", "b.tint=85;b.gloss=40;", 'Full Glam lipstick strength');
 appOnly("Object.assign(sh,{color:'glamRosePink',lipFinish:'cream',glossShade:'gRose',opaqueLip:1});", "Object.assign(sh,{color:'velvetRose',lipFinish:'cream',glossShade:'gPearl',opaqueLip:1});", 'Full Glam lipstick shade');
 // app-zone guide text sits in the top red band, not across the face
-appOnly("ctx.fillText('Keep faces and text out of the red areas',w/2,h*.5)", "ctx.fillText('Keep faces and text out of the red areas',w/2,h*.06)", 'zone text position');
+appOnly("ctx.fillText('Keep faces and text out of the red areas',w/2,h*.5)", "ctx.fillText('Keep clear of red',w*.28,h*.06)", 'zone text short, left of the photo buttons');
 // ---- Try it on, Change the scene, Accessories and Shoes are not in version 1.0 (Demah, Nov 5, 2026). ----
 // ONE SWITCH brings all four back for version 1.1: build with FC_TRYON=1 (see RESTORE-AI-TOOLS.md). Nothing is deleted from the website or the server.
 const TRYON = process.env.FC_TRYON === '1';
@@ -92,7 +92,12 @@ if (!TRYON) {
   appOnly("'Blur is free and made on your phone. Travel, Vanish and Outfit try-on use AI. Your face always stays exactly yours.'", "'Blur is free and made on your phone. Vanish uses AI. Your face always stays exactly yours.'", '1.0: panel intro');
   appOnly("hh.textContent='Background & outfit'", "hh.textContent='Vanish'", '1.0: panel title');
   appOnly("if(!box||!D.getElementById('aiGlowBtn')||!D.getElementById('fcTryBtn'))return false;", "if(!box||!D.getElementById('aiGlowBtn'))return false;", '1.0: AI Studio row without try-on');
-  for (const bad of ['id="fcTryBtn"', 'Choose outfit photo', 'id="fcTravel"', 'Travel backgrounds <small', 'shoes try-on <small'])
+  // the four buttons themselves are not built in 1.0 (no hidden markup)
+  appOnly(`r.innerHTML='<button type="button" id="fcWowOutfit">&#128087; AI Outfit Change<small>Wear any outfit</small></button><button type="button" id="fcWowBg">&#127757; AI Background Change<small>Paris, NYC, Tokyo and more</small></button>';`, "r.innerHTML='';", '1.0: no outfit or scene buttons');
+  appOnly("D.getElementById('fcWowOutfit').onclick=function(){go('outfit')};D.getElementById('fcWowBg').onclick=function(){go('bg')};", '', '1.0: no outfit or scene handlers');
+  appOnly(`r.innerHTML='<button type="button" id="fcWowAcc"><span>&#128141; <b>AI Accessories</b></span><small>Jewelry, bags, watches</small></button>'+\n   '<button type="button" id="fcWowShoes"><span>&#128096; <b>AI Shoes</b></span><small>Try on any shoes</small></button>'+\n   `, "r.innerHTML=", '1.0: no accessories or shoes buttons');
+  appOnly("D.getElementById('fcWowShoes').onclick=function(){pick('shoes')};", '', '1.0: no shoes handler');
+  for (const bad of ['id="fcWowOutfit"', 'id="fcWowBg"', 'id="fcWowAcc"', 'id="fcWowShoes"', 'id="fcTryBtn"', 'Choose outfit photo', 'id="fcTravel"', 'Travel backgrounds <small', 'shoes try-on <small'])
     if (html.indexOf(bad) > -1) throw new Error('1.0 clean-up: "' + bad + '" is still in the app. Update scripts/build-web.mjs.');
 }
 appOnly('content="width=device-width,initial-scale=1,viewport-fit=cover"', 'content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"', 'no page zoom');
@@ -185,6 +190,7 @@ const LEGAL_APP = {
     ['<h2>Free launch, trials and subscriptions</h2><p>Face Couture is free to use at launch. If we introduce Face Couture Pro, prices, the free-trial length and what is included are shown before you subscribe. Subscriptions are billed by Apple or Google to your store account and renew automatically until cancelled in your store settings; cancel at least 24 hours before the current period ends to avoid renewal. Refunds are handled by Apple or Google under their policies. Promo codes are personal, non-transferable and may expire.</p>', '<h2>Free to use</h2><p>Face Couture is free to use, with a daily limit on AI features. If we ever add paid features, their price and terms will be shown clearly before you choose them.</p>']]
 };
 // the in-app pages describe the iPhone app (the website wording stays on the website)
+LEGAL_APP['terms.html'].push(['the website and apps by Always Luxe', 'the Face Couture app by Always Luxe'], ['Terms for using the Face Couture website and apps.', 'Terms for using the Face Couture app.']);
 LEGAL_APP['privacy.html'].push([' · website and apps · ', ' · iPhone app · '], [' (website visitors download them from Google Cloud Storage and jsDelivr the first time)', '']);
 // version 1.0 legal pages describe only the AI tools in this build (the FC_TRYON=1 switch restores the full wording)
 if (!TRYON) {

@@ -46,8 +46,8 @@
     $('#fcSetSupport').onclick = function () {
       var em = CFG.supportEmail || 'hello@facecouture.app';
       // the address is also copied and shown, so support works even on a phone with no Mail account
-      try { if (navigator.clipboard) navigator.clipboard.writeText(em); } catch (e) {}
-      try { if (typeof window.toast === 'function') window.toast('Email us at ' + em + ' (address copied).'); } catch (e) {}
+      try { if (navigator.clipboard) navigator.clipboard.writeText(em).catch(function () {}); } catch (e) {}
+      try { if (typeof window.toast === 'function') { window.toast('Email us at ' + em + ' (address copied).'); var tt = document.getElementById('toast'); if (tt) tt.style.zIndex = '2147483000'; } } catch (e) {}
       location.href = 'mailto:' + em + '?subject=Face%20Couture%20app';
     };
     $('#fcSetDelete').onclick = function () {
