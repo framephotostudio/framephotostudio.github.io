@@ -2,7 +2,7 @@
 
 Paste-ready text for App Store Connect and Google Play Console. Character limits are respected.
 
-## Apple App Store (version 1.0 resubmission, build 41; approved by Demah Nov 5, 2026)
+## Apple App Store (version 1.0 resubmission, build 42; approved by Demah Nov 5, 2026)
 
 **Name (30):** Face Couture: Platform Pack
 **Subtitle (30):** Portraits sized for every app
@@ -43,7 +43,7 @@ No account. Your photos never leave your iPhone, and the app collects no data.
 Terms of Use: https://facecouture.app/terms.html
 Privacy Policy: https://facecouture.app/privacy.html
 
-**Screenshots (6.9-inch, 1290×2796), in this order:** 1 Platform Pack, 2 app layouts, 3 Makeup Artist Mode, 4 For him, 5 Real skin (Airplane Mode). Kept out of this public repository.
+**Screenshots (6.9-inch, 1290×2796), in this order:** 1 Platform Pack, 2 app layouts, 3 Share › Platform Pack (from Photos), 4 Makeup Artist Mode, 5 For him, 6 Real skin (Airplane Mode). Kept out of this public repository.
 
 ## Google Play
 

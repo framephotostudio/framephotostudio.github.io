@@ -1,1 +1,1 @@
-iPhone build request: 1.0.0 (build 41: no AI in 1.0, Share extension and App Shortcut, sample portrait, website and legal pages match)
+iPhone build request: 1.0.0 (build 42: Share extension memory-safe with visible previews, review fixes)
