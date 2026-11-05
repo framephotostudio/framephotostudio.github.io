@@ -5,7 +5,7 @@ Paste-ready text for App Store Connect and Google Play Console. Character limits
 ## Apple App Store (version 1.0 resubmission, approved by Demah Nov 4, 2026)
 
 **Name (30):** Face Couture by Always Luxe
-**Subtitle (30):** Real Face Studio
+**Subtitle (30):** Portraits sized for every app
 **Promotional text (170):** One photo, ready for every platform: sized and framed on your face, polished with Makeup Artist Mode and real-skin beauty tools. Free, with a daily AI limit.
 **Keywords (100, comma-separated, no spaces):**
 `glam,makeup,headshot,work photo,dating,profile,platform pack,resize,crop,makeup artist,lashes,bridal`
@@ -34,14 +34,10 @@ FOR MEN TOO
 A dedicated men's mode with no makeup at all: subtle skin smoothing, grooming and flattering light.
 
 AI STUDIO, WHEN YOU WANT IT
-• AI Glow and AI Looks: makeup placed on your real, unchanged face, keeping your eyes, lips and smile
-• AI Outfit Change, AI Accessories and AI Shoes: try on an outfit, bag, jewelry or shoes from a photo
-• AI Background Change: Santorini, Paris, a rooftop and more
-• Stack your changes: a new outfit, then a new destination
-AI runs only when you choose it and agree. Your photo is sent securely for that one edit. We don't keep it, and it is never used for training.
+AI Glow and AI Looks place makeup on your real, unchanged face, keeping your eyes, lips and smile. More AI tools inside, including outfit and accessory try-on. AI runs only when you choose it and agree; your photo is sent securely for that one edit, we don't keep it, and it is never used for training.
 
 PRIVATE BY DESIGN
-No account needed. Face mapping runs on your iPhone.
+No account needed. The face-mapping models are built into the app, so the beauty tools work even in Airplane Mode.
 
 FREE
 Face Couture is free. AI features have a daily limit.
