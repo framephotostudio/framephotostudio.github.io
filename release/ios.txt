@@ -1,1 +1,1 @@
-iPhone build request: 1.0.0 (launch polish)
+iPhone build request: 1.0.0 (App Store resubmission: no hidden features, native photo picker and save)

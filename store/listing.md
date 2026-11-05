@@ -2,13 +2,13 @@
 
 Paste-ready text for App Store Connect and Google Play Console. Character limits are respected.
 
-## Apple App Store
+## Apple App Store (version 1.0 resubmission, approved by Demah Nov 4, 2026)
 
-**Name (30):** Face Couture: Glam Photo Editor
-**Subtitle (30):** Natural makeup, luxe looks
-**Promotional text (170):** New: AI Outfit Change, AI Background Change in 20+ dream destinations, plus one-tap AI Glow. Your face always stays yours.
+**Name (30):** Face Couture by Always Luxe
+**Subtitle (30):** Real Face Studio
+**Promotional text (170):** Your real face, couture styled: AI Glow, outfit try-on, dream destinations and every social size in one beautiful studio. Free while we launch.
 **Keywords (100, comma-separated, no spaces):**
-`makeup,selfie,beauty,retouch,glam,outfit,try on,background,travel,lashes,skin,portrait,headshot,ai`
+`glam,makeup,outfit,try on,headshot,linkedin,dating,profile,santorini,travel,bridal,lashes,resize`
 **Primary category:** Photo & Video · **Secondary:** Lifestyle
 **Age rating:** 4+ (no objectionable content; AI features are user-initiated photo edits)
 **Support URL:** https://facecouture.app/support.html
@@ -17,53 +17,42 @@ Paste-ready text for App Store Connect and Google Play Console. Character limits
 **Copyright:** © 2026 Always Luxe
 
 **Description (4000):**
-Face Couture is the beauty studio in your pocket: natural, polished, expensive-looking makeup and skin in one tap, from a brand that believes you should still look like you.
+Face Couture is a beauty studio built around one promise: you still look like you.
 
-Upload a selfie, choose a Look, save. Every finish was tuned by hand to read like a celebrity makeup artist's work, not a filter: real skin texture stays, your true skin tone stays, and the makeup follows your actual lips, lash line and eye shape.
+Most beauty editors reshape your face. Face Couture keeps your real face, your eye shape and color, your lips and your smile, then adds polished makeup, a new outfit or a dream destination around them. One photo becomes a complete look, ready for every platform.
 
-LOOKS THAT MEAN WHAT THEY SAY
-• Natural Glow, Clean Girl, Fresh & Bright — the everyday glow
-• Satin Glam, Hollywood, Red Carpet, Runway Drama — smoky eyes, winged liner, a proper red or a glossy wine lip
-• Golden Hour, Sunlit Glow, Gilded Glam — bronzed, rosy, nude-brown luxury
-• Royal Couture — princess, queen, fairy and witch looks all year
-• Seasonal collections appear automatically: Halloween, Thanksgiving, Christmas and New Year's
-• For men: a separate set of clean, natural grooming finishes
+YOUR REAL FACE, PERFECTED
+• AI Glow: one-tap glam placed onto your real, unchanged face
+• AI Looks: Satin Glam, Full Glam, Red Carpet, Clean Girl, Bridal Glow and more
+• Makeup Artist Mode: already wearing makeup? Keep your artist's work and make it photo-ready
 
-MAKEUP ARTIST MODE
-Already wearing makeup? Face Couture keeps your artist's work and makes it magazine-ready: sharper eyes and brows, richer lips, sculpted glow and flawless skin with real texture.
+STYLE THE WHOLE PHOTO
+• AI Outfit Change: add a photo of any outfit and see yourself wearing it
+• AI Accessories and AI Shoes: try on handbags, jewelry, watches and shoes
+• AI Background Change: Santorini, Paris, New York, Tokyo, a rooftop, fine dining and more
+• Vanish: remove people in the background
 
-BEAUTY LAB
-Glossy or creamy lipstick in makeup-artist shades, lengthening mascara and lashes, liner that follows your real lash line, blended shimmer eyeshadow, blush, bronzer, contour, brow fill, skin smoothing that keeps pores, eye lift for hooded lids, teeth and shine control. Three strengths — Subtle, Natural, Glam — plus Max for full drama. Your own choices are kept when you step up the intensity.
+READY FOR EVERY PLATFORM
+• 40+ exact sizes for LinkedIn, dating apps, Instagram, TikTok and more, each framed around your face
+• Platform Pack: save every size at once
+• Before and after photos and short reels
 
-READY TO POST
-• 40+ exact sizes for Instagram, TikTok, Facebook, LinkedIn, dating apps and more
-• Platform Pack: save every size at once, framed around your face
-• Before/after photos and 9:16 before→after reels for Reels and TikTok
-• Video studio: turn your edit into a short clip with captions
-• Frames, crop, rotate, undo/redo, compare, reset
-• Group photos: edit only the person you choose
+BEAUTY LAB, FREE AND ON YOUR PHONE
+Smooth skin that keeps real texture, blemish fix, lipstick and gloss, lashes, liner, brows, blush and contour, eyelid lift, nose size, background blur and frames. These tools work on your iPhone, even offline.
+
+FOR MEN TOO
+A dedicated men's mode with no makeup at all: subtle skin smoothing, grooming and flattering light.
 
 PRIVATE BY DESIGN
-Face and lip mapping runs on your phone. Your photos are never uploaded for it, there is no account, and hidden location data is removed from everything you save. Beauty tools work offline.
+No account needed. Face mapping runs on your iPhone. A photo leaves your phone only when you choose an AI feature and agree, just for that one edit. It is never stored or used for training.
 
-AI STUDIO
-• AI Glow: premium AI glam that keeps your real face, eye color, lips and smile
-• AI Looks: Satin Glam, Full Glam, Red Carpet, Clean Girl, Bridal Glow and more, made by AI on your own photo
-• AI Outfit Change: upload a photo of any outfit and see yourself wearing it
-• AI Accessories and AI Shoes: try on necklaces, earrings, bracelets, watches, bags and shoes
-• AI Background Change: Santorini, Paris, New York, Tokyo, Petra, the Pyramids and 20+ more, with your lighting matched to the scene
-• Vanish people in the background, plus free real-lens background blur
-• Keep editing: stack changes, for example a new outfit and then a new destination
-Your face always stays exactly yours. AI runs only when you ask and agree; your photo is sent securely for that single edit and is never stored or used for training.
+FREE WHILE WE LAUNCH
+Every feature is free right now. AI features have a daily limit.
 
-FREE AT LAUNCH
-Everything in Face Couture is free while we launch, including AI looks: up to 2 AI looks a day for every member.
+Terms of Use: https://facecouture.app/terms.html
+Privacy Policy: https://facecouture.app/privacy.html
 
-Terms of Use: https://facecouture.app/terms.html · Privacy Policy: https://facecouture.app/privacy.html
-
-Face Couture by Always Luxe. Couture beauty for every photo.
-
-**What's New (first release):** Welcome to Face Couture. Natural glam looks, AI Glow, AI Outfit Change, AI Background Change, Makeup Artist Mode and every social size.
+**Screenshots:** the 6 approved pictures (6.9-inch, 1290×2796) are kept out of this public repository because two of them show Demah's own photos.
 
 ## Google Play
 
