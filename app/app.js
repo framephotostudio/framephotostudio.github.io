@@ -10,8 +10,8 @@
   function tap(style) { if (window.FCNative) window.FCNative.tap(style); }
 
   // ---------- bottom tab bar (drives the studio's existing tabs) ----------
+  // every AI feature lives in the Studio tab's AI Studio; the website's older AI tab is never shown in the app
   var ICONS = {
-    ai: '<path d="M12 4l1.5 3.8L17.3 9.3l-3.8 1.5L12 14.6l-1.5-3.8L6.7 9.3l3.8-1.5z"/><path d="M5 16l.7 1.8 1.8.7-1.8.7L5 21l-.7-1.8-1.8-.7 1.8-.7z"/><path d="M19 15l.6 1.4 1.4.6-1.4.6L19 19l-.6-1.4-1.4-.6 1.4-.6z"/>',
     edit: '<path d="M12 3l1.8 4.6L18.5 9l-4.7 1.4L12 15l-1.8-4.6L5.5 9l4.7-1.4z"/><path d="M18 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/>',
     beauty: '<path d="M9 21h6"/><path d="M10 21V11h4v10"/><path d="M10 11l1-6.5c.2-1 1.8-1 2 0l1 6.5"/>',
     frames: '<rect x="3.5" y="3.5" width="17" height="17" rx="3"/><rect x="7.5" y="7.5" width="9" height="9" rx="1.5"/>',
@@ -19,7 +19,7 @@
     video: '<rect x="3" y="6" width="13" height="12" rx="2.5"/><path d="M16 10.5l5-3v9l-5-3z"/>',
     share: '<path d="M12 15V3.5"/><path d="M7.5 8L12 3.5 16.5 8"/><path d="M5 12.5V19a1.5 1.5 0 0 0 1.5 1.5h11A1.5 1.5 0 0 0 19 19v-6.5"/>'
   };
-  var LABELS = { edit: 'Studio', beauty: 'Beauty', ai: 'AI', frames: 'Frames', formats: 'Formats', video: 'Video', share: 'Save' };
+  var LABELS = { edit: 'Studio', beauty: 'Beauty', frames: 'Frames', formats: 'Formats', video: 'Video', share: 'Save' };
 
   function buildTabBar() {
     if (document.getElementById('fcTabBar')) return;
@@ -173,7 +173,45 @@
     });
   }
 
+  // the full-screen editor only opens once the studio is showing; on the welcome screen (for example after
+  // choosing "For men", which switches the Beauty Lab group) it would cover the screen and freeze every button
+  function guardEditor() {
+    if (typeof window.setExpandedPreview !== 'function' || window.setExpandedPreview.__fcGuard) return;
+    var orig = window.setExpandedPreview;
+    var guarded = function (expanded) { if (expanded && !inStudio()) return; return orig.apply(this, arguments); };
+    guarded.__fcGuard = true; window.setExpandedPreview = guarded;
+    var ws = document.querySelector('.workspace');
+    if (ws && ws.classList.contains('expanded') && !inStudio()) orig(false);
+  }
+
+  // website-style file tools are left out of the app: the ZIP set (Platform Pack saves every size to Photos)
+  // and the project file (.json) save/open
+  function hideFileTools() {
+    var batch = document.getElementById('batch'); if (batch && batch.parentNode && batch.parentNode.classList.contains('adv')) batch.parentNode.hidden = true;
+    Array.prototype.forEach.call(document.querySelectorAll('h3'), function (h) {
+      if ((h.textContent || '').trim() !== 'Save your project') return;
+      var n = h; while (n) { var next = n.nextElementSibling; n.hidden = true; n.style.display = 'none'; n = next; if (n && /^H[23]$/.test(n.tagName)) break; }
+    });
+  }
+  // every AI result can be reported (sent to the Face Couture team, no photo is sent)
+  function addReport() {
+    var res = document.querySelector('.luxeRes'); if (!res || res.querySelector('.fcReport')) return;
+    var acts = res.querySelector('.luxeActs') || res;
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'fcReport'; b.textContent = 'Report this result';
+    b.onclick = function () {
+      var why = window.prompt('What was wrong with this AI result? (Your photo is not sent.)'); if (!why) return;
+      var title = (res.querySelector('.luxeTop b') || {}).textContent || '';
+      var done = function () { toastMsg('Thank you. Our team will review it.'); b.disabled = true; b.textContent = 'Reported'; };
+      if (window.FCApi && window.FCApi.url) window.FCApi.api('/api/report', { task: title, reason: String(why).slice(0, 500) }).then(done).catch(function () { toastMsg('You\'re offline. Please try again later.'); });
+      else done();
+    };
+    acts.appendChild(b);
+  }
+
   function init() {
+    hideFileTools();
+    if (window.MutationObserver) new MutationObserver(function () { addReport(); }).observe(document.body, { childList: true, subtree: true });
+    guardEditor();
     setupNative();
     buildTabBar();
     watchStudio();

@@ -34,10 +34,11 @@
     s.innerHTML = '<div class="fcSetTop"><button type="button" class="fcSetDone" id="fcSetClose">Done</button><h2 id="fcSetTitle">Settings</h2></div>' +
       '<div class="fcSetBody">' +
       '<div class="fcSetGroup"><div class="fcSetHead">Privacy</div>' +
-      '<p class="fcSetText">Beauty tools, Looks and saving work on your iPhone, even offline. A photo is sent only when you choose an AI feature and agree, just for that one edit. It is never stored or used for training.</p></div>' +
+      '<p class="fcSetText">Beauty tools, Looks and saving work on your iPhone, even offline. A photo is sent only when you choose an AI feature and agree, just for that one edit. We do not keep it, and it is never used for training.</p></div>' +
       '<div class="fcSetGroup">' + row('fcSetPrivacy', 'Privacy policy') + row('fcSetTerms', 'Terms of use') + row('fcSetDelete', 'Delete my data', 'Removes your AI history from our server') + '</div>' +
       '<div class="fcSetGroup">' + row('fcSetSupport', 'Contact support', CFG.supportEmail || 'hello@facecouture.app') + '</div>' +
-      '<p class="fcSetVer">Face Couture by Always Luxe · Version ' + (CFG.version || '1.0.0') + '</p></div>';
+      '<p class="fcSetVer">Face Couture by Always Luxe · Version ' + (CFG.version || '1.0.0') + '</p>' +
+      ((API && API.device && API.device()) ? '<p class="fcSetVer fcSetId">Device ID (for support): ' + String(API.device()).replace(/[<>&"]/g, '') + '</p>' : '') + '</div>';
     s.hidden = false; document.documentElement.classList.add('fcSetOpen');
     $('#fcSetClose').onclick = closeSettings;
     $('#fcSetPrivacy').onclick = function () { closeSettings(); openLegal('privacy'); };
@@ -47,7 +48,7 @@
       if (!confirm('Delete the AI history linked to this iPhone from our server? Your photos are never stored by us, so there are none to delete.')) return;
       if (!API || !API.url) { toast('Nothing is stored for this iPhone.'); return; }
       API.api('/api/delete-my-data', {}).then(function (r) { toast(r.message || 'Deleted.'); try { localStorage.removeItem('fc-token'); localStorage.removeItem('fc-device'); } catch (e) {} closeSettings(); })
-        .catch(function (e) { toast(e.message || 'Could not delete right now. Please try again.'); });
+        .catch(function (e) { var m = (e && e.message) || ''; toast(/fetch|network|load failed/i.test(m) || !navigator.onLine ? 'You\'re offline. Connect to the internet and try again.' : (m || 'Could not delete right now. Please try again.')); });
     };
   }
   function closeSettings() { var s = $('#fcSettings'); if (s) s.hidden = true; document.documentElement.classList.remove('fcSetOpen'); }
