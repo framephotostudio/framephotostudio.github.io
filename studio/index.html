@@ -800,7 +800,7 @@ const saved=frameState.map(f=>({...f}));let framed=0,noFace=false;
 try{
 if($('#packFace').checked){if(await ensureFace()){const box=headBox(),d=baseCanvas(100);for(const i of selected){const f=faceFrame(i,d.width,d.height,box);frameState[i]=f;if(f.mode==='fill')framed++}}else noFace=true}
 const groups=new Map();for(const i of selected){const k=presets[i][3]+'x'+presets[i][4];if(!groups.has(k))groups.set(k,[]);groups.get(k).push(i)}const files=[],made=[];framed=0;for(const g of groups.values()){const i=g[0];if(frameState[i].mode==='fill')framed++;const blob=await exportBlob(i);const names=[...new Set(g.map(j=>{const q=PACK.find(x=>x[0]===j);return q?q[1]:presets[j][1]+' '+presets[j][2]}))];const slug=names.join(' ').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');const f=new File([blob],'face-couture-'+slug+'-'+presets[i][3]+'x'+presets[i][4]+'.'+($('#quality').value==='image/png'?'png':'jpg'),{type:blob.type});files.push(f);made.push({file:f,names,w:presets[i][3],h:presets[i][4]})}
-const r=await deliverFiles(files,'Face Couture Platform Pack');try{if(r!=='cancelled'&&window.fcPackResult)window.fcPackResult(made,r)}catch(e){}try{if(r!=='cancelled'&&window.fcPackResult)window.fcPackResult(made,r)}catch(e){}try{if(r!=='cancelled'&&window.fcPackResult)window.fcPackResult(made,r)}catch(e){}try{if(r!=='cancelled'&&window.fcPackResult)window.fcPackResult(made,r)}catch(e){}
+const r=await deliverFiles(files,'Face Couture Platform Pack');try{if(r!=='cancelled'&&window.fcPackResult)window.fcPackResult(made,r)}catch(e){}try{if(r!=='cancelled'&&window.fcPackResult)window.fcPackResult(made,r)}catch(e){}try{if(r!=='cancelled'&&window.fcPackResult)window.fcPackResult(made,r)}catch(e){}try{if(r!=='cancelled'&&window.fcPackResult)window.fcPackResult(made,r)}catch(e){}try{if(r!=='cancelled'&&window.fcPackResult)window.fcPackResult(made,r)}catch(e){}
 toast(r==='cancelled'?'Share cancelled.':r==='pending'?'Your pack is ready. Tap Share to send it.':'Pack ready: '+files.length+(files.length===1?' size':' sizes')+(framed&&framed===files.length?', each framed on your face':framed?', '+framed+' framed on your face':'')+(noFace?'. No face found, so whole photos were kept':'')+'.')
 }catch(e){toast(e.message||'Could not build your pack.')}
 finally{frameState=saved;syncCrop();invalidate();btn.disabled=false;btn.textContent=label}
@@ -1487,7 +1487,7 @@ if(VIBES.evening)Object.assign(VIBES.evening,{look:'rose',adj:Object.assign({},V
 /* Finishes change the lips, skin and glow; eyes stay soft and consistent so her own eye makeup is not repainted */
 for(const k in VIBES){if(!/^(fx_|w_)/.test(k))continue;const b=VIBES[k].beauty;b.eyeShadow=Math.min(b.eyeShadow||0,16);b.eyeLiner=Math.min(b.eyeLiner||0,8);b.lashes=0;b.mascara=Math.min(b.mascara||0,16);const sh=VIBES[k].sh;sh.eyeColor='champagne';sh.eyeFinish='matte';sh.linerStyle='fine';sh.linerColor='brown';sh.lashStyle='natural'}}
 if(!VIBES.fx_sunlit)VIBES.fx_sunlit={n:'Sunlit Glow',t:'Sun-kissed tan, beachy glow',g:'#f4d2a8,#c98d5e',d:1,look:'natural',adj:{light:4,contrast:3,color:2},beauty:{smooth:32,foundation:14,concealer:22,highlight:36,blush:16,tan:32,eyeShadow:16,eyeLiner:8,mascara:16,browMakeup:16,tint:44,gloss:34,wrinkles:6},sh:{color:'teaRose',blushColor:'peach',eyeColor:'champagne',eyeFinish:'matte',glossShade:'gHoney',lipFinish:'cream',linerColor:'brown',linerStyle:'fine',lashStyle:'natural'}};if(VIBES.beachglam){VIBES.beachglam.n='Bronzed Glow';setTimeout(()=>{try{document.querySelectorAll('.vibe[data-vibe="beachglam"] b').forEach(e=>e.textContent='Bronzed Glow')}catch(e){}},0)}
-const FIN=['fx_soft','fx_full','fx_red','fx_clean','bridal','fx_golden','datenight','fx_natural','fx_sunlit','fx_bold','fx_headshot'],WORK=['w_classic','w_exec','w_bright','w_natural'];
+const FIN=['evening','fresh','fx_soft','fx_full','fx_natural','smokyeye','vampy','softnatural','datenight','fx_red','fx_clean','bridal','fx_golden','fx_sunlit','fx_bold','fx_headshot'],WORK=['w_classic','w_exec','w_bright','w_natural'];
 if(!VIBES.fx_full)VIBES.fx_full=Object.assign({},VIBES.fx_soft,{n:'Grand Soirée',t:'Sculpted, smoky, wow',g:'#d98fb0,#5a2d6e',d:1});
 const WDOT={w_classic:'#aeb2ba',w_exec:'#232a3a',w_bright:'#f6efe4',w_natural:'#bba98a'};
 const btn=(k)=>{const v=VIBES[k];return `<button class="vibe${v.d?' dark':''}" data-vibe="${k}" data-tag="fin" style="background:linear-gradient(135deg,${v.g})">${WDOT[k]?`<i class="wdot" style="background:${WDOT[k]}"></i>`:''}<b>${v.n}</b> <span>${v.t}</span></button>`};
@@ -2316,7 +2316,7 @@ var _bpW=beautyPixels;beautyPixels=function(d,w,h,b){if(b&&b.wrinkles){try{wrink
    Owner preview of every season: see Admin preview below */
 ;(function(){try{
 var SEASONS=[
-{id:'halloween',name:'Halloween',from:[10,1],to:[11,7],until:'Until Nov 7',g:'#2a1030,#5a1a3c',looks:{
+{id:'halloween',name:'Halloween',from:[10,1],to:[10,31],until:'Until Oct 31',g:'#2a1030,#5a1a3c',looks:{
 hw_vampire:{n:'Couture Vampire',t:'Black-cherry lip, wine smoke',g:'#3a0d1f,#7a1a36',d:1,look:'rose',adj:{light:2,contrast:7,color:1,warmth:-3,vignette:4,softness:8},
  beauty:{smooth:42,foundation:24,concealer:26,blemish:80,scars:70,wrinkles:28,contour:30,highlight:34,blush:14,eyeShadow:54,eyeLiner:40,lashes:60,mascara:44,browMakeup:26,tint:80,gloss:22,faceLight:16},
  sh:{color:'blackCherry',lipFinish:'cream',glossShade:'gCherry',blushColor:'mauve',eyeColor:'wineE',eyeFinish:'matte',linerStyle:'wing',linerColor:'black',lashStyle:'volume',lowerSmoke:.4,glamEyes:1}},
@@ -5083,6 +5083,7 @@ pp.addEventListener('change',function(){var v=pp.value;if(!/^(tiktok|reels|safe)
 try{var i=presets.findIndex(function(p){return p[0]===(v==='tiktok'?'tiktok':'ig-story')});if(i<0)return;if(back&&back.i!==i){frameState[back.i]=back.f}else if(presets[active][3]===1080&&presets[active][4]===1920&&!back)return;if(!back||back.i!==i)back={i:i,f:Object.assign({},frameState[i]),active:back?back.active:active};
 Promise.resolve(ensureFace()).then(function(ok){if(ok){var d=baseCanvas(100);frameState[i]=zoneFrame(i,d.width,d.height)||faceFrame(i,d.width,d.height,headBox())}choose(i);pp.value=v;if(typeof schedule==='function')schedule();setTimeout(function(){if(pp.value===v&&typeof W.toast==='function')W.toast('Showing the 9:16 '+(v==='tiktok'?'TikTok':v==='reels'?'Reels':'Story')+' size, framed on your face.')},80)})}catch(e){}});return true}
 var n=0,t=setInterval(function(){if(zones()||++n>40)clearInterval(t)},250);
+var dd=D.createElement('style');dd.id='fcFinDedupe';dd.textContent=['evening','fresh','smokyeye','vampy','softnatural'].map(function(k){return '#vibes [data-vibe="'+k+'"]'}).join(',')+'{display:none!important}';D.head.appendChild(dd);
 }catch(e){console.warn('v109',e)}})();
 </script>
 </body></html>
