@@ -1,7 +1,7 @@
 // Builds the app's web bundle from the live site's code (checked out into ./site from the main branch).
 // Everything the site loads from the internet (face detection engine, AI models) is downloaded and bundled,
 // so the app works fully offline and never loads the website itself.
-import fs from 'node:fs'; import path from 'node:path';
+import fs from 'node:fs'; import path from 'node:path'; import { shared } from './shared.mjs';
 const SITE = process.env.SITE_DIR || 'site', OUT = 'www', V = path.join(OUT, 'vendor');
 fs.rmSync(OUT, { recursive: true, force: true }); fs.mkdirSync(V, { recursive: true });
 for (const f of fs.readdirSync(SITE)) if (/\.(png|jpg|onnx|webp|svg|ico)$/i.test(f)) fs.copyFileSync(path.join(SITE, f), path.join(OUT, f));
@@ -23,6 +23,8 @@ html = html.split(MP + '/wasm').join('./vendor/mediapipe/wasm').split(MP + '/vis
 // app-only adjustments to the studio code: the AI button talks to the Face Couture API when one is configured;
 // store-facing names use the current brand
 html = html.replace("$('#generate').onclick=async()=>{openPro();return;", "$('#generate').onclick=async()=>{return;");
+// changes shared with the website (Platform Pack, lipstick, look and button names, zone text, consent wording): scripts/shared.mjs
+html = shared(html);
 // App Store build: no hidden or unfinished features (Apple guideline 2.3.1). The website keeps all of these.
 // Each change must match exactly once, so a website update can never silently bring one back.
 function appOnly(find, repl, why) {
@@ -44,39 +46,12 @@ appOnly("var OWNER=false;try{OWNER=localStorage.getItem('fc-owner')==='1'}catch(
 appOnly('render();checkAdminParam();', 'render();', 'admin preview');
 // Google Analytics stays on the website only; the iPhone app sends no analytics
 appOnly('try{if(OWNER){window.gtag=function(){};return}', 'try{if(true){window.gtag=function(){};return}', 'no analytics in the app');
-appAll('Headshot Pro', 'Boardroom Portrait', 'look name (Headshot Studio is another app)');
 appAll('"operatingSystem":"Web, iOS, Android"', '"operatingSystem":"iOS"', 'app platform');
 appAll('Coming soon<b>Face Couture mobile app</b>', 'Face Couture<b>on iPhone</b>', 'store badge text');
-appAll("matte:{n:'Matte Pro'", "matte:{n:'Velvet Matte'", 'look name without Pro');
 appAll('<b>Face detected · AI mapped</b>', '<b>Face detected · mapped on your phone</b>', 'on-device wording');
 appAll("faceLight:['Even lighting (AI fill light)'", "faceLight:['Even lighting (fill light)'", 'on-device wording');
-// ---- Platform Pack (build 40, App Review): every set saves distinct sizes, each framed on the face, never two identical files ----
-appOnly("const SETS={social:['ig-portrait','ig-story','tiktok'],pro:['linkedin','whatsapp-profile','x'],dating:['hinge','ig-portrait','whatsapp-profile']};",
-  "const SETS={social:['ig-portrait','ig-square','ig-story','pinterest','youtube'],pro:['linkedin','headshot','linkedin-post','x','whatsapp-status'],dating:['hinge','tinder','league']};", 'pack sets');
-{ const a = html.indexOf("const PACK=[['ig-portrait','Instagram post']"), b = html.indexOf('].map(([id,n])=>', a);
-  if (a < 0 || b < 0 || b - a > 600) throw new Error('Platform Pack "chip list" not found. Update scripts/build-web.mjs.');
-  html = html.slice(0, a) + "const PACK=[['ig-portrait','Instagram post'],['ig-square','Square post'],['ig-story','Story · Reels'],['tiktok','TikTok'],['pinterest','Pinterest pin'],['youtube','YouTube thumbnail'],['linkedin','LinkedIn profile'],['headshot','Headshot'],['linkedin-post','LinkedIn post'],['x','X post'],['whatsapp-status','WhatsApp status'],['whatsapp-profile','WhatsApp profile'],['facebook-portrait','Facebook post'],['hinge','Hinge · Bumble · Raya'],['tinder','Tinder'],['league','The League']" + html.slice(b); }
-// face framing: if the head with hair doesn't fit a size, frame the face itself (hair at the sides may be trimmed);
-// if even that doesn't fit (wide sizes), zoom out on a clean backdrop instead of keeping the whole photo small
-{ const a = html.indexOf('function faceFrame(i,iw,ih,box){'), b = html.indexOf('\n', a);
-  if (a < 0 || b < 0 || html.indexOf('function faceFrame(i,iw,ih,box){', a + 1) > -1) throw new Error('Platform Pack "face framing" not found. Update scripts/build-web.mjs.');
-  html = html.slice(0, a) + "function faceFrame(i,iw,ih,box){const cw=presets[i][3],ch=presets[i][4],sc=Math.max(cw/iw,ch/ih),w=iw*sc,h=ih*sc,ty=ch>cw*1.05?.45:.5,o=beauty.faceOutline||[];let tight=box;if(o.length>2){const xs=o.map(p=>p.x),ys=o.map(p=>p.y),fx0=Math.min(...xs),fx1=Math.max(...xs),fy0=Math.min(...ys),fy1=Math.max(...ys),fw=fx1-fx0,fh=fy1-fy0;tight={x0:Math.max(0,fx0-.06*fw),x1:Math.min(1,fx1+.06*fw),y0:Math.max(0,fy0-.3*fh),y1:Math.min(1,fy1+.1*fh)}}const cl=v=>Math.max(0,Math.min(1,v));function at(b,z){const W=w*z,H=h*z,cx=(b.x0+b.x1)/2,cy=(b.y0+b.y1)/2,x=Math.abs(cw-W)>1?cl((.5*cw-cx*W)/(cw-W)):.5,y=Math.abs(ch-H)>1?cl((ty*ch-cy*H)/(ch-H)):.5,ox=(cw-W)*x,oy=(ch-H)*y;if(ox+b.x0*W<-1||ox+b.x1*W>cw+1||oy+b.y0*H<-1||oy+b.y1*H>ch+1)return null;return{x,y,z,mode:'fill'}}for(const b of [box,tight]){const r=at(b,1);if(r)return r}const zb=tight,z=Math.max(.3,Math.min(1,.96*cw/((zb.x1-zb.x0)*w),.96*ch/((zb.y1-zb.y0)*h)));return at(zb,z)||at(tight,z)||{x:.5,y:.5,z:1,mode:'fit'}}" + html.slice(b); }
-// the space around a zoomed-out or whole photo is a smooth backdrop made from the photo's own edge colours (no blown-up blur)
-appOnly("if(f.mode==='fit'&&$('#frameBackdrop').value==='soft'){const bg=document.createElement('canvas');bg.width=32;bg.height=Math.max(1,Math.round(32*input.height/input.width));bg.getContext('2d').drawImage(baseCanvas(160),0,0,bg.width,bg.height);const cover=Math.max(c.width/bg.width,c.height/bg.height);const bw=bg.width*cover,bh=bg.height*cover;ctx.imageSmoothingEnabled=true;ctx.drawImage(bg,(c.width-bw)/2,(c.height-bh)/2,bw,bh);ctx.fillStyle='#ffffff66';ctx.fillRect(0,0,c.width,c.height);bg.width=bg.height=1}",
-  "if((f.mode==='fit'||f.z<.999)&&$('#frameBackdrop').value==='soft'){window.fcSoftBackdrop(ctx,c.width,c.height,baseCanvas(160))}", 'pack backdrop');
-// one file per size: platforms that share a size are saved once, named for all of them; the saved sizes are shown on screen
-appOnly("const files=[];for(const i of selected){const blob=await exportBlob(i);files.push(new File([blob],filename(i),{type:blob.type}))}",
-  "const groups=new Map();for(const i of selected){const k=presets[i][3]+'x'+presets[i][4];if(!groups.has(k))groups.set(k,[]);groups.get(k).push(i)}const files=[],made=[];framed=0;for(const g of groups.values()){const i=g[0];if(frameState[i].mode==='fill')framed++;const blob=await exportBlob(i);const names=[...new Set(g.map(j=>{const q=PACK.find(x=>x[0]===j);return q?q[1]:presets[j][1]+' '+presets[j][2]}))];const slug=names.join(' ').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');const f=new File([blob],'face-couture-'+slug+'-'+presets[i][3]+'x'+presets[i][4]+'.'+($('#quality').value==='image/png'?'png':'jpg'),{type:blob.type});files.push(f);made.push({file:f,names,w:presets[i][3],h:presets[i][4]})}", 'pack one file per size');
-appOnly("const r=await deliverFiles(files,'Face Couture Platform Pack');", "const r=await deliverFiles(files,'Face Couture Platform Pack');try{if(r!=='cancelled'&&window.fcPackResult)window.fcPackResult(made,r)}catch(e){}", 'pack result');
-appOnly("(framed?', '+framed+' framed on your face':'')", "(framed&&framed===files.length?', each framed on your face':framed?', '+framed+' framed on your face':'')", 'pack toast');
-appOnly('Center on my face (keeps the whole photo if a size would cut it off)', 'Frame every size on my face', 'pack option');
 // the AI Studio sits at the end of the Studio tab (not pinned above the tools)
 appOnly('if(w.parentNode!==box){box.appendChild(w);moved=1}', "{var ed=D.getElementById('edit');if(ed&&w.parentNode!==ed){ed.appendChild(w);moved=1}}", 'AI Studio at the end');
-// Full Glam (Grand Soirée) lipstick: velvet rose, fuller colour and a pearl gloss (Demah's pick B, Nov 5, 2026; was a bright pink that went flat and bubblegum on light lips)
-appOnly("b.tint=S.beauty.tint;b.gloss=60;", "b.tint=85;b.gloss=40;", 'Full Glam lipstick strength');
-appOnly("Object.assign(sh,{color:'glamRosePink',lipFinish:'cream',glossShade:'gRose',opaqueLip:1});", "Object.assign(sh,{color:'velvetRose',lipFinish:'cream',glossShade:'gPearl',opaqueLip:1});", 'Full Glam lipstick shade');
-// app-zone guide text sits in the top red band, not across the face
-appOnly("ctx.fillText('Keep faces and text out of the red areas',w/2,h*.5)", "ctx.fillText('Keep clear of red',w*.28,h*.06)", 'zone text short, left of the photo buttons');
 // ---- Try it on, Change the scene, Accessories and Shoes are not in version 1.0 (Demah, Nov 5, 2026). ----
 // ONE SWITCH brings all four back for version 1.1: build with FC_TRYON=1 (see RESTORE-AI-TOOLS.md). Nothing is deleted from the website or the server.
 const TRYON = process.env.FC_TRYON === '1';
@@ -93,16 +68,14 @@ if (!TRYON) {
   appOnly("hh.textContent='Background & outfit'", "hh.textContent='Vanish'", '1.0: panel title');
   appOnly("if(!box||!D.getElementById('aiGlowBtn')||!D.getElementById('fcTryBtn'))return false;", "if(!box||!D.getElementById('aiGlowBtn'))return false;", '1.0: AI Studio row without try-on');
   // the four buttons themselves are not built in 1.0 (no hidden markup)
-  appOnly(`r.innerHTML='<button type="button" id="fcWowOutfit">&#128087; AI Outfit Change<small>Wear any outfit</small></button><button type="button" id="fcWowBg">&#127757; AI Background Change<small>Paris, NYC, Tokyo and more</small></button>';`, "r.innerHTML='';", '1.0: no outfit or scene buttons');
+  appOnly(`r.innerHTML='<button type="button" id="fcWowOutfit">&#128087; Try it on<small>Wear any outfit</small></button><button type="button" id="fcWowBg">&#127757; Change the scene<small>Paris, NYC, Tokyo and more</small></button>';`, "r.innerHTML='';", '1.0: no outfit or scene buttons');
   appOnly("D.getElementById('fcWowOutfit').onclick=function(){go('outfit')};D.getElementById('fcWowBg').onclick=function(){go('bg')};", '', '1.0: no outfit or scene handlers');
-  appOnly(`r.innerHTML='<button type="button" id="fcWowAcc"><span>&#128141; <b>AI Accessories</b></span><small>Jewelry, bags, watches</small></button>'+\n   '<button type="button" id="fcWowShoes"><span>&#128096; <b>AI Shoes</b></span><small>Try on any shoes</small></button>'+\n   `, "r.innerHTML=", '1.0: no accessories or shoes buttons');
+  appOnly(`r.innerHTML='<button type="button" id="fcWowAcc"><span>&#128141; <b>Accessories</b></span><small>Jewelry, bags, watches</small></button>'+\n   '<button type="button" id="fcWowShoes"><span>&#128096; <b>Shoes</b></span><small>Try on any shoes</small></button>'+\n   `, "r.innerHTML=", '1.0: no accessories or shoes buttons');
   appOnly("D.getElementById('fcWowShoes').onclick=function(){pick('shoes')};", '', '1.0: no shoes handler');
   for (const bad of ['id="fcWowOutfit"', 'id="fcWowBg"', 'id="fcWowAcc"', 'id="fcWowShoes"', 'id="fcTryBtn"', 'Choose outfit photo', 'id="fcTravel"', 'Travel backgrounds <small', 'shoes try-on <small'])
     if (html.indexOf(bad) > -1) throw new Error('1.0 clean-up: "' + bad + '" is still in the app. Update scripts/build-web.mjs.');
 }
 appOnly('content="width=device-width,initial-scale=1,viewport-fit=cover"', 'content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"', 'no page zoom');
-appAll('only to create this look, and it is not stored.', 'only to create this look. We do not store it.', 'consent wording 2');
-appAll('<button type="button" data-set="pro">Professional</button>', '<button type="button" data-set="pro">Work</button>', 'same set name as the welcome card');
 appOnly("try{isAdmin=localStorage.getItem('fcAdmin')===ADMIN_HASH}catch(e){}", '', 'admin flag');
 { const a = html.indexOf('function setAdmin(on){'), b = html.indexOf('window.__seasonal=', a);
   if (a < 0 || b < 0 || b - a > 3000) throw new Error('App Store clean-up "admin switch" not found. Update scripts/build-web.mjs.');
@@ -130,20 +103,15 @@ appAll('Photo clips with optional user-supplied audio, created locally. Export a
 appAll('>Download custom size<', '>Save custom size<', 'custom size button');
 appAll(' Direct publishing is not connected.', '', 'share note');
 appAll('It needs an internet connection once. If you are viewing this inside a preview or an app, open the live website link in your phone browser instead. ', 'Please close and reopen Face Couture. ', 'face detector fallback');
-appAll("message('Solo photos for now','AI Luxe Looks work on photos of one person for now. Group photos are coming soon. The Looks below work on group photos.')", "message('One person at a time','AI Looks work on photos of one person. The Looks below work on group photos.')", 'group photo message');
+appAll("message('Solo photos for now','AI Luxe Looks work on photos of one person for now. Group photos are coming soon. The Looks below work on group photos.')", "message('One person at a time','Couture Looks work on photos of one person. The Looks below work on group photos.')", 'group photo message');
 appAll('Premium AI version · uses 1 AI look', 'AI version · uses 1 AI look', 'AI Glow label');
 appAll('<span>Premium AI &middot; each uses 1 AI look</span>', '<span>Each uses 1 of today&rsquo;s AI looks</span>', 'AI Studio label');
 appAll('<p class="prolabel">✦ FRAME PRO · PREMIUM AI</p><button class="btn full" id="aiUpgrade">See Pro plans</button>', '<p class="prolabel"></p><button class="btn full" id="aiUpgrade" hidden></button>', 'old AI tab label');
-appAll('Tap AI Glow for your premium AI makeover.', 'Tap AI Glow for your AI makeover.', 'AI Glow tip');
+appAll('Tap Couture Glow for your premium AI makeover.', 'Tap Couture Glow for your AI makeover.', 'Couture Glow tip');
 appAll('Your photos are edited on your device and are not uploaded to Face Couture.', 'Your photos are edited on your iPhone. A photo is sent only when you choose an AI feature and agree.', 'privacy note');
 appAll("st.textContent=files.length+' photos styled'", "st.textContent=files.length+(files.length===1?' photo':' photos')+' styled'", 'carousel count');
 appAll('>Add your music or recorded voiceover<', '>Add your music or a voiceover file<', 'video audio label');
-appAll("to create the look. It isn't stored. <a", "to create the look. We don't store it. <a", 'consent wording');
 html = html.replace(/<link rel="manifest"[^>]*>/, ''); // website install manifest (not used in the app)
-// 5) App Store names for the AI Studio buttons (approved by Demah, Nov 4, 2026); the section is still called "AI Studio"
-for (const [a, b] of [['AI Outfit Change', 'Try it on'], ['AI Background Change', 'Change the scene'], ['AI Accessories', 'Accessories'], ['AI Shoes', 'Shoes'], ['AI Looks', 'Couture Looks'], ['AI Glow', 'Couture Glow']]) appAll(a, b, 'button name ' + a);
-// original look names (Demah, Nov 5, 2026): common beauty terms read like a template app, so each look has its own Face Couture name
-for (const [a, b] of [['Full Glam', 'Grand Soirée'], ['Red Carpet', 'Première'], ['Clean Girl', 'Bare Luxe'], ['Bridal Glow', 'Ivory Vow'], ['Glass Skin', 'Porcelain Dew'], ['Hollywood Glam', 'Silver Screen'], ['Golden Hour', 'Gilded Hour'], ['Magazine Cover', 'Cover Edit'], ['Ice Queen', 'Frost Couture'], ['Pumpkin Spice', 'Spiced Amber']]) appAll(a, b, 'look name ' + a);
 appAll('Pro grooming, no makeup', 'Expert grooming, no makeup', 'men glow subtitle');
 appAll('Pro grooming on your own photo.', 'Expert grooming on your own photo.', 'men AI subtitle');
 appAll('Tap Women above the Finishes to switch.', 'Tap Women above the Looks to switch.', 'men toast');
@@ -194,7 +162,7 @@ LEGAL_APP['terms.html'].push(['the website and apps by Always Luxe', 'the Face C
 LEGAL_APP['privacy.html'].push([' · website and apps · ', ' · iPhone app · '], [' (website visitors download them from Google Cloud Storage and jsDelivr the first time)', '']);
 // version 1.0 legal pages describe only the AI tools in this build (the FC_TRYON=1 switch restores the full wording)
 if (!TRYON) {
-  LEGAL_APP['privacy.html'].push(['AI Luxe Looks, headshot, backgrounds, outfit try-on, Vanish, blur', 'Couture Glow, Couture Looks, Vanish']);
+  LEGAL_APP['privacy.html'].push(['AI Luxe Looks, headshot, backgrounds, outfit try-on, Vanish, blur', 'Couture Glow, Couture Looks, Vanish'], ['Couture Glow, Couture Looks, headshot, backgrounds, outfit try-on, Vanish, blur', 'Couture Glow, Couture Looks, Vanish']);
   LEGAL_APP['privacy.html'].push(['<tr><td>Outfit or accessory photos you upload for try-on</td><td>Same as above</td><td>Same as above. Upload only items you have the right to use; try-on implies no brand partnership.</td></tr>\n', '']);
   LEGAL_APP['terms.html'].push([' Outfit try-on is a visual preview, not a guarantee of fit or availability, and does not imply any partnership with a brand whose product you upload.', '']);
 }
@@ -208,7 +176,8 @@ for (const f of ['privacy.html', 'terms.html', 'support.html', 'delete-my-data.h
   fs.writeFileSync(path.join(OUT, f), t);
 }
 { const legal = ['privacy.html', 'support.html', 'delete-my-data.html', 'terms.html'].map(f => fs.readFileSync(path.join(OUT, f), 'utf8')).join(' ');
-  if (/Google Play|Android|RevenueCat|promo code|Enter a promo/i.test(legal)) throw new Error('App legal pages still mention purchases or other platforms. Update scripts/build-web.mjs.'); }
+  if (/Google Play|Android|RevenueCat|promo code|Enter a promo/i.test(legal)) throw new Error('App legal pages still mention purchases or other platforms. Update scripts/build-web.mjs.');
+  if (!TRYON && /try-on|outfit try|website and apps/i.test(legal)) throw new Error('App legal pages still mention try-on or the website. Update LEGAL_APP in scripts/build-web.mjs.'); }
 // final check: nothing hidden, no payment code and nothing loaded from the internet ships in the App Store build
 { const bad = [];
   for (const f of fs.readdirSync(OUT)) if (/\.(html|js|css)$/.test(f) && !/^(privacy|terms|support|delete-my-data)\.html$/.test(f)) { // the legal pages are documents, not app code
