@@ -119,3 +119,5 @@ html.fc-app #fcTabBar button[data-tab="ai"],html.fc-app nav.tabs [data-tab="ai"]
 .fcReport{display:block;margin:10px auto 0;border:0;background:none;color:#d9c3e6;font:500 13px -apple-system,system-ui,sans-serif;text-decoration:underline;padding:8px;cursor:pointer}
 .fcReport:disabled{opacity:.6;text-decoration:none}
 .fcSetId{font-size:11.5px;margin-top:6px;-webkit-user-select:text;user-select:text;word-break:break-all}
+/* the photo preview menu shows its whole label ("TikTok app zones") */
+html.fc-app #platformPreview,html.fc-app.fc-studio .previewTools #platformPreview{flex:0 0 auto!important;width:auto!important;min-width:142px!important;max-width:none!important;font-size:12.5px!important;padding-right:22px!important}

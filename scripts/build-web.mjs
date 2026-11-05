@@ -80,6 +80,9 @@ appAll("to create the look. It isn't stored. <a", "to create the look. We don't 
 html = html.replace(/<link rel="manifest"[^>]*>/, ''); // website install manifest (not used in the app)
 // 5) App Store names for the AI Studio buttons (approved by Demah, Nov 4, 2026); the section is still called "AI Studio"
 for (const [a, b] of [['AI Outfit Change', 'Try it on'], ['AI Background Change', 'Change the scene'], ['AI Accessories', 'Accessories'], ['AI Shoes', 'Shoes'], ['AI Looks', 'Glam Looks'], ['AI Glow', 'Glow']]) appAll(a, b, 'button name ' + a);
+appAll('Pro grooming, no makeup', 'Expert grooming, no makeup', 'men glow subtitle');
+appAll('Pro grooming on your own photo.', 'Expert grooming on your own photo.', 'men AI subtitle');
+appAll('Tap Women above the Finishes to switch.', 'Tap Women above the Looks to switch.', 'men toast');
 // saved files carry the Face Couture name
 for (const [a, b] of [["'frame-custom-'", "'face-couture-custom-'"], ["'frame-photo-set.zip'", "'face-couture-photo-set.zip'"], ["'frame-clip.'", "'face-couture-clip.'"], ["'frame-before-after.", "'face-couture-before-after."], ["'frame-set-'", "'face-couture-set-'"], ["'frame-my-look-'", "'face-couture-my-look-'"]]) appAll(a, b, 'file name ' + a);
 // per-build settings (backend URL comes from a repository variable). Version 1.0 has no purchases, so no store keys.
@@ -103,7 +106,8 @@ const LEGAL_APP = {
     [' Pro raises the allowance when available.', ''],
     ['<div class="card"><b>Subscription or refund</b> — manage it in your <a href="https://apps.apple.com/account/subscriptions">App Store</a> or <a href="https://play.google.com/store/account/subscriptions">Google Play</a> account. Refunds are issued by Apple or Google.</div>', ''],
     ['<div class="card"><b>Promo code</b> — Settings (gear icon) → Enter a promo code.</div>', ''],
-    ['on the AI screen tap "Report this AI result"', 'tap "Report this result" under any AI result']],
+    ['on the AI screen tap "Report this AI result"', 'tap "Report this result" under any AI result'],
+    ['<p>Instagram and TikTok: <a href="https://www.instagram.com/always_luxe/">@always_luxe</a></p>', '<p>Instagram and TikTok: @always_luxe</p>']],
   'delete-my-data.html': [
     ['or delete the app (iPhone/Android) or clear site data (browser).', 'or delete the app.'],
     [" On the website, clear this site's data in your browser settings.", ''],
