@@ -8,18 +8,18 @@ Paste-ready text for App Store Connect and Google Play Console. Character limits
 **Subtitle (30):** Real Face Studio
 **Promotional text (170):** Your real face, couture styled: AI Glow, outfit try-on, dream destinations and every social size in one beautiful studio. Free while we launch.
 **Keywords (100, comma-separated, no spaces):**
-`glam,makeup,outfit,try on,headshot,linkedin,dating,profile,santorini,travel,bridal,lashes,resize`
+`glam,makeup,outfit,try on,headshot,work photo,dating,profile,santorini,travel,bridal,lashes,resize`
 **Primary category:** Photo & Video · **Secondary:** Lifestyle
-**Age rating:** 4+ (no objectionable content; AI features are user-initiated photo edits)
+**Age rating:** 13+ (AI photo editing of real people; no objectionable content)
 **Support URL:** https://facecouture.app/support.html
-**Marketing URL:** https://facecouture.app
+**Marketing URL:** (leave empty)
 **Privacy Policy URL:** https://facecouture.app/privacy.html
 **Copyright:** © 2026 Always Luxe
 
 **Description (4000):**
 Face Couture is a beauty studio built around one promise: you still look like you.
 
-Most beauty editors reshape your face. Face Couture keeps your real face, your eye shape and color, your lips and your smile, then adds polished makeup, a new outfit or a dream destination around them. One photo becomes a complete look, ready for every platform.
+Your AI makeup is placed on your real, unchanged face. Face Couture keeps your eye shape and color, your lips and your smile, then adds polished makeup, a new outfit or a dream destination around them. One photo becomes a complete look, ready for every platform.
 
 YOUR REAL FACE, PERFECTED
 • AI Glow: one-tap glam placed onto your real, unchanged face
