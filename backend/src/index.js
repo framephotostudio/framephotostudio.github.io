@@ -467,7 +467,7 @@ async function deleteMyData(req, env) {
   const dev = await auth(req, env); if (!dev) return err('Reopen the app and try again.', 401);
   const l = await env.KV.list({ prefix: 'use:' + dev.id }); for (const k of l.keys) await env.KV.delete(k.name);
   await env.KV.delete('dev:' + dev.id);
-  return json({ ok: true, message: 'Everything linked to this device was deleted. Subscriptions are managed in your App Store or Google Play account.' });
+  return json({ ok: true, message: 'Everything linked to this device was deleted.' });
 }
 
 async function status(env) {

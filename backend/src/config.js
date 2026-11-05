@@ -14,7 +14,7 @@ export const DEFAULT_CONFIG = {
   // free = app users without a plan after the free launch (on-device looks stay unlimited), web = the website.
   // Top-up packs add AI looks on top of any plan and never expire.
   allowances: {
-    launch: { perDay: 20, perMonth: 60 }, // TEMPORARY for Apple review: put back to { perDay: 2, perMonth: 10 } after public release
+    launch: { perDay: 20, perMonth: 60 }, // launch allowance; planned: { perDay: 2, perMonth: 10 } after the App Store release
     trial: { total: 2 },
     paid:  { perDay: 15, perMonth: 15 },
     weekly: { perDay: 5, perWeek: 5 },   // weekly plan: 5 AI looks per week (week starts Monday, UTC)
@@ -23,7 +23,7 @@ export const DEFAULT_CONFIG = {
     anonymousWeb: { perDay: 1, perMonth: 3 }
   },
   // Owner spending ceiling for the whole service. AI stops automatically at the limit.
-  spend: { monthlyCeilingUSD: 20, alertAtPercent: 80, blockedMessage: 'AI looks are busy right now, try the on-device version.' },
+  spend: { monthlyCeilingUSD: 40, alertAtPercent: 80, blockedMessage: 'AI looks are busy right now, try the on-device version.' },
   // AI engine: 'fast' (about 4 cents, ~1.3K pixels) or 'pro' (about 13 cents, sharp 2K output)
   ai: { engine: 'std' },
   // Which AI tools are switched on.
@@ -40,9 +40,14 @@ export const DEFAULT_CONFIG = {
   flags: { reviewPromptAfterSaves: 3, showQuiz: true, showMenFirst: false }
 };
 
+// While the iPhone app is in App Review, the monthly AI spending limit is at least this much, even if an older
+// dashboard setting is lower, so AI never shows "busy" to the reviewer. Set back to 0 after approval.
+export const REVIEW_MIN_CEILING_USD = 40;
 export async function getConfig(env) {
   const raw = await env.KV.get('config:current', 'json');
-  return raw ? deepMerge(structuredClone(DEFAULT_CONFIG), raw) : structuredClone(DEFAULT_CONFIG);
+  const c = raw ? deepMerge(structuredClone(DEFAULT_CONFIG), raw) : structuredClone(DEFAULT_CONFIG);
+  if (c.spend && REVIEW_MIN_CEILING_USD > 0 && !(c.spend.monthlyCeilingUSD >= REVIEW_MIN_CEILING_USD)) c.spend.monthlyCeilingUSD = REVIEW_MIN_CEILING_USD;
+  return c;
 }
 
 export async function saveConfig(env, next, who) {

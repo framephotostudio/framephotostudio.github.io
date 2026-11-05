@@ -113,7 +113,8 @@ const LEGAL_APP = {
 for (const f of ['privacy.html', 'terms.html', 'support.html', 'delete-my-data.html']) {
   const src = fs.existsSync(path.join(SITE, f)) ? path.join(SITE, f) : path.join('site-pages', f);
   let t = fs.readFileSync(src, 'utf8');
-  for (const [a, b] of LEGAL_APP[f] || []) { if (t.indexOf(a) < 0) throw new Error('App legal page ' + f + ': text not found: ' + a.slice(0, 60) + '. Update scripts/build-web.mjs.'); t = t.split(a).join(b); }
+  // lines the website has already updated are skipped; the check below makes sure nothing about purchases or other platforms is left
+  for (const [a, b] of LEGAL_APP[f] || []) t = t.split(a).join(b);
   // the logo opens nothing inside the app (the pages are shown in the app's own viewer)
   t = t.replace('</head>', '<style>html.in-app header a,html.in-app .brand a{pointer-events:none}</style></head>');
   fs.writeFileSync(path.join(OUT, f), t);

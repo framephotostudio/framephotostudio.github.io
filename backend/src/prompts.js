@@ -102,7 +102,7 @@ const GLAM = {
     look: 'RED CARPET - sophisticated, camera-ready evening glamour with an editorial wow factor from the complete design, not just the lipstick: a distinct, elegant eye - a soft smoky gradient in bronze and deep chocolate with refined gold shimmer on the lid and a precise, sleek liner with a short, elegant wing that follows the natural angle of her eye (never stretching or elongating the eye shape), kept thin across the inner and middle lid so the eyes stay exactly as open as in the original; glamorous, lifted, separated lashes; elegant bronze sculpting, polished blush and a controlled golden radiance on the cheekbones; and an immaculate statement lip coordinated with the eyes and cheeks - a rich Old Hollywood siren red with a subtle blue-red undertone - vibrant and sophisticated, never neon, orange, dark, wine or burgundy - in a luxurious high-shine gloss finish (never matte): full, even, opaque colour across both lips right into the corners and edges, a beautifully defined cupid\'s bow and smooth contours, slightly deeper colour at the lip contours with a soft glassy highlight at the centre of the lower lip for a plush three-dimensional finish, realistic light reflections and natural lip texture so it looks like expensive lipstick and gloss, not a painted shape; the lips keep exactly their natural size and shape (never bigger or overlined) - with crisp clean edges.' }
 };
 GLAM.bridal = Object.assign({}, GLAM.aiglow, { name: 'Bridal Glow' });
-export function simplePrompt(task, o = {}) {
+function simplePromptCore(task, o = {}) {
   if (task !== 'glam') return null;
   const L = GLAM[o.intensity] || GLAM.glam;
   return o.style === 'men' ? 'Lightly retouch this photo of a man: clearer even skin and neatly groomed brows, no makeup of any kind. Keep his face, expression and everything else the same. Photorealistic.'
@@ -126,7 +126,7 @@ const ACCESSORY = { necklace: 'worn around the neck, resting naturally on the co
 const ORIGINAL_SCENES = ['santorini_day', 'santorini_sunset', 'mykonos', 'beach_lux', 'paris_cafe'];
 export const TRAVEL_KEYS = ['lebanon', 'lisbon', 'cartagena', 'mexico_city', 'cancun', 'cabo', 'tulum', 'niagara', 'banff', 'santorini_day', 'santorini_sunset', 'mykonos', 'beach_lux', 'paris_cafe', 'new_york', 'times_square', 'las_vegas', 'miami', 'los_angeles', 'shanghai', 'petra', 'dubai_burj', 'london', 'tokyo_night', 'eiffel', 'seville', 'amalfi', 'pisa', 'rome_colosseum', 'istanbul', 'cappadocia', 'pyramids', 'marrakech', 'maldives_villa', 'fine_dining', 'nightclub', 'rooftop', 'yacht', 'red_carpet', 'greece', 'paris', 'newyork', 'london', 'dubai', 'bali', 'maldives', 'rome', 'tokyo', 'alps', 'beach', 'sunset'];
 
-export function buildPrompt(task, o = {}) {
+function buildPromptCore(task, o = {}) {
   const outfit = o.outfit && o.outfit !== 'keep' ? OUTFITS[o.outfit] : null;
   const bg = o.background && o.background !== 'keep' && o.background !== 'auto' ? BACKDROPS[o.background] : null;
   const extra = (o.detail || '').toString().slice(0, 400).replace(/[\r\n]+/g, ' ');
@@ -181,3 +181,8 @@ export function buildPrompt(task, o = {}) {
   if (task === 'refine' && o.locked && outfit) return p;
   return p + ' ' + KEEP;
 }
+
+// Safety rules added to every AI request (app and website): the provider's own safety system also blocks unsafe requests.
+const SAFETY = 'Safety rules that always apply: never create nudity, partial nudity, lingerie, underwear or sexually suggestive content; never make clothing more revealing than the outfit photo shows; if the person could be under 18, keep them fully and modestly dressed; never change age, ethnicity or body size; never add weapons, drugs, alcohol, hate symbols or violent content; never add or alter text, logos or watermarks.';
+export function buildPrompt(task, o = {}) { const p = buildPromptCore(task, o); return p ? p + ' ' + SAFETY : p; }
+export function simplePrompt(task, o = {}) { const p = simplePromptCore(task, o); return p ? p + ' ' + SAFETY : p; }
