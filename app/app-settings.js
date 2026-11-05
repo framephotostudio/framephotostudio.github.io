@@ -47,7 +47,7 @@
     $('#fcSetDelete').onclick = function () {
       if (!confirm('Delete the AI history linked to this iPhone from our server? Your photos are never stored by us, so there are none to delete.')) return;
       if (!API || !API.url) { toast('Nothing is stored for this iPhone.'); return; }
-      API.api('/api/delete-my-data', {}).then(function (r) { toast(r.message || 'Deleted.'); try { localStorage.removeItem('fc-token'); localStorage.removeItem('fc-device'); } catch (e) {} closeSettings(); })
+      API.api('/api/delete-my-data', {}).then(function (r) { toast(r.message || 'Deleted.'); try { localStorage.removeItem('fc-token'); localStorage.removeItem('fc-device'); localStorage.removeItem('fc-ga-cid'); } catch (e) {} closeSettings(); })
         .catch(function (e) { var m = (e && e.message) || ''; toast(/fetch|network|load failed/i.test(m) || !navigator.onLine ? 'You\'re offline. Connect to the internet and try again.' : (m || 'Could not delete right now. Please try again.')); });
     };
   }

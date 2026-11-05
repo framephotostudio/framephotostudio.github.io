@@ -228,33 +228,66 @@
       if (panel) { var y = h.getBoundingClientRect().top - panel.getBoundingClientRect().top + panel.scrollTop - head; panel.scrollTo({ top: Math.max(0, y), behavior: 'smooth' }); }
       else h.scrollIntoView({ behavior: 'smooth', block: 'start' });
       h.classList.add('fcFlash'); setTimeout(function () { h.classList.remove('fcFlash'); }, 1600);
+      var sb = document.querySelector('#packSets [data-set="' + PACKSET + '"]'); if (sb) sb.click();
     }, 450);
   }
+  var PACKSET = 'social';
   function addPackCard() {
     if (document.getElementById('fcPackCard')) return;
-    var magic = document.getElementById('fcMagic'); if (!magic || !magic.parentNode) return;
+    var anchor = document.getElementById('styleRow') || document.getElementById('fcMagic'); if (!anchor || !anchor.parentNode) return;
     var c = document.createElement('div'); c.id = 'fcPackCard';
-    c.innerHTML = '<b>Platform Pack</b><p>One photo, every platform. Sized and framed on your face.</p>' +
-      '<div class="fcPills"><span>Profile</span><span>Story</span><span>Post</span><span>Cover</span><span>Work</span><span>Dating</span></div>' +
+    c.innerHTML = '<b>Platform Pack</b><p>Every size in one tap, saved to Photos.</p>' +
+      '<div class="fcPills" role="group" aria-label="Platforms"><button type="button" data-set="social" class="on" aria-pressed="true">Social</button><button type="button" data-set="pro" aria-pressed="false">Work</button><button type="button" data-set="dating" aria-pressed="false">Dating</button></div>' +
       '<button type="button" class="fcPackGo">Choose a photo</button>';
+    Array.prototype.forEach.call(c.querySelectorAll('.fcPills button'), function (b) {
+      b.addEventListener('click', function () {
+        tap('LIGHT'); PACKSET = b.dataset.set;
+        Array.prototype.forEach.call(c.querySelectorAll('.fcPills button'), function (x) { var on = x === b; x.classList.toggle('on', on); x.setAttribute('aria-pressed', on ? 'true' : 'false'); });
+      });
+    });
     c.querySelector('.fcPackGo').addEventListener('click', function () {
       tap('MEDIUM');
       if (document.body.classList.contains('ownPhoto')) { enterStudio(); goPack(); return; }
       window.__fcGoPack = true;
       var up = document.getElementById('heroGlow') || document.getElementById('file'); if (up) up.click();
     });
-    magic.parentNode.insertBefore(c, magic);
+    anchor.parentNode.insertBefore(c, anchor);
     if (window.MutationObserver) new MutationObserver(function () {
       if (window.__fcGoPack && document.body.classList.contains('ownPhoto')) { window.__fcGoPack = false; setTimeout(function () { enterStudio(); goPack(); }, 600); }
     }).observe(document.body, { attributes: true, attributeFilter: ['class'] });
   }
+  // welcome headline: Platform Pack is what Face Couture is about; the AI tools live in the studio's AI Studio
+  function heroText() {
+    var hero = document.querySelector('.intro.heroNew'); if (!hero) return;
+    var eb = hero.querySelector('.eyebrow'), h1 = hero.querySelector('h1'), hp = h1 && h1.nextElementSibling;
+    var H = 'One photo.<br><span>Every platform, framed on you.</span>';
+    if (eb && eb.textContent !== 'Platform Pack \u00b7 Makeup Artist Mode') eb.textContent = 'Platform Pack \u00b7 Makeup Artist Mode';
+    if (h1 && h1.innerHTML !== H) h1.innerHTML = H;
+    var P = 'Sized and framed on your face for profiles, stories, work and dating. Polish it first with beauty tools that run right on your phone.';
+    if (hp && hp.tagName === 'P' && hp.textContent !== P) hp.textContent = P;
+  }
+
+  // Video tab: the photo and music fields show as app buttons (no "Choose Files / No file chosen")
+  function fileButtons() {
+    [['videoPhotos', 'Add photos', function (f) { return f.length ? f.length + (f.length === 1 ? ' photo added' : ' photos added') + ' \u2713' : 'Add photos'; }],
+     ['videoAudio', 'Choose music or voiceover', function (f) { return f.length ? 'Audio added \u2713' : 'Choose music or voiceover'; }]].forEach(function (x) {
+      var inp = document.getElementById(x[0]); if (!inp || inp.__fcBtn) return; inp.__fcBtn = true;
+      var b = document.createElement('button'); b.type = 'button'; b.className = 'fcFileBtn'; b.textContent = x[1];
+      b.addEventListener('click', function () { tap('LIGHT'); inp.click(); });
+      inp.addEventListener('change', function () { b.textContent = x[2](inp.files || []); });
+      inp.parentNode.insertBefore(b, inp.nextSibling);
+    });
+    var clr = document.getElementById('clearVideoAudio'); var au = document.getElementById('videoAudio');
+    if (clr && au && !clr.__fcBtn) { clr.__fcBtn = true; clr.addEventListener('click', function () { setTimeout(function () { var b = au.nextSibling; if (b && b.className === 'fcFileBtn') b.textContent = 'Choose music or voiceover'; }, 50); }); }
+  }
 
   function init() {
-    hideFileTools();
+    hideFileTools(); fileButtons();
     setInterval(menIcons, 700); document.addEventListener('click', function () { setTimeout(menIcons, 80); }, true);
     if (window.MutationObserver) new MutationObserver(function () { addReport(); }).observe(document.body, { childList: true, subtree: true });
     guardEditor();
     addPackCard(); setTimeout(addPackCard, 1500);
+    heroText(); var hn = 0, ht = setInterval(function () { heroText(); if (++hn > 12) clearInterval(ht); }, 500);
     setupNative();
     buildTabBar();
     watchStudio();

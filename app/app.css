@@ -61,9 +61,9 @@ html.fc-app .editorActions{top:calc(env(safe-area-inset-top,0px) + 47px)!importa
 html.fc-app footer,html.fc-app #openPro{display:none!important}
 
 /* settings button */
-.fcGear{border:0;background:none;color:#6b3d86;padding:6px;border-radius:50%;cursor:pointer;display:inline-flex}
+.fcGear{border:0;background:none;color:#6b3d86;padding:6px;border-radius:50%;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px}
 html.fc-app header .fcGear{position:absolute;right:10px;top:calc(env(safe-area-inset-top,0px) + 8px)}
-#fcStudioBar .fcGear{min-height:0;padding:4px;border:0;background:none}
+#fcStudioBar .fcGear{min-width:44px;min-height:44px;padding:0;border:0;background:none}
 .linklike{border:0;background:none;color:#6d3fd0;font:inherit;font-size:12px;padding:0;cursor:pointer;text-decoration:underline}
 html.fc-app .prolabel{letter-spacing:1.5px}
 
@@ -122,5 +122,17 @@ html.fc-app #fcTabBar button[data-tab="ai"],html.fc-app nav.tabs [data-tab="ai"]
 /* the photo preview menu shows its whole label ("TikTok app zones") */
 html.fc-app #platformPreview,html.fc-app.fc-studio .previewTools #platformPreview{flex:0 0 auto!important;width:auto!important;min-width:142px!important;max-width:none!important;font-size:12.5px!important;padding-right:22px!important}
 
-/* welcome Platform Pack card */
-#fcPackCard{margin:4px 0 18px;padding:18px 18px 16px;border-radius:20px;background:linear-gradient(135deg,#fff6fb,#f3e9ff);border:1px solid rgba(122,72,160,.18);box-shadow:0 10px 26px -14px rgba(74,42,99,.45);text-align:left}#fcPackCard b{display:block;font-size:20px;color:#3b1f57;margin-bottom:4px}#fcPackCard p{margin:0 0 10px;font-size:15px;line-height:1.35;color:#5a4470}#fcPackCard .fcPills{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}#fcPackCard .fcPills span{font-size:12.5px;padding:5px 10px;border-radius:999px;background:#fff;border:1px solid rgba(122,72,160,.22);color:#4a2a63}#fcPackCard .fcPackGo{width:100%;min-height:48px;border:0;border-radius:14px;background:#4a2a63;color:#fff;font-size:16px;font-weight:600}
+/* welcome Platform Pack card; the AI tools live in the studio's AI Studio, not on the welcome screen */
+html.fc-app #fcMagic{display:none!important}
+#fcPackCard{margin:14px 0 6px;padding:18px 18px 16px;border-radius:20px;background:linear-gradient(135deg,#fff6fb,#f3e9ff);border:1px solid rgba(122,72,160,.18);box-shadow:0 10px 26px -14px rgba(74,42,99,.45);text-align:left}
+#fcPackCard b{display:block;font-size:20px;color:#3b1f57;margin-bottom:4px}#fcPackCard p{margin:0 0 12px;font-size:15px;line-height:1.35;color:#5a4470}
+#fcPackCard .fcPills{display:flex;flex-wrap:nowrap;gap:8px;margin-bottom:14px}
+#fcPackCard .fcPills button{flex:1 1 0;min-width:0;min-height:44px;font:inherit;font-size:15px;font-weight:600;border-radius:999px;background:#fff;border:1px solid rgba(122,72,160,.28);color:#4a2a63;padding:0 6px}
+#fcPackCard .fcPills button.on{background:#4a2a63;border-color:#4a2a63;color:#fff}
+#fcPackCard .fcPackGo{width:100%;min-height:50px;border:0;border-radius:14px;background:linear-gradient(110deg,#6d3fd0,#9b4dbb 60%,#c9a35a);color:#fff;font:inherit;font-size:16.5px;font-weight:650}
+/* bigger tap targets for the save options */
+#packFace,#hdExport{width:22px;height:22px;flex:0 0 22px;margin:0 10px 0 0;accent-color:#6d3fd0}
+html.fc-app .packOpt{display:flex;align-items:center;min-height:44px}
+/* Video tab: styled buttons instead of the web file fields */
+html.fc-app #videoPhotos,html.fc-app #videoAudio{position:absolute!important;width:1px!important;height:1px!important;opacity:0!important;pointer-events:none!important}
+.fcFileBtn{display:flex;align-items:center;justify-content:center;width:100%;min-height:46px;margin:6px 0 4px;border-radius:14px;border:1px solid #d9c9ee;background:#fff;color:#4a2a63;font:inherit;font-size:15px;font-weight:600}

@@ -41,6 +41,11 @@ appOnly('<button class="toolbtn" id="openPro">✦ Pro</button>', '<button class=
   html = html.slice(0, a) + html.slice(b); }
 appOnly("var OWNER=false;try{OWNER=localStorage.getItem('fc-owner')==='1'}catch(e){}window.__fcOwnerNoStats=OWNER;", 'var OWNER=false;', 'owner flag');
 appOnly('render();checkAdminParam();', 'render();', 'admin preview');
+// Google Analytics stays on the website only; the iPhone app sends no analytics
+appOnly('try{if(OWNER){window.gtag=function(){};return}', 'try{if(true){window.gtag=function(){};return}', 'no analytics in the app');
+appAll("n:'Headshot Pro'", "n:'Headshot Studio'", 'look name without Pro');
+appAll('"operatingSystem":"Web, iOS, Android"', '"operatingSystem":"iOS"', 'app platform');
+appAll('Coming soon<b>Face Couture mobile app</b>', 'Face Couture<b>on iPhone</b>', 'store badge text');
 appOnly("try{isAdmin=localStorage.getItem('fcAdmin')===ADMIN_HASH}catch(e){}", '', 'admin flag');
 { const a = html.indexOf('function setAdmin(on){'), b = html.indexOf('window.__seasonal=', a);
   if (a < 0 || b < 0 || b - a > 3000) throw new Error('App Store clean-up "admin switch" not found. Update scripts/build-web.mjs.');
