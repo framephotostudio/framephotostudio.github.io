@@ -74,10 +74,14 @@
       } catch (e) {}
     };
   }
-  // the studio's own Privacy and Terms links open the same in-app pages
+  // the studio's own Privacy and Terms links (and plain links to these pages) open the same in-app pages
   document.addEventListener('click', function (ev) {
-    var l = ev.target && ev.target.closest && ev.target.closest('.legalLink[data-legal]'); if (!l) return;
-    ev.preventDefault(); ev.stopPropagation(); openLegal(l.getAttribute('data-legal'));
+    var t = ev.target && ev.target.closest ? ev.target : null; if (!t) return;
+    var l = t.closest('.legalLink[data-legal]');
+    if (l) { ev.preventDefault(); ev.stopPropagation(); openLegal(l.getAttribute('data-legal')); return; }
+    var a = t.closest('a[href]'); if (!a) return;
+    var m = /^(?:\.\/|\/|https:\/\/facecouture\.app\/)?(privacy|terms|support|delete-my-data)\.html(?:[?#].*)?$/.exec(a.getAttribute('href') || '');
+    if (m) { ev.preventDefault(); ev.stopPropagation(); openLegal(m[1]); }
   }, true);
   window.FCSettings = { open: openSettings, close: closeSettings };
 

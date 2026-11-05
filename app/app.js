@@ -134,6 +134,8 @@
   function watchStudio() {
     var sample = document.getElementById('heroSample');
     if (sample) sample.addEventListener('click', function () { setTimeout(enterStudio, 50); });
+    // the quiz's "See it on the sample first" shows the result in the studio
+    document.addEventListener('click', function (ev) { if (ev.target && ev.target.closest && ev.target.closest('#quizSample')) setTimeout(enterStudio, 400); }, true);
     var check = function () { if (document.body.classList.contains('ownPhoto')) enterStudio(); };
     if (window.MutationObserver) new MutationObserver(check).observe(document.body, { attributes: true, attributeFilter: ['class'] });
     check();

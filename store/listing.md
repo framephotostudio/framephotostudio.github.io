@@ -44,7 +44,7 @@ FOR MEN TOO
 A dedicated men's mode with no makeup at all: subtle skin smoothing, grooming and flattering light.
 
 PRIVATE BY DESIGN
-No account needed. Face mapping runs on your iPhone. A photo leaves your phone only when you choose an AI feature and agree, just for that one edit. It is never stored or used for training.
+No account needed. Face mapping runs on your iPhone. A photo leaves your phone only when you choose an AI feature and agree, just for that one edit. We don't keep it, and it is never used for training.
 
 FREE WHILE WE LAUNCH
 Every feature is free right now. AI features have a daily limit.

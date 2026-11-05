@@ -122,6 +122,8 @@ function tierOf(dev, cfg) {
   if (dev.trialUntil && dev.trialUntil > now) return 'trial';
   if (dev.promoUntil && dev.promoUntil > now) return 'promo';
   if (dev.platform === 'web') return 'anonymousWeb';
+  // the iPhone/Android apps have no way to buy yet, so they never see a paywall until in-app purchases go live
+  if (dev.platform !== 'web' && !(cfg.pro && cfg.pro.inAppPurchasesLive)) return 'launch';
   if (!paywallOn(cfg)) return 'launch';          // free launch (2 weeks): everything unlocked
   return 'free';
 }

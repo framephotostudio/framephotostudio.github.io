@@ -68,7 +68,7 @@
     var cam = input.hasAttribute('capture'), multiple = input.multiple;
     var base = { quality: 92, resultType: 'uri', correctOrientation: true, saveToGallery: false };
     var pick = multiple && P.Camera.pickImages
-      ? P.Camera.pickImages({ quality: 92, limit: 7, correctOrientation: true }).then(function (r) { return (r.photos || []).map(function (x) { return x.webPath; }); })
+      ? P.Camera.pickImages({ quality: 92, limit: input.id === 'carouselFiles' ? 10 : 7, correctOrientation: true }).then(function (r) { return (r.photos || []).map(function (x) { return x.webPath; }); })
       : P.Camera.getPhoto(Object.assign(base, cam
           ? { source: 'CAMERA', direction: 'FRONT' }
           : { source: 'PROMPT', promptLabelHeader: 'Add a photo', promptLabelPhoto: 'Choose from Photos', promptLabelPicture: 'Take a selfie', promptLabelCancel: 'Cancel' }))

@@ -74,6 +74,7 @@ appAll('<span>Premium AI &middot; each uses 1 AI look</span>', '<span>Each uses 
 appAll('<p class="prolabel">✦ FRAME PRO · PREMIUM AI</p><button class="btn full" id="aiUpgrade">See Pro plans</button>', '<p class="prolabel"></p><button class="btn full" id="aiUpgrade" hidden></button>', 'old AI tab label');
 appAll('Tap AI Glow for your premium AI makeover.', 'Tap AI Glow for your AI makeover.', 'AI Glow tip');
 appAll('Your photos are edited on your device and are not uploaded to Face Couture.', 'Your photos are edited on your iPhone. A photo is sent only when you choose an AI feature and agree.', 'privacy note');
+appAll("st.textContent=files.length+' photos styled'", "st.textContent=files.length+(files.length===1?' photo':' photos')+' styled'", 'carousel count');
 // saved files carry the Face Couture name
 for (const [a, b] of [["'frame-custom-'", "'face-couture-custom-'"], ["'frame-photo-set.zip'", "'face-couture-photo-set.zip'"], ["'frame-clip.'", "'face-couture-clip.'"], ["'frame-before-after.", "'face-couture-before-after."], ["'frame-set-'", "'face-couture-set-'"], ["'frame-my-look-'", "'face-couture-my-look-'"]]) appAll(a, b, 'file name ' + a);
 // per-build settings (backend URL comes from a repository variable). Version 1.0 has no purchases, so no store keys.
