@@ -1,1 +1,1 @@
-iPhone build request: 1.0.0 (build 42: Share extension memory-safe with visible previews, review fixes)
+iPhone build request: 1.0.0 (build 43: Continue-your-last-edit box no longer comes back after Start new)

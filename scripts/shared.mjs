@@ -69,6 +69,11 @@ export function shared(html) {
   // consent wording
   all('only to create this look, and it is not stored.', 'only to create this look. We do not store it.', 'consent wording (script)');
   all("to create the look. It isn't stored. <a", "to create the look. We don't store it. <a", 'consent wording (label)');
+  // "Continue your last edit?": Start new forgets the old project (it used to come back on every launch),
+  // either button answers on the first touch, and the box steps aside by itself after 15 seconds
+  one("d.querySelector('.no').onclick=function(){d.remove()};",
+    "var fcAns=function(go){if(!d.parentNode)return;d.remove();if(!go){try{localStorage.removeItem('frame-draft')}catch(e){}}};d.querySelector('.no').onclick=function(){fcAns(false)};d.querySelector('.no').addEventListener('touchend',function(e){e.preventDefault();fcAns(false)});d.querySelector('.go').addEventListener('touchend',function(e){e.preventDefault();d.querySelector('.go').onclick()});setTimeout(function(){if(d.parentNode)d.remove()},15000);",
+    'resume box');
   // names: original look names and the AI Studio button names
   all("matte:{n:'Matte Pro'", "matte:{n:'Velvet Matte'", 'Velvet Matte');
   for (const [a, b] of LOOK_NAMES) all(a, b, 'look name ' + a);
