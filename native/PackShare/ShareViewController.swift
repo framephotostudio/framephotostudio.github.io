@@ -95,7 +95,7 @@ final class ShareViewController: UIViewController {
             segment.heightAnchor.constraint(equalToConstant: 40),
             scroll.topAnchor.constraint(equalTo: segment.bottomAnchor, constant: 20),
             scroll.leadingAnchor.constraint(equalTo: g.leadingAnchor), scroll.trailingAnchor.constraint(equalTo: g.trailingAnchor),
-            scroll.heightAnchor.constraint(equalToConstant: 250),
+            scroll.heightAnchor.constraint(equalToConstant: 196),
             saveButton.topAnchor.constraint(equalTo: scroll.bottomAnchor, constant: 22),
             saveButton.leadingAnchor.constraint(equalTo: g.leadingAnchor, constant: 20), saveButton.trailingAnchor.constraint(equalTo: g.trailingAnchor, constant: -20),
             saveButton.heightAnchor.constraint(equalToConstant: 52),
@@ -218,7 +218,7 @@ final class ShareViewController: UIViewController {
         guard photo != nil else { return }
         view.layoutIfNeeded()
         let labelH: CGFloat = 34, gap: CGFloat = 12
-        let thumbH = max(120, scroll.bounds.height - labelH - 6)
+        let thumbH = max(110, scroll.bounds.height - labelH - 6)
         var x: CGFloat = 20
         for (name, w, h) in sets[setIndex].1 {
             let thumbW = round(thumbH * w / h)
@@ -233,6 +233,7 @@ final class ShareViewController: UIViewController {
         }
         scroll.contentSize = CGSize(width: x - gap + 20, height: scroll.bounds.height)
         scroll.contentOffset = .zero
+        if status.text == nil || status.text == "" || status.text!.hasSuffix("see them all.") { status.textColor = UIColor(red: 0.35, green: 0.27, blue: 0.44, alpha: 1); status.text = "\(sets[setIndex].1.count) sizes in this set. Swipe to see them all." }
     }
 
     // MARK: Saving
