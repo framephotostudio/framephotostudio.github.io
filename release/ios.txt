@@ -1,1 +1,1 @@
-iPhone build request: 1.0.0 (build 38: new AI Studio button names, review fixes)
+iPhone build request: 1.0.0 (build 39: Platform Pack first screen, second review fixes)
